@@ -2,7 +2,7 @@
 
 Fleet, session, trace and actual desktop views with truthful freshness.
 
-**Status: public scaffold, not a deployed or production-ready implementation.**
+**Status: process-local projection candidate; integrated UI and desktop adapters are not implemented.**
 
 This repository is one boundary of [Runspindle](https://github.com/newdarwindev/runspindle). Repository boundaries do not require one microservice each.
 
@@ -15,3 +15,8 @@ This repository is one boundary of [Runspindle](https://github.com/newdarwindev/
 No old repository is retired by this scaffold. Migration and archival are separate verified gates.
 
 New conceptual documentation is in [docs/product](docs/product/README.md). These HTML pages are conceptual adaptations; browser visual QA and runtime acceptance are not established.
+
+A dependency-free [projection candidate](src/projection.js) now has synthetic component tests.
+Run `npm test`, `python3 tools/check_projection_mutations.py` and
+`python3 tools/check_scaffold.py` with Node 20+ and Python 3.
+See [implementation evidence and remaining gaps](docs/IMPLEMENTATION_EVIDENCE.md).

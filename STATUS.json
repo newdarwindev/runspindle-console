@@ -1,10 +1,16 @@
 {
+  "component_tests": "passed",
+  "desktop_integration": "not_implemented",
   "dev_deployment": "not_run",
-  "implementation": "not_implemented",
+  "durability": "not_implemented",
+  "github_ci": "not_run",
+  "implementation": "partial_projection_model",
+  "implementation_evidence": "docs/IMPLEMENTATION_EVIDENCE.md",
   "legacy_archival": "not_started",
   "live_acceptance": "not_run",
   "production_deployment": "not_run",
+  "rendered_accessibility": "not_run",
   "runner_capacity": "unverified",
   "selected_source_migration": "partial",
-  "stage": "scaffold"
+  "stage": "projection_candidate"
 }

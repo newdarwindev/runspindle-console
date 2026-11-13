@@ -16,7 +16,8 @@ The target requires task, host and workspace. Native session, browser, lease epo
 trace/span and exact sha256 artifact digest are optional for fleet-level projections;
 a span needs a trace and an epoch needs a browser. When supplied they must match
 every accepted update exactly. Changing any target identity requires a new selection.
-Unknown identity keys, unsupported observation versions and invalid combinations
+Identity inputs require own enumerable data properties, with no inherited/accessor
+fields. Unknown identity keys, unsupported observation versions and invalid combinations
 reject without replacing accepted state. Snapshot and event sources must already
 be authorized and sanitized by trusted backend adapters. Actor strings and the
 projected authority state cannot grant capability; `canExecute` is always false.
@@ -34,7 +35,8 @@ remain labeled unverified pending adapter qualification.
 Task switches abort reads and pending passive admission, clear old data, and close
 an active viewer. Generation and request checks reject late replies even when the
 adapter ignores abort. Duplicate view admission is suppressed while pending/open.
-A late opened view is closed after navigation or stale admission. Read errors are
+A late opened view is closed after navigation, a revised observation or stale admission.
+A changed/revoked view source aborts pending admission and closes the active view. Read errors are
 represented without retaining arbitrary adapter error strings. URLs require an
 explicit configured HTTPS origin and no embedded username/password. `escapeText`
 escapes HTML metacharacters for a future renderer; it is not evidence that a UI uses
@@ -54,7 +56,7 @@ An adapter close failure is caught; closure acknowledgment is not proven.
 On 2026-11-13, based on console `8d76a3919b019539aa4201294fef88cf2de645eb`,
 Node v26.13.0 and Python 3.9.6:
 
-- `npm test`: 12 tests passed (11 projection tests plus the distinct scaffold readiness test).
+- `npm test`: 14 tests passed (13 projection tests plus the distinct scaffold readiness test).
 - `python3 tools/check_projection_mutations.py`: three deliberately broken variants
   were rejected by the actual projection test suite: duplicate revision acceptance,
   wrong identity acceptance, and treating unknown time as fresh. Each failed with

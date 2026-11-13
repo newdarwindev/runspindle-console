@@ -165,3 +165,43 @@ test('task and observation bounds are enforced; returned objects cannot mutate a
   projection.dispose();
   assert.throws(() => projection.select(target), /disposed/);
 });
+
+
+test('identities require own data properties and cannot drop inherited identity during copying', () => {
+  const projection = make();
+  const inherited = Object.create({task: 'task-forged', host: 'host-forged', workspace: 'workspace-forged'});
+  const accessor = {...target};
+  Object.defineProperty(accessor, 'task', {enumerable: true, get() {throw new Error('getter must not run');}});
+  const hidden = {...target};
+  Object.defineProperty(hidden, 'task', {value: target.task, enumerable: false});
+  for (const malformed of [inherited, accessor, hidden]) {
+    assert.throws(() => projection.select(malformed), TypeError);
+    assert.equal(projection.merge(fixture({identity: malformed})), false);
+    assert.deepEqual(projection.state().identity, target);
+  }
+  projection.select(Object.assign(Object.create(null), target));
+  assert.equal(projection.merge(fixture()), true);
+  assert.deepEqual(projection.state().identity, target);
+});
+
+test('revised or revoked view source invalidates pending passive admission and closes stale handles', async () => {
+  for (const change of [{viewUrl: 'javascript:denied'}, {viewUrl: 'https://viewer.invalid/new'}, {label: 'new revision'}]) {
+    const request = deferred(); let closes = 0, calls = 0, signal;
+    const projection = make({openPassive: async (_, options) => {calls++; signal = options.signal; return request.promise;}});
+    projection.merge(fixture());
+    const pending = projection.view();
+    projection.merge(fixture({revision: 2, ...change}));
+    request.resolve({close() {closes++;}});
+    assert.equal(await pending, false);
+    assert.equal(closes, 1);
+    assert.equal(calls, 1);
+    if (change.viewUrl) assert.equal(signal.aborted, true);
+  }
+  let closes = 0;
+  const active = make({openPassive: async () => ({close() {closes++;}})});
+  active.merge(fixture());
+  assert.equal(await active.view(), true);
+  active.merge(fixture({revision: 2, viewUrl: 'javascript:denied'}));
+  assert.equal(closes, 1);
+  assert.equal(await active.view(), false);
+});

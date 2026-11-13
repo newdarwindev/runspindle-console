@@ -6,7 +6,14 @@ const EVIDENCE = new Set(['synthetic_component', 'isolated_integration', 'live_a
 
 function identity(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError('invalid identity');
-  for (const key of Object.keys(value)) if (!ID_KEYS.includes(key)) throw new TypeError('unknown identity field');
+  const original = value;
+  if (![Object.prototype, null].includes(Object.getPrototypeOf(original))) throw new TypeError('invalid identity prototype');
+  value = Object.create(null);
+  for (const key of Reflect.ownKeys(original)) {
+    const descriptor = Object.getOwnPropertyDescriptor(original, key);
+    if (!ID_KEYS.includes(key) || !descriptor.enumerable || !Object.hasOwn(descriptor, 'value')) throw new TypeError('invalid identity field');
+    value[key] = descriptor.value;
+  }
   for (const key of ['task', 'host', 'workspace']) {
     if (typeof value[key] !== 'string' || !value[key].length || value[key].length > 256) throw new TypeError('invalid identity');
   }
@@ -71,12 +78,14 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
     if (update.simulated && update.evidenceClass !== 'synthetic_component') return false;
     if (record && (update.revision <= record.revision || (update.observedAt !== null && record.observedAt !== null && update.observedAt < record.observedAt))) return false;
     const gap = !snapshot && !!record && (record.gap || update.revision !== record.revision + 1);
+    const previous = record;
     record = Object.freeze({
       revision: update.revision, observedAt: update.observedAt, connection: update.connection,
       authority: update.authority, evidenceClass: update.evidenceClass, label: update.label,
       simulated: update.simulated, gap,
       viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
     });
+    if (previous && (previous.viewUrl !== record.viewUrl || previous.simulated !== record.simulated || previous.evidenceClass !== record.evidenceClass || record.connection !== 'online' || record.observedAt === null)) releaseView();
     phase = 'ready';
     return true;
   }
@@ -117,12 +126,12 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
   }
   async function view() {
     if (disposed || pendingView || activeView || state().status !== 'ready' || !record.viewUrl || typeof openPassive !== 'function') return false;
-    const controller = new AbortController(), expectedGeneration = generation;
+    const controller = new AbortController(), expectedGeneration = generation, admittedRecord = record;
     pendingView = controller;
     try {
       const opened = await openPassive(Object.freeze({identity: target, url: record.viewUrl, mode: 'passive', simulated: record.simulated}), {signal: controller.signal});
       if (!opened || typeof opened.close !== 'function') return false;
-      if (controller.signal.aborted || disposed || expectedGeneration !== generation || state().status !== 'ready') { opened.close(); return false; }
+      if (controller.signal.aborted || disposed || expectedGeneration !== generation || record !== admittedRecord || state().status !== 'ready') { opened.close(); return false; }
       activeView = opened;
       return true;
     } catch { return false; }

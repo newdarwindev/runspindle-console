@@ -1,0 +1,9 @@
+{
+  "api_version": "runspindle.v1alpha0",
+  "component": "console",
+  "description": "Fleet, session, trace and actual desktop views with truthful freshness",
+  "implementation_language": "javascript",
+  "repository": "newdarwindev/runspindle-console",
+  "schema_version": 1,
+  "stage": "scaffold"
+}

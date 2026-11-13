@@ -51,20 +51,22 @@ def verify_pin(bundle=BUNDLE, pin_path=PIN):
         raise ValueError('fixture source identity mismatch')
     if set(manifest['files']) != FILES or {p.name for p in bundle.iterdir()} != FILES | {'manifest.json'}:
         raise ValueError('fixture inventory mismatch')
+    verified = {}
     for name, expected in manifest['files'].items():
         raw = _read(bundle / name)
+        verified[name] = raw
         if hashlib.sha256(raw).hexdigest() != expected:
             raise ValueError('fixture bytes differ from reviewed manifest')
-    return manifest
+    return manifest, verified
 
 
 def load_kit(bundle=BUNDLE, pin_path=PIN):
-    verify_pin(bundle, pin_path)
+    _, verified = verify_pin(bundle, pin_path)
     path = Path(bundle) / 'fixturekit.py'
     module = types.ModuleType('console_pinned_fixturekit_v1')
     module.__file__ = str(path)
     # No vendored code is imported until the independent pin and every byte pass.
-    exec(compile(path.read_bytes(), str(path), 'exec'), module.__dict__)
+    exec(compile(verified['fixturekit.py'], str(path), 'exec'), module.__dict__)
     module.verify_bundle(bundle)
     return module
 

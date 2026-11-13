@@ -2,6 +2,10 @@
 import copy
 import hashlib
 import json
+import importlib.util
+import marshal
+import struct
+import sys
 from pathlib import Path
 import shutil
 import socket
@@ -9,15 +13,17 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from tools import shared_fixtures as consumer
 from tools.shared_fixtures import BUNDLE, PIN, load_kit, verify_pin
 
 
 class SharedFixtureTests(unittest.TestCase):
     def setUp(self):
-        self.network = patch.object(socket, 'socket', side_effect=AssertionError('network forbidden'))
-        self.socket = self.network.start()
-        self.addCleanup(self.network.stop)
-        self.addCleanup(self.socket.assert_not_called)
+        for method in ['socket', 'create_connection', 'getaddrinfo']:
+            network = patch.object(socket, method, side_effect=AssertionError('network forbidden'))
+            spy = network.start()
+            self.addCleanup(network.stop)
+            self.addCleanup(spy.assert_not_called)
         self.kit = load_kit()
         self.golden = self.kit.load_json(BUNDLE / 'golden.json')
         self.vectors = self.kit.load_json(BUNDLE / 'vectors.json')
@@ -84,6 +90,37 @@ class SharedFixtureTests(unittest.TestCase):
                     (bundle / 'unexpected.txt').write_text('unreviewed extra')
                 with self.assertRaises(ValueError):
                     load_kit(bundle, PIN)
+
+
+class ExecutableSnapshotTests(unittest.TestCase):
+    setUp = SharedFixtureTests.setUp
+
+    def test_validator_compiles_verified_snapshot_if_source_changes_after_verification(self):
+        with tempfile.TemporaryDirectory(prefix='runspindle-console-snapshot-') as directory:
+            bundle = Path(directory) / 'bundle'
+            shutil.copytree(BUNDLE, bundle)
+            verify = consumer.verify_pin
+            def change_after_verification(*args):
+                result = verify(*args)
+                (bundle / 'fixturekit.py').write_text("raise RuntimeError('unreviewed reread executed')\n")
+                return result
+            with patch.object(consumer, 'verify_pin', side_effect=change_after_verification):
+                with self.assertRaisesRegex(ValueError, 'bundle-digest'):
+                    consumer.load_kit(bundle, PIN)
+
+    def test_matching_bytecode_cache_is_rejected_without_executing_it(self):
+        with tempfile.TemporaryDirectory(prefix='runspindle-console-pycache-') as directory:
+            bundle = Path(directory) / 'bundle'
+            shutil.copytree(BUNDLE, bundle)
+            source = bundle / 'fixturekit.py'
+            with patch.object(sys, 'pycache_prefix', None):
+                cache = Path(importlib.util.cache_from_source(str(source)))
+                cache.parent.mkdir()
+                header = importlib.util.MAGIC_NUMBER + struct.pack('<III', 0, int(source.stat().st_mtime), source.stat().st_size)
+                code = compile("raise RuntimeError('unreviewed bytecode executed')", str(source), 'exec')
+                cache.write_bytes(header + marshal.dumps(code))
+                with self.assertRaisesRegex(ValueError, 'inventory mismatch'):
+                    consumer.load_kit(bundle, PIN)
 
 
 if __name__ == '__main__':

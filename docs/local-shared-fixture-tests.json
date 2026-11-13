@@ -10,7 +10,7 @@
       "negative_vectors": 12,
       "positive_kinds": 4,
       "status": "passed",
-      "tests": 5
+      "tests": 7
     },
     {
       "command": "npm test",
@@ -48,13 +48,13 @@
     "fixtures/shared-v1/manifest.json": "ac174ab690d5347aee2dd51b4bc99e3ca129bbb708599d5e36753d1427ee7a9e",
     "fixtures/shared-v1/vectors.json": "0d60f635ccaa9535c05fc9ca98e9982c618fb86e70c50bdac56f230f3ab3d8ed",
     "provenance.json": "935023b42be8beea96a9fa59283184cd365dbe5bda66edf2091ac1d968620251",
-    "tests/test_shared_fixtures.py": "55d8ff2250a044d922c7ce4fa4e2a28fbcb6baef0ca14aae82438c5a4fc91c13",
-    "tools/shared_fixtures.py": "aa1ad50b7f7fb232c14d246d09c4102a8bb53ce89a3f004edba193e0dd8e531d"
+    "tests/test_shared_fixtures.py": "c9ae3c50bd48a3bd082c451cc51ea8f9fcc518cd4ecb5c896996faca68711cb0",
+    "tools/shared_fixtures.py": "1e084182d0f2fba07cdb7720797145c14cf0f8f80fc9641965d4b296e474c66c"
   },
   "isolated_integration": "not_run",
   "javascript_runtime_mapping": "not_implemented",
   "live_acceptance": "not_run",
-  "recorded_at": "2026-11-13T18:43:43.331362+00:00",
+  "recorded_at": "2026-11-13T18:48:05.470569+00:00",
   "runtime": {
     "node": "v26.13.0",
     "python": "3.9.6"

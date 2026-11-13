@@ -24,19 +24,22 @@ python3 tools/check_scaffold.py
 ```
 
 `tools/shared_fixtures.py` checks the separately reviewed pin, exact inventory and
-every file hash before compiling/executing the vendored validator. Calling
+every file hash before compiling/executing the exact verified source-byte snapshot.
+It never imports a vendored bytecode cache; an extra cache directory is rejected. Calling
 `fixtures/shared-v1/fixturekit.py` directly bypasses this external-pin check and is
 not the consumer invocation. Symlinks, unexpected files, corrupt bytes and a
 self-rehashed altered manifest are rejected. The pin is trusted checked-in review
 input; replacing both pin and bundle requires review, not automatic refresh.
 
-The Python consumer tests run all four positive fixture kinds against separate
+Seven Python consumer tests run all four positive fixture kinds against separate
 synthetic expected identities/receipts and all 12 negative mutations against the
 unchanged positive oracle, asserting exact declared error codes. They deny socket
-construction and assert zero socket calls. Corruption tests use temporary directories
+construction, connection and DNS and assert zero calls. Corruption tests use temporary directories
 and remove them on exit; they prove corrupt validator bytes are rejected before
 execution and an internally consistent altered manifest cannot replace the reviewed
-pin. No services or child processes are started by the Python fixture-consumer tests.
+pin. A matching executable bytecode cache is rejected without running it. A source
+file deliberately changed after hash verification cannot replace the byte snapshot
+that is compiled; the subsequent bundle recheck detects changed files. No services or child processes are started by the Python fixture-consumer tests.
 
 The JavaScript projection tests remain a separate synthetic component lane. The
 Python consumer uses the shared validator; no JavaScript validator or runtime

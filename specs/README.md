@@ -21,4 +21,7 @@ Preserve explicit authority and unknown outcomes. Distinguish request admission,
 3. Bounded live acceptance in an authorized target.
 4. Failure, restart, uncertain-effect reconciliation and rollback evidence.
 
-None of these product gates has been run for this scaffold.
+Synthetic component tests now cover a bounded process-local projection candidate.
+See [implementation evidence](../docs/IMPLEMENTATION_EVIDENCE.md). Integration,
+rendered accessibility, live acceptance and restart/durability gates remain not run.
+The internal API is provisional and is not the cross-component wire protocol.

@@ -1,0 +1,46 @@
+{
+  "base_commit": "8d76a3919b019539aa4201294fef88cf2de645eb",
+  "checks": [
+    {
+      "command": "npm test",
+      "status": "passed",
+      "tests": 14
+    },
+    {
+      "command": "python3 tools/check_projection_mutations.py",
+      "detected_mutations": 3,
+      "status": "passed"
+    },
+    {
+      "command": "python3 tools/check_scaffold.py",
+      "evidence_class": "scaffold_structure",
+      "status": "passed"
+    },
+    {
+      "command": "python3 tools/acceptance_gate.py console-build",
+      "exit_code": 78,
+      "status": "blocked"
+    }
+  ],
+  "durability": "not_implemented",
+  "evidence_class": "synthetic_component",
+  "files": {
+    "STATUS.json": "26667f89b87e8dc0f46221d69e10276b6ca91d321e90677fd407539c5561de06",
+    "component.json": "c84cd81eaf377c85e2dfc2a13a2674061fa4a1bcd86b243d1b3a19089ecc8e81",
+    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
+    "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
+    "test/projection.test.js": "2f93665ba5e2aec400cb422636fbdf0e1f6cccc6f8f0654c09a52b7e7ca81d37",
+    "tools/check_projection_mutations.py": "6d3b894631d98b71dfaeee5fde92d2ec34b1e324cd3c01e675e73279651aeac5",
+    "tools/check_scaffold.py": "2efe46a3e05e228cfc072b4958dbed234b1974e21395b90f21d9b62787ff0eb8"
+  },
+  "fixture_seed": "fixed-no-randomness",
+  "github_ci": "not_run",
+  "isolated_integration": "not_run",
+  "live_acceptance": "not_run",
+  "recorded_at": "2026-11-13T18:40:39.867609+00:00",
+  "rendered_accessibility": "not_run",
+  "runtime": {
+    "node": "v26.13.0",
+    "python": "3.9.6"
+  }
+}

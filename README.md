@@ -25,3 +25,15 @@ The [pinned shared fixture subset](docs/SHARED_FIXTURES.md) can be verified and
 consumed in isolation with `python3 tools/shared_fixtures.py` and
 `python3 -m unittest discover -s tests -v`. This Python conformance lane is separate
 from JavaScript runtime mapping and the projection component tests.
+
+## Desired technical direction
+
+Truthful operator control and evidence: this component contributes to turning authorized one-off work into
+repeatable, maintained cross-application workflows. Scoped access, managed
+sessions, explicit human exceptions and evaluated DSPy candidates are intended
+to compose into that capability; no automatic improvement or live integration
+is implied.
+
+Read [the component-specific technical intent](specs/desired-intent.md) for its
+interfaces, privacy boundaries, failure cases and acceptance obligations. Current
+implementation and evidence limits above remain unchanged.

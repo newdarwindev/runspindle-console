@@ -1,0 +1,62 @@
+{
+  "base_commit": "fc9d046c42c4dd2ed9660aea7b85c7f8bd4eec61",
+  "checks": [
+    {
+      "command": "python3 tools/shared_fixtures.py",
+      "status": "passed"
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -v",
+      "negative_vectors": 12,
+      "positive_kinds": 4,
+      "status": "passed",
+      "tests": 7
+    },
+    {
+      "command": "npm test",
+      "status": "passed",
+      "tests": 14
+    },
+    {
+      "command": "python3 tools/check_projection_mutations.py",
+      "detected_mutations": 3,
+      "status": "passed"
+    },
+    {
+      "command": "python3 tools/check_scaffold.py",
+      "evidence_class": "scaffold_structure",
+      "status": "passed"
+    },
+    {
+      "command": "python3 tools/acceptance_gate.py console-build",
+      "exit_code": 78,
+      "status": "blocked"
+    }
+  ],
+  "deployment": "not_run",
+  "evidence_class": "pinned_synthetic_fixture_consumer",
+  "fixture_seed": 90210,
+  "fixture_time": "2026-11-13T00:00:00Z",
+  "github_ci": "not_run",
+  "input_sha256": {
+    "STATUS.json": "c32ad04c74b8dfe9f45a6e0600f0a896ee5e0a6371f66f4502c44b2f9346022a",
+    "fixtures/shared-v1.pin.json": "f39d278a98ee6f53b90f5f05e43d61780f270345cad7c7707c87c9ca47e80b75",
+    "fixtures/shared-v1/artifact.txt": "5d331381d2f6ae517386fdda84eb4f92011915473935b57385c69648cc85bbc8",
+    "fixtures/shared-v1/contract.json": "f707f1d2b7147797042292b6374afd34aecc39c09916ec7a809ae7587ee556a9",
+    "fixtures/shared-v1/fixturekit.py": "1bd6d10ae7105a44a0d583a8974230dde56af603c6ed2b75f67fe3f1fb16319f",
+    "fixtures/shared-v1/golden.json": "9a42bcbb6950179931c07e3e4768e91859b873834687346ace8f96e32e047728",
+    "fixtures/shared-v1/manifest.json": "ac174ab690d5347aee2dd51b4bc99e3ca129bbb708599d5e36753d1427ee7a9e",
+    "fixtures/shared-v1/vectors.json": "0d60f635ccaa9535c05fc9ca98e9982c618fb86e70c50bdac56f230f3ab3d8ed",
+    "provenance.json": "935023b42be8beea96a9fa59283184cd365dbe5bda66edf2091ac1d968620251",
+    "tests/test_shared_fixtures.py": "c9ae3c50bd48a3bd082c451cc51ea8f9fcc518cd4ecb5c896996faca68711cb0",
+    "tools/shared_fixtures.py": "1e084182d0f2fba07cdb7720797145c14cf0f8f80fc9641965d4b296e474c66c"
+  },
+  "isolated_integration": "not_run",
+  "javascript_runtime_mapping": "not_implemented",
+  "live_acceptance": "not_run",
+  "recorded_at": "2026-11-13T18:48:05.470569+00:00",
+  "runtime": {
+    "node": "v26.13.0",
+    "python": "3.9.6"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "component": "console",
+  "composition_commit": "e8cd5779968fede213443db13a591c992cd0e183",
+  "origin_manifest_sha256": "1dd35d045064056dd66e6da3619ff100549e1c3e81c928f076cfd4109a524d81",
+  "schema": "runspindle.fixture.v1",
+  "subset_manifest_sha256": "ac174ab690d5347aee2dd51b4bc99e3ca129bbb708599d5e36753d1427ee7a9e"
+}

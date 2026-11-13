@@ -9,8 +9,8 @@ synthetic component tests, not a rendered console or desktop integration.
 `merge` validates a version-1 local observation, `refresh` calls an injected read
 adapter, and `view` calls only an injected passive-view adapter. No network or
 control adapter is supplied by this package. This version number does not establish
-an agreed cross-component protocol; root shared-contract review and consumer
-conformance remain outstanding.
+an agreed cross-component protocol; a [pinned Python fixture-consumer lane](SHARED_FIXTURES.md) is now available,
+but JavaScript runtime mapping and actual adapter conformance remain outstanding.
 
 The target requires task, host and workspace. Native session, browser, lease epoch,
 trace/span and exact sha256 artifact digest are optional for fleet-level projections;

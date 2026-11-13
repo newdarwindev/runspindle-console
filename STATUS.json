@@ -12,5 +12,8 @@
   "rendered_accessibility": "not_run",
   "runner_capacity": "unverified",
   "selected_source_migration": "partial",
+  "shared_fixture_evidence": "docs/local-shared-fixture-tests.json",
+  "shared_fixture_tests": "passed",
+  "shared_runtime_mapping": "not_implemented",
   "stage": "projection_candidate"
 }

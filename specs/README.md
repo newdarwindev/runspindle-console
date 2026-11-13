@@ -25,3 +25,10 @@ Synthetic component tests now cover a bounded process-local projection candidate
 See [implementation evidence](../docs/IMPLEMENTATION_EVIDENCE.md). Integration,
 rendered accessibility, live acceptance and restart/durability gates remain not run.
 The internal API is provisional and is not the cross-component wire protocol.
+
+## Engineering direction
+
+[Desired intent](desired-intent.md) connects this component to scoped access,
+managed sessions, explicit human exceptions and evaluated maintained workflows.
+It adds design and verification obligations without changing runtime schemas,
+existing acceptance results or operational permissions.

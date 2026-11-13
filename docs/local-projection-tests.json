@@ -25,7 +25,7 @@
   "durability": "not_implemented",
   "evidence_class": "synthetic_component",
   "files": {
-    "STATUS.json": "26667f89b87e8dc0f46221d69e10276b6ca91d321e90677fd407539c5561de06",
+    "STATUS.json": "c32ad04c74b8dfe9f45a6e0600f0a896ee5e0a6371f66f4502c44b2f9346022a",
     "component.json": "c84cd81eaf377c85e2dfc2a13a2674061fa4a1bcd86b243d1b3a19089ecc8e81",
     "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
     "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
@@ -37,10 +37,11 @@
   "github_ci": "not_run",
   "isolated_integration": "not_run",
   "live_acceptance": "not_run",
-  "recorded_at": "2026-11-13T18:40:39.867609+00:00",
+  "recorded_at": "2026-11-13T18:44:06.572261+00:00",
   "rendered_accessibility": "not_run",
   "runtime": {
     "node": "v26.13.0",
     "python": "3.9.6"
-  }
+  },
+  "source_parent_revision": "fc9d046c42c4dd2ed9660aea7b85c7f8bd4eec61"
 }

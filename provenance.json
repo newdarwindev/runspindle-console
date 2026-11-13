@@ -88,5 +88,13 @@
       "source_id": "SRC-013",
       "status": "adapted_document"
     }
-  ]
+  ],
+  "synthetic_fixture_bundle": {
+    "classification": "unchanged_original_synthetic_fixture_export",
+    "destination": "fixtures/shared-v1",
+    "pin": "fixtures/shared-v1.pin.json",
+    "runtime_qualification": "not_established",
+    "source_commit": "e8cd5779968fede213443db13a591c992cd0e183",
+    "source_repository": "newdarwindev/runspindle"
+  }
 }

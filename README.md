@@ -20,3 +20,8 @@ A dependency-free [projection candidate](src/projection.js) now has synthetic co
 Run `npm test`, `python3 tools/check_projection_mutations.py` and
 `python3 tools/check_scaffold.py` with Node 20+ and Python 3.
 See [implementation evidence and remaining gaps](docs/IMPLEMENTATION_EVIDENCE.md).
+
+The [pinned shared fixture subset](docs/SHARED_FIXTURES.md) can be verified and
+consumed in isolation with `python3 tools/shared_fixtures.py` and
+`python3 -m unittest discover -s tests -v`. This Python conformance lane is separate
+from JavaScript runtime mapping and the projection component tests.

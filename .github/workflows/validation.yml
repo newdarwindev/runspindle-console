@@ -17,5 +17,18 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Prepare exact retained producer source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: newdarwindev/runspindle-tether
+          ref: 670989839a0fccbcf2014d01609778ae6e4df424
+          path: local/retained-tether
+          persist-credentials: false
+      - name: Run required retained-store integration
+        env:
+          RUNSPINDLE_RETAINED_TETHER: ${{ github.workspace }}/local/retained-tether
+        run: node --test test/retained-snapshot.test.js
       - name: Run implemented validation
+        env:
+          RUNSPINDLE_RETAINED_TETHER: ${{ github.workspace }}/local/retained-tether
         run: python3 tools/validate.py

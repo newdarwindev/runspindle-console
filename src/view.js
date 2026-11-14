@@ -32,6 +32,7 @@ const VIEW_EVIDENCE = new Set([
   "synthetic_component",
   "isolated_integration",
   "live_acceptance",
+  "retained_local",
 ]);
 
 /** @param {unknown} value @param {number} [limit] @returns {string} */

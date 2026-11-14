@@ -2,7 +2,7 @@
 const ID_KEYS = ['task', 'host', 'workspace', 'nativeSession', 'browser', 'leaseEpoch', 'trace', 'span', 'artifactDigest'];
 const STATES = new Set(['online', 'offline', 'unknown', 'unsupported']);
 const AUTHORITY = new Set(['unknown', 'pending', 'denied', 'agent', 'human', 'handback_pending']);
-const EVIDENCE = new Set(['synthetic_component', 'isolated_integration', 'live_acceptance']);
+const EVIDENCE = new Set(['synthetic_component', 'isolated_integration', 'live_acceptance', 'retained_local']);
 
 function identity(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError('invalid identity');
@@ -76,6 +76,7 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
     if (update.observedAt !== null && (!Number.isSafeInteger(update.observedAt) || update.observedAt < 0)) return false;
     if (typeof update.label !== 'string' || update.label.length > 4096 || typeof update.simulated !== 'boolean') return false;
     if (update.simulated && update.evidenceClass !== 'synthetic_component') return false;
+    if (update.evidenceClass === 'retained_local' && (update.observedAt !== null || update.connection !== 'unknown' || update.authority !== 'unknown' || update.simulated || (update.viewUrl !== null && update.viewUrl !== undefined))) return false;
     if (record && (update.revision <= record.revision || (update.observedAt !== null && record.observedAt !== null && update.observedAt < record.observedAt))) return false;
     const gap = !snapshot && !!record && (record.gap || update.revision !== record.revision + 1);
     const previous = record;

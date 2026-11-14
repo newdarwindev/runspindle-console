@@ -38,3 +38,6 @@ existing acceptance results or operational permissions.
 [Read-only DOM surface](read-only-view.md) renders process-local projection fields. DOM-double tests pass; actual browser evidence remains blocked by the execution environment.
 
 [Synthetic task navigation](task-navigation.md) composes stream and read-only DOM with bounded catalog and History adapters; tests use explicit DOM/history doubles, not browser qualification.
+
+- [Retained local snapshot transport](retained-snapshot.md): pinned SQLite producer
+  readback, bounded Node transport, unknown freshness and no execution authority.

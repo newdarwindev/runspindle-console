@@ -1,0 +1,47 @@
+{
+  "evidence_class": "actual_retained_sqlite_local_process_transport_synthetic_producer_authority",
+  "base_revision": "aea203c9504bdc4141698b7343362ee29bed52c2",
+  "producer_revision": "670989839a0fccbcf2014d01609778ae6e4df424",
+  "producer_merge": "22546d6b414cb298a6ec60433505ef6cf7ca9883",
+  "passed": {
+    "node_tests": 52,
+    "python_tests": 11,
+    "optimized_python_tests": 11,
+    "new_node_tests": 11,
+    "new_python_tests": 4,
+    "aggregate": true,
+    "scaffold": true,
+    "changed_python_ruff_and_strict_mypy": true,
+    "new_js_eslint_format_and_no_new_type_diagnostics": true,
+    "behavioral_pin_mutation_detected": true,
+    "normal_optimized_export_bytes_identical": true
+  },
+  "limitations": [
+    "Main projection has existing strict TypeScript diagnostics; whole-repository strict gate is not claimed.",
+    "Trusted local historical records, not cryptographically authenticated or currently authorized state.",
+    "No current timestamps, live connection, native/browser identities, provider calls, view or execution permission.",
+    "No real browser, network service, production database, installed service or full Console acceptance."
+  ],
+  "not_run": [
+    "independent review",
+    "remote CI",
+    "live backend qualification"
+  ],
+  "source_sha256": {
+    "src/retained-snapshot.js": "f298fb5e8521cc5bfc881526667307fbb33a39280246e0891ef863b9ef636b71",
+    "src/projection.js": "6d679f093deeb856c198934a873f132eb3e425cb22b130b462a8876144649e88",
+    "src/view.js": "fce8176d3784c2f9fa2bd38c8ad18156ba08ed15e618ed1fc8d5e688f7093fdc",
+    "tools/retained_snapshot.py": "667681d89b8da629438286d74d1120a25ce6c00444903c1ee8d52b18d31e11e7",
+    "test/retained-snapshot.test.js": "a5936dbd648abe8a30c2807804a3aeda18b857cad1154ed8d117c4eca97fcfb4",
+    "test_support/retained_producer.py": "94772c87ff7fa1522c3c3b0ca3f94fa0f2915346b74db9f4ab4e5a3acde83f50",
+    "tests/test_retained_export.py": "3704749b46d2b1ed29121c81edd234c0c12d6d464eb827c52e18df548da45af4",
+    "dependencies/tether-snapshot.json": "257260454260680ace6786c6369a41febc6f8bc311d350b9ba36209d804fd654",
+    "specs/retained-snapshot.md": "052a2790249daf8b84eee16a589786edb8ebc570de32d95bf73210191875b282",
+    ".github/workflows/validation.yml": "93e2202178610df92ceb05667def09a79dd019c21e2cbaf2d4fc2ded2e5be482"
+  },
+  "commands": [
+    "RUNSPINDLE_RETAINED_TETHER=/prepared/exact-tether python3 tools/validate.py",
+    "RUNSPINDLE_RETAINED_TETHER=/prepared/exact-tether python3 -O -m unittest discover -s tests -v",
+    "MYPYPATH=/prepared/exact-tether:$PWD mypy --strict --explicit-package-bases --follow-imports=silent tools/retained_snapshot.py tests/test_retained_export.py test_support/retained_producer.py"
+  ]
+}

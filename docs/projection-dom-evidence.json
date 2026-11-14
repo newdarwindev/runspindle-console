@@ -5,13 +5,14 @@
   "source_sha256": {
     "src/view.js": "e72f490027567b3e6f26ecb5a5d1c30b365a25bcaadee5f1b1d95a6e0e0fa7a4",
     "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
-    "fixtures/console-ui/scenarios.js": "e5b4adf642906ea932e11abf693a13d180f2f2a8eba2ab2503872f0f1e44324b",
-    "test/view.test.js": "7a4272e6417ec65e06d227d57c2888e6753fe76933fdd3e1951bfa475470c7e0",
+    "fixtures/console-ui/scenarios.js": "ab43faf5d8451a1204fb892303b227e252d6e40b4e914c87bef057e590294ea1",
+    "test/view.test.js": "ced471082d60001b1ceb29b8746a4dc89f394a53842c90df24d657ee32229bbe",
     "test/view.assertions.js": "63e2a352cbdef045984957118479063c5b68be650926ea0cf7422f616257a4a5",
-    "test/view-mutation.test.js": "b2c22503d3f2a0b9493f9d4770726db1034f425ecef331adc13edd89cac2919c",
+    "test/view-mutation.test.js": "53b8c0eaec92958d6072d2325ef76476df0347e03d85fa0483e2e4398c67fb75",
     "tools/check_projection_dom.py": "2f865960cc29952dc24bc379f63d44ae17e4c6234c171c8e2a99892401a70393",
     "specs/read-only-view.md": "2efec3d80b4540aabfaaed88d00d2ae3db12d4a2a66f8f9a1318dfe6aeaa5856",
-    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627"
+    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
+    "test/dom-double.js": "353fcf34d78c1f7100ece03e7e9dc8251f1b4082c05d5b61f327cd241ff5b70c"
   },
   "toolchain": {
     "node": "v24.22.1",
@@ -23,11 +24,11 @@
     "python3 tools/check_projection_dom.py"
   ],
   "node_tests": {
-    "passed": 30,
+    "passed": 41,
     "failed": 0,
     "skipped": 0
   },
-  "mutation": "DOM_double_rejects_textContent_to_innerHTML",
+  "mutation": "duplicate_history_refused_admission_and_pending_success_mutants_each_rejected",
   "actual_dom": {
     "status": "blocked",
     "reason": "normal sandbox browser local IPC socket unavailable",
@@ -43,5 +44,6 @@
     3,
     6,
     10
-  ]
+  ],
+  "rerun_note": "Original DOM-double assertions rerun after extracting shared DOM double and extending canonical task catalog; no actual browser qualification."
 }

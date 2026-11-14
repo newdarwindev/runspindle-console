@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "base_commit": "4da9f550288dba8d491dc4eeeff0e060307d852a",
+  "evidence_class": "synthetic_component_dom_double",
+  "source_sha256": {
+    "src/view.js": "e72f490027567b3e6f26ecb5a5d1c30b365a25bcaadee5f1b1d95a6e0e0fa7a4",
+    "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
+    "fixtures/console-ui/scenarios.js": "e5b4adf642906ea932e11abf693a13d180f2f2a8eba2ab2503872f0f1e44324b",
+    "test/view.test.js": "7a4272e6417ec65e06d227d57c2888e6753fe76933fdd3e1951bfa475470c7e0",
+    "test/view.assertions.js": "63e2a352cbdef045984957118479063c5b68be650926ea0cf7422f616257a4a5",
+    "test/view-mutation.test.js": "b2c22503d3f2a0b9493f9d4770726db1034f425ecef331adc13edd89cac2919c",
+    "tools/check_projection_dom.py": "2f865960cc29952dc24bc379f63d44ae17e4c6234c171c8e2a99892401a70393",
+    "specs/read-only-view.md": "2efec3d80b4540aabfaaed88d00d2ae3db12d4a2a66f8f9a1318dfe6aeaa5856",
+    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627"
+  },
+  "toolchain": {
+    "node": "v24.22.1",
+    "chromium_attempted": "156.0.8078.79"
+  },
+  "commands": [
+    "npm test",
+    "python3 tools/validate.py",
+    "python3 tools/check_projection_dom.py"
+  ],
+  "node_tests": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "mutation": "DOM_double_rejects_textContent_to_innerHTML",
+  "actual_dom": {
+    "status": "blocked",
+    "reason": "normal sandbox browser local IPC socket unavailable",
+    "command_exit": 78,
+    "browser_exit": -6
+  },
+  "actual_dom_mutation": "not_run",
+  "visual_accessibility_acceptance": "not_run",
+  "real_backend": "not_implemented",
+  "native_live": "not_run",
+  "issues_remain_open": [
+    1,
+    3,
+    6,
+    10
+  ]
+}

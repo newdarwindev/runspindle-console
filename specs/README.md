@@ -34,3 +34,5 @@ It adds design and verification obligations without changing runtime schemas,
 existing acceptance results or operational permissions.
 
 [Bounded stream coordination](stream-coordination.md) adds process-local subscription/snapshot race handling; real runtime transports and UI acceptance remain unverified.
+
+[Read-only DOM surface](read-only-view.md) renders process-local projection fields. DOM-double tests pass; actual browser evidence remains blocked by the execution environment.

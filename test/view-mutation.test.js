@@ -23,6 +23,7 @@ test("DOM-double suite rejects unsafe innerHTML mutation (not browser evidence)"
       "fixtures/console-ui/scenarios.js",
       "test/view.assertions.js",
       "test/view.test.js",
+      "test/dom-double.js",
     ]) {
       let source = readFileSync(join(root, file), "utf8");
       if (file === "src/view.js") {

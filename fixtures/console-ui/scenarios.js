@@ -34,3 +34,16 @@ export const consoleScenarios = Object.freeze({
     "ready",
   ]),
 });
+
+export const consoleTaskCatalog = Object.freeze(
+  ["a", "b"].map((key) =>
+    Object.freeze({
+      key,
+      label: `Synthetic task ${key}`,
+      identity: Object.freeze({
+        ...consoleScenarios.identity,
+        task: `task-${key}`,
+      }),
+    }),
+  ),
+);

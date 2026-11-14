@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "evidence_class": "synthetic_component",
+  "base_commit": "d89ce7efd3545ba78e25452383ee88bc4c59e48f",
+  "source_sha256": {
+    "src/stream.js": "b1e66d61232de06765c48e832273a1d757f1f128fd4b94210612f92b1a9a3f47",
+    "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
+    "test/stream.test.js": "ab6cc2fcddfea6b7e3551ea21b2479af58c2fba31f5b611fa04d387128a99ea0",
+    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
+    "specs/stream-coordination.md": "f12698c3eb3c3424207f77d2648f01c85a6192b52b916fbfad9ac27281ee2cd1"
+  },
+  "toolchain": {
+    "node": "v24.22.1"
+  },
+  "commands": [
+    "npm test",
+    "python3 tools/validate.py"
+  ],
+  "node_tests": {
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0
+  },
+  "mutation": "disabled_buffer_bound_fails_overflow_status_assertion",
+  "boundaries": {
+    "runtime_backend": "not_implemented",
+    "shared_wire_mapping": "not_implemented",
+    "ui_accessibility": "not_run",
+    "server_view_revocation": "not_run",
+    "durability": "not_implemented",
+    "github_ci": "not_run"
+  },
+  "issues": [
+    1,
+    3,
+    9
+  ]
+}

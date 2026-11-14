@@ -21,8 +21,18 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Prepare exact retained producer source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: newdarwindev/runspindle-tether
+          ref: 670989839a0fccbcf2014d01609778ae6e4df424
+          path: local/retained-tether
+          persist-credentials: false
       - id: partition
         name: Run quality partition
+        env:
+          RUNSPINDLE_RETAINED_TETHER: ${{ github.workspace }}/local/retained-tether
+          MYPYPATH: ${{ github.workspace }}/local/retained-tether:${{ github.workspace }}
         run: python3 tools/partition_validation.py quality --output "$GITHUB_OUTPUT"
   component:
     name: validation / component
@@ -34,8 +44,17 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Prepare exact retained producer source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: newdarwindev/runspindle-tether
+          ref: 670989839a0fccbcf2014d01609778ae6e4df424
+          path: local/retained-tether
+          persist-credentials: false
       - id: partition
         name: Run component partition
+        env:
+          RUNSPINDLE_RETAINED_TETHER: ${{ github.workspace }}/local/retained-tether
         run: python3 tools/partition_validation.py component --output "$GITHUB_OUTPUT"
   rust:
     name: validation / rust

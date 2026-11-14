@@ -13,6 +13,19 @@
       "timeout_seconds": 300
     },
     {
+      "id": "retained-source",
+      "command": [
+        "python3",
+        "tools/check_retained_source.py"
+      ],
+      "required_files": [
+        "tools/check_retained_source.py",
+        "tools/retained_snapshot.py",
+        "dependencies/tether-snapshot.json"
+      ],
+      "timeout_seconds": 60
+    },
+    {
       "id": "static-quality",
       "command": [
         "python3",
@@ -88,6 +101,20 @@
     {
       "id": "distributable-build",
       "not_applicable": "No distributable build command exists in this repository validation contract; this does not claim release acceptance."
+    },
+    {
+      "id": "retained-snapshot-integration",
+      "command": [
+        "node",
+        "--test",
+        "test/retained-snapshot.test.js"
+      ],
+      "required_files": [
+        "test/retained-snapshot.test.js",
+        "test_support/retained_producer.py",
+        "dependencies/tether-snapshot.json"
+      ],
+      "timeout_seconds": 300
     }
   ],
   "lockfiles": [

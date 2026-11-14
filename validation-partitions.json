@@ -13,6 +13,7 @@
   "partitions": {
     "quality": [
       "scaffold",
+      "retained-source",
       "static-quality",
       "repository-hygiene"
     ],
@@ -20,7 +21,8 @@
       "check-artifacts",
       "python-tests",
       "javascript-tests",
-      "distributable-build"
+      "distributable-build",
+      "retained-snapshot-integration"
     ],
     "rust": [],
     "mutation_1": [

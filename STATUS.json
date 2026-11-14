@@ -20,5 +20,7 @@
   "shared_runtime_mapping": "not_implemented",
   "stage": "projection_candidate",
   "stream_coordination": "partial_process_local_synthetic_component",
-  "stream_evidence": "docs/stream-coordination-evidence.json"
+  "stream_evidence": "docs/stream-coordination-evidence.json",
+  "task_navigation": "partial_synthetic_dom_history_shell",
+  "task_navigation_evidence": "docs/task-navigation-evidence.json"
 }

@@ -1,0 +1,246 @@
+{
+  "acceptance_status": "blocked_visual_review",
+  "artifact": "vision.html",
+  "build": {
+    "command": "python3 tools/check_vision.py --output /tmp/runspindle-vision-build",
+    "dependencies": "Python standard library for validation/copy only; browser for rendering; no package installation",
+    "mode": "standalone_html_no_compilation"
+  },
+  "canonical_path": "docs/product/vision.html",
+  "canonical_repository": "newdarwindev/runspindle-console",
+  "classification": "reviewed_adapted_static_document",
+  "executable_runtime_implementation": "none",
+  "historical_original_republished": false,
+  "mirror_path": "docs/marketing/vision.html",
+  "mirror_repository": "newdarwindev/runspindle",
+  "navigation": [
+    {
+      "destination": "index.html",
+      "disposition": "replaced",
+      "id": "historical-demo",
+      "review_decision": "Local overview exists; explicitly identified as design document, not interactive demo.",
+      "source_role": "Back to interactive demo"
+    },
+    {
+      "destination": "#materials",
+      "disposition": "unavailable",
+      "id": "historical-white-paper",
+      "review_decision": "Separate selected artifact scope; not required to render this page. No PDF copied or historical build claim transferred.",
+      "source_role": "Read white paper PDF"
+    },
+    {
+      "destination": "#materials",
+      "disposition": "unselected_excluded",
+      "id": "historical-presentation",
+      "review_decision": "Unselected navigational resource, not dependency. Neither fetched nor imported; displayed as unavailable text without broken link.",
+      "source_role": "View presentation PDF"
+    }
+  ],
+  "overall_selected_source_migration": "partial",
+  "rendering_assets": [
+    {
+      "disposition": "replaced",
+      "id": "inline-css",
+      "review_decision": "Original responsive cards and hierarchy adapted in new inline CSS; system fonts, explicit focus, semantic landmarks and responsive flow. No external font or package dependency.",
+      "type": "inline_stylesheet"
+    },
+    {
+      "disposition": "not_present",
+      "id": "diagrams",
+      "review_decision": "The selected page contains no diagram, image, SVG, canvas or embedded figure; do not import figures from separately selected papers.",
+      "source_count": 0,
+      "type": "diagram_or_figure"
+    },
+    {
+      "disposition": "not_present",
+      "id": "scripts",
+      "review_decision": "No scripts, forms or runtime controls in the source or adaptation.",
+      "source_count": 0,
+      "type": "script"
+    },
+    {
+      "disposition": "not_present",
+      "id": "external-rendering-assets",
+      "review_decision": "No stylesheets, images, fonts or embedded documents are fetched for rendering.",
+      "source_count": 0,
+      "type": "linked_rendering_dependency"
+    }
+  ],
+  "rights_review": {
+    "copyright": "Copyright (c) 2026 newdarwindev",
+    "decision": "Selected page and exact notice reviewed; adaptation permitted subject to retained notice. No blanket relicense.",
+    "license": "MIT",
+    "notice": "LICENSE-SRC-010.txt",
+    "privacy": "Selected synthetic narrative has no private operational snapshots, personal data or credentials. Only reviewed adaptation and cleared metadata included."
+  },
+  "schema_version": 1,
+  "scope_accounting": "complete",
+  "sections": [
+    {
+      "destination": "header",
+      "disposition": "adapted",
+      "id": "hero",
+      "review_decision": "Adapted human-guided premise; explicitly static design, not deployed capability.",
+      "source_unit": "Header title, exploratory subtitle and public-concept badge"
+    },
+    {
+      "destination": "#premise",
+      "disposition": "adapted",
+      "id": "premise",
+      "review_decision": "Adapted to immutable output feedback and separate collection authority.",
+      "source_unit": "Lead opt-in, dataset, comparison and approval premise"
+    },
+    {
+      "destination": "header .badge",
+      "disposition": "adapted",
+      "id": "limits",
+      "review_decision": "Retained as no live service, collection, provider calls, training or external actions.",
+      "source_unit": "Capability disclaimer and invented-example boundary"
+    },
+    {
+      "destination": "#domains",
+      "disposition": "adapted",
+      "id": "domains-internal",
+      "review_decision": "Retained research examples with source permission and acceptance boundaries.",
+      "source_unit": "Internal work card"
+    },
+    {
+      "destination": "#domains",
+      "disposition": "adapted",
+      "id": "domains-orchestration",
+      "review_decision": "Retained proposed routing research; no automatic schedules or account access.",
+      "source_unit": "Agent coordination card"
+    },
+    {
+      "destination": "#domains",
+      "disposition": "adapted",
+      "id": "domains-external",
+      "review_decision": "Retained research domains; separates research from communications and commitments.",
+      "source_unit": "External work card"
+    },
+    {
+      "destination": "#domains",
+      "disposition": "adapted",
+      "id": "human-constraints",
+      "review_decision": "Retained human, legal, relational and physical constraints.",
+      "source_unit": "Limits of the all-work-as-compute thesis"
+    },
+    {
+      "destination": "#select",
+      "disposition": "adapted",
+      "id": "loop-select",
+      "review_decision": "Workflow owner, boundary, intended use, budget, target bindings and stop conditions.",
+      "source_unit": "Refinement step 1: select and authorize"
+    },
+    {
+      "destination": "#review",
+      "disposition": "adapted",
+      "id": "loop-review",
+      "review_decision": "Review before dataset entry; immutable output identity and quarantined conflicts.",
+      "source_unit": "Refinement step 2: review and redact"
+    },
+    {
+      "destination": "#gold",
+      "disposition": "adapted",
+      "id": "loop-gold",
+      "review_decision": "Versioned, adjudicated grouped splits; gold eligibility separate from serving approval.",
+      "source_unit": "Refinement step 3: golden dataset"
+    },
+    {
+      "destination": "#candidates",
+      "disposition": "adapted",
+      "id": "loop-candidates",
+      "review_decision": "Fixed baseline and evaluation set; program/model/dataset/metric revisions.",
+      "source_unit": "Refinement step 4: choose candidates"
+    },
+    {
+      "destination": "#evaluate",
+      "disposition": "adapted",
+      "id": "loop-evaluate",
+      "review_decision": "Quality, cost, latency, safety, uncertainty, exclusions and no cheaper-but-unsafe promotion.",
+      "source_unit": "Refinement step 5: evaluate"
+    },
+    {
+      "destination": "#approve",
+      "disposition": "adapted",
+      "id": "loop-approve",
+      "review_decision": "Exact digests; evaluated, approved, promoted and serving remain distinct.",
+      "source_unit": "Refinement step 6: human approval"
+    },
+    {
+      "destination": "#rollback",
+      "disposition": "adapted",
+      "id": "loop-rollback",
+      "review_decision": "Separate release authority, monitoring, recovery and uncertain-effect reconciliation.",
+      "source_unit": "Refinement step 7: rollback"
+    },
+    {
+      "destination": "#hypotheses",
+      "disposition": "adapted",
+      "id": "hypothesis-1",
+      "review_decision": "Retained as unproven research hypothesis.",
+      "source_unit": "Smaller-model quality hypothesis"
+    },
+    {
+      "destination": "#hypotheses",
+      "disposition": "adapted",
+      "id": "hypothesis-2",
+      "review_decision": "Retained as unproven research hypothesis.",
+      "source_unit": "Adjudicated dataset hypothesis"
+    },
+    {
+      "destination": "#hypotheses",
+      "disposition": "adapted",
+      "id": "hypothesis-3",
+      "review_decision": "Retained as unproven research hypothesis.",
+      "source_unit": "Versioning, approval and rollback hypothesis"
+    },
+    {
+      "destination": "#hypotheses",
+      "disposition": "adapted",
+      "id": "simulation-warning",
+      "review_decision": "Retained warning; no historical numbers imported.",
+      "source_unit": "Simulated figures; no measured outcomes"
+    },
+    {
+      "destination": "#materials",
+      "disposition": "adapted",
+      "id": "materials",
+      "review_decision": "Replaced historical build claims with this standalone artifact status, MIT notice, validation and explicit unavailable navigation.",
+      "source_unit": "Source and generated materials section, build claim and fine print"
+    }
+  ],
+  "source_id": "SRC-010",
+  "source_identity": "Exact original revision, selected path and original hashes retained in restricted source mapping; no private source identifiers published.",
+  "source_inventory": {
+    "external_rendering_assets": 0,
+    "figures": 0,
+    "inline_stylesheets": 1,
+    "navigation_links": 3,
+    "scripts": 0,
+    "sections": 4
+  },
+  "supplemental_sections": [
+    {
+      "decision": "Retain existing supplemental accounting concepts; broader source migration remains partial.",
+      "destination": "#economics",
+      "source_ids": [
+        "SRC-005"
+      ]
+    },
+    {
+      "decision": "Retain release-gate context and add original console evidence/freshness requirements; no additional historical material imported.",
+      "destination": "#evidence",
+      "source_ids": [
+        "SRC-013"
+      ]
+    }
+  ],
+  "unresolved_acceptance": [
+    "Actual desktop and narrow/mobile render review",
+    "Actual keyboard navigation and visible focus review",
+    "Actual 200 percent browser zoom and clipping review"
+  ],
+  "validation_record": "SRC-010-validation.md",
+  "verified_product_behavior": "not_established"
+}

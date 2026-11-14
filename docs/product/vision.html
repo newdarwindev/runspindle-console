@@ -1,1 +1,81 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Runspindle Refinery</title><style>body{max-width:72rem;margin:auto;padding:3rem 1.5rem;font:18px/1.65 system-ui;color:#183247;background:#f7fafc}h1{font-size:3rem;line-height:1.1}h2{line-height:1.25;margin-top:2.6rem}p{max-width:78ch}.badge{color:#6b3600;background:#fff0d3;padding:1rem;border-radius:.6rem}a{color:#075985}nav{display:flex;gap:1rem;flex-wrap:wrap}footer{border-top:1px solid #b8c8d2;margin-top:3rem;padding-top:1rem}</style><body><nav><a href="index.html">Overview</a><a href="browser.html">Browser</a><a href="vision.html">Refinery</a></nav><main><h1>Runspindle Refinery</h1><p class="badge">Design scaffold. Integrations and deployments are planned. No measured savings or live fleet is claimed.</p><section><h2>Refinement without default collection</h2><p>The proposed refinery begins only with an explicitly selected workflow and authorized examples. Review and redaction precede dataset entry. Dataset versions should retain source permission, adjudication, group identifiers, and stable train, validation, and held-out splits. Related examples must remain in the same split to reduce leakage. Proposed feedback records would bind attributable reactions or replies to the exact output and its version. Task-specific automatic gold rules may admit examples only under explicit criteria; conflicting signals must be quarantined for adjudication. Gold eligibility is separate from candidate release approval.</p><p>Python DSPy candidates would be compared with a baseline under a fixed task definition and evaluation budget. Quality, safety failures, latency, human repair, and total cost belong in the comparison. Experiments cannot promote themselves. A versioned release needs threshold evidence, human authorization, and a rollback reference. No live collection, provider invocation, training, promotion, or saving is claimed.</p></section><section><h2>Economics of accepted work</h2><p>Cost per accepted authorized task is total model, tool, human, verification, maintenance, and recovery cost divided by the number of verified authorized completions. Include failed attempts and cleanup in the numerator. If there are no accepted completions, report the cost and zero completions rather than a misleading unit price.</p><p>A specialist system also has fixed integration and evaluation costs. Low-volume workflows may remain cheaper with manual assistance. Break-even depends on measured workload mix, acceptance rate, maintenance cadence, and labor assumptions. Saved minutes do not automatically become cash savings. Provider improvements may remove the advantage of a custom harness, so repeat comparisons after material model or platform changes. Runspindle has no measured savings, prices, break-even point, or market-size estimate.</p></section><section><h2>Evaluation and release gates</h2><p>Development validation should test contracts and synthetic fixtures first: lease fencing, isolation, duplicate requests, restart recovery, permission changes, cancellation, stream revocation, and unknown external outcomes. Integration tests then need pinned component versions and permissioned environments. No source repository&#x27;s historical test result transfers automatically to the new system.</p><p>Production readiness requires independently evidenced secrets management, authenticated routing, monitoring, rollback, dependency review, and operator acceptance. Packaging a manifest is not deployment; a passing stub test is not proof of a live system. Development and production deployment remain planned. The distribution must fail closed when prerequisites or authorization are missing.</p></section><section><h2>Claims, sources, and open questions</h2><p>This migration adapts selected concepts under opaque source identifiers SRC-002, SRC-013, and SRC-009. These are partial migrations and newly written adaptations, not faithful re-renders. Historical PDFs are preserved separately and are not Runspindle builds. Detailed source provenance and review records are kept outside the public candidate. Source selection does not establish a new project license or third-party endorsement.</p><p>The next useful evidence is a reproducible, permissioned end-to-end task that traverses the component boundaries and demonstrates recovery from an uncertain result. Until then, the materials describe a research and engineering plan. Open questions include native session integration, browser lifecycle compatibility, least-privilege secret delivery, evaluation validity, release reproducibility, and operational cost.</p></section></main><footer>Runspindle design materials. Source concepts: SRC-002, SRC-013, SRC-009. Historical artifacts are not new builds. Third-party products retain their own names and licenses.</footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runspindle Refinery | Human-guided workflow evaluation</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#183247;background:#f7fafc;font-size:18px;line-height:1.65}
+*{box-sizing:border-box}body{margin:0}header,main,footer{max-width:72rem;margin:auto;padding:2rem 1.5rem}header{padding-bottom:0}
+a{color:#075985;text-underline-offset:.2em;overflow-wrap:anywhere}a:focus-visible,[tabindex]:focus-visible{outline:3px solid #9a3412;outline-offset:5px}
+.skip{display:block;width:fit-content;margin-bottom:1rem}nav{display:flex;gap:1rem;flex-wrap:wrap}nav a{padding:.4rem 0}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15;max-width:24ch}h2{line-height:1.25;margin-top:0}h3{line-height:1.35}p,li{max-width:80ch}section{border-bottom:1px solid #b8c8d2;padding:2rem 0}section:first-child{padding-top:0}
+.badge,.note{padding:1rem 1.2rem;border-radius:.5rem}.badge{background:#fff0d3;color:#623000}.note{background:#e6f0f7;border-left:4px solid #075985}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.card{padding:1rem;background:white;border:1px solid #b8c8d2;border-radius:.5rem}.card h3{margin-top:0}
+.steps{padding-left:1.6rem}.steps li{padding:0 0 1rem .4rem}.steps h3{margin:.2rem 0}.steps p{margin:.3rem 0}.eyebrow{font-weight:700;font-size:.85rem;letter-spacing:.07em}
+footer{padding-top:1rem;font-size:.9rem}main{padding-top:2rem}section[id]{scroll-margin-top:1rem}@media(max-width:48rem){.grid{grid-template-columns:1fr}header,main,footer{padding-left:1rem;padding-right:1rem}}@media print{a{color:inherit}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+<a class="skip" href="#main">Skip to content</a>
+<nav aria-label="Product documents"><a href="index.html">Overview</a><a href="browser.html">Browser</a><a href="vision.html" aria-current="page">Refinery vision</a></nav>
+<p class="eyebrow">REVIEWED DESIGN ADAPTATION · SRC-010</p>
+<h1>Human-guided workflow evaluation</h1>
+<p>Turn one explicitly authorized, repeatable workflow into a testable candidate. Keep its owner, evidence and permission boundary visible from selection through rollback.</p>
+<p class="badge"><strong>Design narrative, not a live service.</strong> This static page runs no collection, orchestration, provider calls, training, promotion or external action. It contains no live fleet, customer outcomes, measured savings or production benchmarks.</p>
+</header>
+<main id="main" tabindex="-1">
+<section id="premise" aria-labelledby="premise-heading">
+<h2 id="premise-heading">Refinement without default collection</h2>
+<p>The proposal is a reviewed second layer around agent-assisted work: select a bounded pattern only after its owner opts in, curate representative examples, compare programs and model choices, then seek separate approval for any release. Narrower implementations might reduce total cost while preserving delivery quality. That is a hypothesis to test, not a promised result.</p>
+<p>Console would display attributable evidence. Tether would bind feedback to an immutable output ID, revision and digest; an edit creates a new output version rather than silently moving earlier feedback. Refinery would consume only separately authorized, reviewed examples. Reading a message, an operator correction or a successful task does not automatically authorize dataset collection.</p>
+</section>
+<section id="domains" aria-labelledby="domains-heading">
+<h2 id="domains-heading">Where the idea might apply</h2>
+<div class="grid">
+<article class="card"><h3>Repeatable assistance</h3><p>Opted-in support triage, document tagging or meeting summaries could be narrowly scoped experiments. Source permission, redaction and acceptance criteria come first.</p></article>
+<article class="card"><h3>Agent coordination</h3><p>Task-routing patterns could be compared under explicit review. Repetition does not create a schedule, a new credential grant or permission to control another session.</p></article>
+<article class="card"><h3>Opportunity research</h3><p>Job, contract or consulting research are possible domains. Reading and evaluating are distinct from contacting someone, submitting a proposal or making a commitment, each of which needs its own authority.</p></article>
+</div>
+<p>Not all work reduces to compute. Human judgment, relationships, legal duties and physical work remain constraints. These domains are examples of research questions, not connected applications.</p>
+</section>
+<section id="refinement-loop" aria-labelledby="loop-heading">
+<h2 id="loop-heading">The controlled refinement loop</h2>
+<p>The seven stages describe intended requirements. They are not controls that this page can execute.</p>
+<ol class="steps">
+<li id="select"><h3>Select and authorize</h3><p>Define one workflow, its owner, permitted inputs and effects, target account/session bindings, intended use, budget and stop conditions. A scope change needs fresh authorization; feedback cannot expand it.</p></li>
+<li id="review"><h3>Review and redact</h3><p>Check source permission and remove sensitive material before any dataset entry. Preserve the immutable output identity, provenance and explicit exclusions. Quarantine conflicting or uncertain feedback instead of treating it as consent or truth.</p></li>
+<li id="gold"><h3>Curate a golden dataset</h3><p>Label representative cases, record adjudication and version the dataset. Keep related examples in the same stable train, validation or held-out split. Task-specific gold rules may admit examples only under explicit criteria. <strong>Gold eligibility is separate from serving approval.</strong></p></li>
+<li id="candidates"><h3>Choose candidates</h3><p>Compare a baseline with bounded DSPy program configurations and smaller-model options on the same task definition and evaluation set. Pin program, model, dataset and metric revisions. Choosing a candidate grants no provider budget or release authority.</p></li>
+<li id="evaluate"><h3>Evaluate</h3><p>Measure quality, safety failures, latency, total cost, human repair and uncertainty. Report sample sizes, exclusions, units and held-out results. A cheaper candidate must not advance below an agreed quality or safety threshold; missing evidence stays missing.</p></li>
+<li id="approve"><h3>Obtain human approval</h3><p>Present evidence and risks for the exact candidate and artifact digests. Evaluation passed, approved, promoted and serving are different facts. Approval must identify the permitted scope and rollback reference; experiments cannot promote themselves.</p></li>
+<li id="rollback"><h3>Monitor and roll back</h3><p>For a separately authorized release, observe its approved scope and metrics. Stop or restore the prior approved revision when a gate fails, and reconcile uncertain effects before retrying. The existence of a rollback plan is not proof that recovery works.</p></li>
+</ol>
+</section>
+<section id="hypotheses" aria-labelledby="hypotheses-heading">
+<h2 id="hypotheses-heading">Testable hypotheses</h2>
+<ul><li><strong>H1:</strong> Some bounded workflows may use smaller models without unacceptable quality loss.</li><li><strong>H2:</strong> Adjudicated golden datasets may improve repeatability and reveal errors.</li><li><strong>H3:</strong> Versioned artifacts, explicit approval and tested rollback may make experiments easier to govern.</li></ul>
+<p>Each needs permissioned evaluation. Historical demo numbers were simulated; they do not establish Runspindle performance. No numerical result or historical success claim is imported here.</p>
+</section>
+<section id="evidence" aria-labelledby="evidence-heading">
+<h2 id="evidence-heading">Truthful console evidence</h2>
+<p>Keep <strong>planned, stub, synthetic, component, isolated integration and live acceptance</strong> distinct. A static page review proves document behavior only. It does not qualify a console runtime, desktop integration, restart recovery or production release.</p>
+<p>A future operator view must show observation time, source, sequence, revision and freshness policy. An unavailable or stale feed is <strong>unknown</strong>, never an automatic live/healthy badge. Requested, acknowledged, observed terminal, validated and delivered states remain separate. Rendering a control or account label does not enforce backend permission or lease fencing.</p>
+<p>Read the canonical repository's <a href="https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json">current implementation status</a> and <a href="https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md">component evidence</a> separately. No historical test result transfers to Runspindle.</p>
+</section>
+<section id="economics" aria-labelledby="economics-heading">
+<h2 id="economics-heading">Economics of accepted work</h2>
+<p>Divide total model, tool, human, verification, maintenance and recovery cost, including failed attempts, by verified authorized completions. With zero accepted completions, report cost and zero completions rather than a misleading unit price.</p>
+<p>Fixed integration and evaluation costs can outweigh gains on low-volume tasks. Saved minutes are not automatically cash savings. Repeat comparisons when workload, model or platform changes. This design asserts no measured price, savings or break-even point.</p>
+</section>
+<section id="materials" aria-labelledby="materials-heading">
+<h2 id="materials-heading">Source and materials navigation</h2>
+<p>This is the canonical Console adaptation of selected artifact <strong>SRC-010</strong>. Its hero, research domains, seven stages, hypotheses, limitations and navigation are accounted for in the <a href="SRC-010-lift.json">section and asset disposition map</a>. Supplemental economics and release-boundary concepts retain SRC-005 and SRC-013 attribution; their broader migrations remain partial.</p>
+<ul><li>The historical interactive-demo link is replaced by this directory's <a href="index.html">Runspindle overview</a>, a design document rather than an interactive demo.</li><li><strong>Historical white paper: unavailable from this page.</strong> Its separate artifact lift is not a dependency of this standalone page; no historical PDF is presented as a new build.</li><li><strong>Historical presentation: unavailable and unselected.</strong> It was navigation only, not a rendering asset. No presentation content is imported.</li></ul>
+<p>Review the <a href="SRC-010-validation.md">validation record and reproduction commands</a>, <a href="THIRD_PARTY_NOTICES.md">source notices</a> and <a href="LICENSE-SRC-010.txt">retained SRC-010 MIT notice</a>. Historical source hashes and detailed mapping stay in restricted records; public metadata contains no private operational evidence.</p>
+</section>
+</main>
+<footer>Runspindle design materials. Adapted narrative: SRC-010. Supplemental concepts: SRC-005, SRC-013. Copyright (c) 2026 newdarwindev for SRC-010 material, under its retained MIT notice. No blanket license, product endorsement or live capability is implied.</footer>
+</body>
+</html>

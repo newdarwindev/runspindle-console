@@ -1,4 +1,5 @@
 {
+  "actual_dom_tests": "blocked_environment",
   "component_tests": "passed",
   "desktop_integration": "not_implemented",
   "dev_deployment": "not_run",
@@ -9,6 +10,8 @@
   "legacy_archival": "not_started",
   "live_acceptance": "not_run",
   "production_deployment": "not_run",
+  "projection_dom": "partial_read_only_surface",
+  "projection_dom_evidence": "docs/projection-dom-evidence.json",
   "rendered_accessibility": "not_run",
   "runner_capacity": "unverified",
   "selected_source_migration": "partial",

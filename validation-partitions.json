@@ -22,8 +22,11 @@
       "distributable-build"
     ],
     "rust": [],
-    "mutation": [
+    "mutation_1": [
       "check-projection-mutations"
-    ]
+    ],
+    "mutation_2": [],
+    "mutation_3": [],
+    "mutation_4": []
   }
 }

@@ -32,3 +32,5 @@ The internal API is provisional and is not the cross-component wire protocol.
 managed sessions, explicit human exceptions and evaluated maintained workflows.
 It adds design and verification obligations without changing runtime schemas,
 existing acceptance results or operational permissions.
+
+[Bounded stream coordination](stream-coordination.md) adds process-local subscription/snapshot race handling; real runtime transports and UI acceptance remain unverified.

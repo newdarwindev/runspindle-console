@@ -59,6 +59,22 @@
       "timeout_seconds": 300
     },
     {
+      "id": "check-vision",
+      "command": [
+        "python3",
+        "tools/check_vision.py"
+      ],
+      "required_files": [
+        "tools/check_vision.py",
+        "docs/product/vision.html",
+        "docs/product/artifacts.json",
+        "docs/product/LICENSE-SRC-010.txt",
+        "docs/product/SRC-010-lift.json",
+        "docs/product/SRC-010-validation.md"
+      ],
+      "timeout_seconds": 300
+    },
+    {
       "id": "check-projection-mutations",
       "command": [
         "python3",

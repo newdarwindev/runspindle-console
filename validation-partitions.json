@@ -19,6 +19,7 @@
     ],
     "component": [
       "check-artifacts",
+      "check-vision",
       "python-tests",
       "javascript-tests",
       "distributable-build",

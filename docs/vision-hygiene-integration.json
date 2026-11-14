@@ -1,0 +1,57 @@
+{
+  "candidate_identity": "The local verification receipt records exact commit, tree and observed source identity; these source records do not certify future revisions.",
+  "canonical_source": "4737f8a37d5cd837ec52377adefd687ebd597383",
+  "evidence_class": "local_static_vision_hygiene_integration",
+  "hygiene_base": "42eb2ec444be1fa0e75c6c48b77d7fd2326a8139",
+  "integration_changes": [
+    "Retained the existing manifest-driven hygiene dispatcher when resolving the merge.",
+    "Added check-vision as a required component-partition check; no existence skip.",
+    "Removed the scaffold nested artifact call. The required artifact checker remains assigned and executed exactly once.",
+    "Formatted the scaffold without changing its existing structural assertions. Added three integration regressions."
+  ],
+  "merged_main": "08d8c77952ae23e27f3593da887ca39244da7758",
+  "passed": {
+    "existing_static_debt": 117,
+    "full_hygiene_inventory": true,
+    "mandatory_artifact_checker_executions": 1,
+    "mandatory_vision_checker_executions": 1,
+    "node_tests": 52,
+    "optimized_python_tests": 96,
+    "python_skips": 0,
+    "python_tests": 96,
+    "static_quality_new_diagnostics": 0
+  },
+  "preserved_boundaries": [
+    "All existing workflows and image/source dependency pins remain byte-identical or semantically unchanged where the new check was assigned.",
+    "The static-quality baseline is byte-identical. No new diagnostic allowance.",
+    "Canonical vision artifact, notice, source map, validation record and original checker/tests are byte-identical to merged main.",
+    "Existing retained-source and other immutable evidence records are unchanged."
+  ],
+  "preserved_canonical_sha256": {
+    "docs/product/LICENSE-SRC-010.txt": "fcf64df3e04554728cc4f082f244fa3dc672c2c6368f22360e6491a113204895",
+    "docs/product/SRC-010-lift.json": "80e4fbae10af2b29b9712cfc3c4754bda32266f5597940244ed9b998afa40e0d",
+    "docs/product/SRC-010-validation.md": "d551d121efb1525d8a73ef2f73099935ad9092c4f3ec38cb20a438debe20bb6b",
+    "docs/product/artifacts.json": "52017a9039d1132994af29791c422d7a859dbe9b6f7d0ec46e22375ca1869c1f",
+    "docs/product/vision.html": "39a546f71fce360129b06e4978c589769d79b19a05d14917066dadf0816d41e7",
+    "tests/test_vision.py": "52144c9fbbb73f58a8c0c0fd6c3783f710ee8415363cbab5ad50e9ccae5bb5be",
+    "tools/check_vision.py": "d656bd3e88f6ef63276e1e07d2b15bc2b2794a3f94bc5ff36a5170f131d5e7ea"
+  },
+  "remaining_gates": {
+    "issue_2": "open",
+    "native_image_qualification": "not_run",
+    "remote_ci_for_this_tree": "not_run",
+    "runtime_acceptance": "not_run",
+    "selected_source_migration": "partial",
+    "visual_keyboard_zoom": "blocked"
+  },
+  "runtime_requirements": "Use the already provisioned pinned Python quality environment and Node tool closure. The verifier never installs them.",
+  "schema_version": 1,
+  "source_id": "SRC-010",
+  "verification_commands": [
+    "RUNSPINDLE_RETAINED_TETHER=<prepared-exact-source> MYPYPATH=<prepared-exact-source>:$PWD python3 tools/validate.py",
+    "python3 -m unittest discover -s tests -v",
+    "python3 -O -m unittest discover -s tests -v",
+    "npm run test",
+    "python3 tools/static_quality.py"
+  ]
+}

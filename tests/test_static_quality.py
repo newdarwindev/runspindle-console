@@ -20,6 +20,19 @@ SPEC.loader.exec_module(quality)
 
 
 class StaticQualityTests(unittest.TestCase):
+    def test_sealed_node_modules_precede_local_installation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            image = root / "image-node_modules"
+            image.mkdir()
+            with patch.object(quality, "ROOT", root):
+                self.assertEqual(quality.node_modules_path(image), image)
+                image.rmdir()
+                self.assertEqual(
+                    quality.node_modules_path(image),
+                    root / "tools/quality-node/node_modules",
+                )
+
     def test_new_diagnostic_fails_without_mutating_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

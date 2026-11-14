@@ -39,6 +39,13 @@ NODE_PINS = {
 }
 
 
+def node_modules_path(
+    image: Path = Path("/opt/runspindle-quality-node/node_modules"),
+) -> Path:
+    """Use the sealed image closure in CI; allow local locked installation."""
+    return image if image.is_dir() else ROOT / "tools/quality-node/node_modules"
+
+
 def command(argv: list[str], allowed: tuple[int, ...] = (0, 1)) -> str:
     result = subprocess.run(argv, cwd=ROOT, text=True, capture_output=True, timeout=180)
     if result.returncode not in allowed or (
@@ -221,7 +228,7 @@ def collect(files: list[str]) -> tuple[list[str], dict[str, Any]]:
             raise RuntimeError(f"invalid JSON: {path}") from None
     if javascript:
         summary["node_runtime"] = command(["node", "--version"], (0,)).strip()
-        modules = ROOT / "tools/quality-node/node_modules"
+        modules = node_modules_path()
         for name, expected in NODE_PINS.items():
             if (
                 json.loads((modules / name / "package.json").read_text())["version"]

@@ -12,7 +12,8 @@ import {
   consoleTaskCatalog,
 } from "../fixtures/console-ui/scenarios.js";
 
-function setup() {
+/** @param {Partial<import('../src/stream.js').StreamOptions> & {control?: () => void}} overrides */
+function setup(overrides = {}) {
   /** @type {any} */ const document = { activeElement: null };
   document.createElement = /** @param {string} tag */ (tag) =>
     new ElementDouble(tag, document);
@@ -38,6 +39,7 @@ function setup() {
     openPassive: () => {
       viewCount++;
     },
+    ...overrides,
   });
   /** @type {Array<string | null>} */ const entries = [null];
   let position = 0,
@@ -255,6 +257,88 @@ test("refused connection cannot render previous identity under newly selected ta
   assert.equal(field(f, "task"), "task-b");
   assert.equal(field(f, "label"), "Unknown");
   navigator.dispose();
+});
+
+test("unresolved stream acquisition refuses navigation without relabeling old data; retry is explicit", async () => {
+  /** @type {(value:any)=>void} */ let resolve = () => {};
+  const late = new Promise((done) => {
+    resolve = done;
+  });
+  /** @type {any[]} */ const subscriptions = [];
+  let closes = 0,
+    controls = 0;
+  const f = setup({
+    subscribe: (identity, callbacks) => {
+      subscriptions.push({ identity, ...callbacks });
+      return subscriptions.length === 1
+        ? late
+        : {
+            close: () => {
+              closes++;
+            },
+          };
+    },
+    control: () => controls++,
+  });
+  const first = f.navigator.navigate("a");
+  const refused = f.navigator.navigate("b");
+  assert.equal(
+    subscriptions.length,
+    1,
+    "only one unresolved acquisition is allowed",
+  );
+  assert.equal(await refused, false);
+  assert.equal(await f.navigator.navigate("a"), false);
+  assert.equal(await f.navigator.navigate("b"), false);
+  assert.equal(
+    subscriptions.length,
+    1,
+    "only one unresolved acquisition is allowed",
+  );
+  assert.equal(subscriptions[0].signal.aborted, true);
+  assert.equal(f.stream.state().subscriptionCleanup, "unknown");
+  subscriptions[0].onEvent({
+    ...consoleScenarios.observation,
+    identity: f.catalog[0].identity,
+  });
+  subscriptions[0].onDisconnect();
+  subscriptions[0].onError(new Error("SECRET_CANARY"));
+  f.navigator.update();
+  assert.equal(field(f, "task"), "task-b");
+  assert.equal(field(f, "label"), "Unknown");
+  assert.equal(
+    f.root.querySelector('[aria-live="polite"]').textContent,
+    "Status: unknown",
+  );
+  assert.equal(f.document.activeElement.getAttribute("data-task-key"), "b");
+  assert.equal(f.reads.length, 0);
+  resolve({
+    close: () => {
+      closes++;
+    },
+  });
+  assert.equal(await first, false);
+  await tick();
+  f.navigator.update();
+  assert.equal(closes, 1);
+  assert.equal(subscriptions.length, 1);
+  assert.equal(f.reads.length, 0);
+  assert.equal(field(f, "task"), "task-b");
+  assert.equal(field(f, "label"), "Unknown");
+  const historyCount = f.entries.length;
+  const retry = f.navigator.navigate("b");
+  await tick();
+  assert.equal(subscriptions.length, 2);
+  assert.equal(f.entries.length, historyCount);
+  f.settle(0);
+  assert.equal(await retry, true);
+  assert.equal(field(f, "task"), "task-b");
+  assert.equal(field(f, "label"), consoleScenarios.observation.label);
+  assert.equal(controls, 0);
+  assert.equal(f.counts().viewCount, 0);
+  assert.ok(!f.root.textContent.includes("SECRET_CANARY"));
+  f.navigator.dispose();
+  assert.equal(closes, 2);
 });
 
 test("same-identity refusal stays unknown and retries without duplicate history", async () => {

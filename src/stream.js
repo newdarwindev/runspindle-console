@@ -27,8 +27,11 @@ export function createStreamProjection(
   }
   /** @type {Session | null} */
   let current = null;
+  /** @type {Session | null} */
+  let pendingAcquisition = null;
   let disposed = false;
   let cleanupUnknown = false;
+  let tearingDown = false;
   const empty = projectionFactory(options);
   let last = empty.state();
   empty.dispose();
@@ -57,6 +60,9 @@ export function createStreamProjection(
   function stop(session, status) {
     if (session.closed) return;
     session.closed = true;
+    // Abort listeners, passive cleanup and handle.close are trusted callbacks
+    // that can reenter connect before synchronous teardown has finished.
+    tearingDown = true;
     let observed = {
       status: "unknown",
       identity: session.identity,
@@ -84,6 +90,7 @@ export function createStreamProjection(
         session.handle = null;
         closeHandle(handle);
       }
+      tearingDown = false;
     }
   }
 
@@ -109,7 +116,8 @@ export function createStreamProjection(
 
   /** @param {unknown} identity @returns {Promise<boolean>} */
   function connect(identity) {
-    if (disposed || cleanupUnknown) return Promise.resolve(false);
+    if (disposed || cleanupUnknown || tearingDown)
+      return Promise.resolve(false);
     const projection = projectionFactory(options);
     projection.select(identity);
     let selected;
@@ -128,7 +136,9 @@ export function createStreamProjection(
       return current.promise ?? Promise.resolve(false);
     }
     if (current) stop(current, "offline");
-    if (cleanupUnknown) {
+    // Abort fences callbacks but cannot confirm that a pending acquisition did
+    // not allocate. Keep its slot until a valid handle is owned or closed.
+    if (disposed || cleanupUnknown || pendingAcquisition !== null) {
       projection.dispose();
       return Promise.resolve(false);
     }
@@ -172,6 +182,7 @@ export function createStreamProjection(
         stop(session, "unsupported");
         return false;
       }
+      pendingAcquisition = session;
       try {
         const handle = await subscribe(selected, {
           signal: session.controller.signal,
@@ -192,6 +203,7 @@ export function createStreamProjection(
           return false;
         }
         session.handle = handle;
+        pendingAcquisition = null;
         const refreshed = await projection.refresh();
         if (!active()) return false;
         if (!refreshed) {
@@ -205,9 +217,13 @@ export function createStreamProjection(
       } catch {
         // A subscription rejection supplies no cleanup receipt. It may have
         // allocated before failing, so do not silently create another stream.
-        if (!session.handle) markCleanupUnknown();
+        if (pendingAcquisition === session) markCleanupUnknown();
         if (active()) stop(session, "error");
         return false;
+      } finally {
+        // A late handle is closed before releasing this slot. Failed/missing
+        // cleanup is sticky in cleanupUnknown, even after the promise settles.
+        if (pendingAcquisition === session) pendingAcquisition = null;
       }
     })();
     return session.promise;
@@ -223,14 +239,16 @@ export function createStreamProjection(
         observed = last;
       }
     }
+    const unconfirmed =
+      cleanupUnknown || tearingDown || !!pendingAcquisition?.closed;
     return Object.freeze({
       ...observed,
-      status: cleanupUnknown
+      status: unconfirmed
         ? "unknown"
         : current && !current.closed && current.synchronizing
           ? "loading"
           : observed.status,
-      subscriptionCleanup: cleanupUnknown
+      subscriptionCleanup: unconfirmed
         ? "unknown"
         : "no_unconfirmed_unsubscribe",
       buffered: current?.buffer.length ?? 0,

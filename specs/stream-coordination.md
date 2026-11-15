@@ -1,11 +1,12 @@
 # Bounded process-local stream coordination
 
 `createStreamProjection` in `src/stream.js` reuses the existing provisional
-projection model. This is an original partial implementation for issues #1/#3,
-and a seam for #9, not a runtime wire mapping or actual event-stream server.
-Issues #9–11 remain blocked on their real transport, sanitization and authority
-prerequisites. No UI, native desktop, durable store, credentials or control API
-is added.
+projection model. This is an original partial implementation for issues #1/#3
+and the bounded subscription-acquisition lifecycle in #9, not a runtime wire
+mapping or actual event-stream server. Issue #9 remains open: authenticated
+transport and shared runtime mapping still depend on root #43 and Tether #8/#10.
+Issues #10–11 retain their real transport, sanitization and authority prerequisites.
+No native desktop, durable store, credentials or control API is added here.
 
 ## Adapter contract
 
@@ -21,11 +22,32 @@ unsubscribe leave cleanup unknown and block further subscriptions on this object
 An owner must reconcile the external adapter separately; constructing a new object
 does not establish cleanup of an old one.
 
-Connect deduplicates overlapping calls for the same complete identity. Explicit
-`disconnect()` then `connect()` resubscribes and obtains a new snapshot. Switching
-task/session closes the old projection and subscription. A late subscription
-handle is closed; a late callback or snapshot cannot become the current projection.
-A late cleanup failure also invalidates a newer subscription.
+Connect deduplicates overlapping calls for the same complete identity, including
+while acquisition is pending. Switching task/session or disconnecting closes the
+old projection and aborts its subscription signal. Abort is not proof that an
+unresolved subscribe call did not allocate. One acquisition slot remains occupied
+until that call yields a valid handle; a late handle must synchronously confirm
+unsubscribe before the slot can be reused. During this invalidated pending state,
+`status` and `subscriptionCleanup` are `unknown`, and all connect calls return
+false without invoking subscribe again. There is no waiting queue or remembered
+next target. Old callbacks and snapshots cannot repopulate the projection.
+
+A successfully closed late handle releases the slot but does not reconnect.
+An explicit subsequent `connect()` may subscribe and obtain a new snapshot.
+Missing/malformed handles, rejection, thrown close and asynchronous/unconfirmed
+close leave cleanup unknown permanently on this object. Repeated disconnect or
+dispose never close the same handle twice; disposal never allows reconnect.
+The synthetic navigator renders a refused newly selected task as unavailable,
+without relabeling the previous stream identity or observation.
+
+For an acquired handle, synchronous teardown also holds admission closed across
+abort listeners, projection/passive cleanup and subscription close. Reentrant
+connect calls return false, report cleanup unknown during teardown, and are not
+queued. A caller-initiated replacement may acquire only after teardown returns
+with confirmed subscription cleanup and the object is still undisposed. Disposal
+inside a teardown callback also prevents the outer replacement from subscribing.
+This preserves the existing passive-view
+revocation limitation; it does not add a server acknowledgment.
 
 ## Observation bounds and transitions
 
@@ -49,8 +71,11 @@ viewer cleanup and handback require issue #11's authorized adapter and tests.
 This object has no persistence, automatic retries, timer, autonomous reconnect,
 network client or cross-process/concurrency guarantee. A real adapter must provide
 bounded acquisition/read deadlines and cancellation cleanup. A stalled injected
-promise remains loading until the caller disconnects/disposes; memory stays
-bounded. No claim of live backend compatibility follows from synthetic tests.
+promise remains loading until invalidated, then unknown and blocks further
+acquisition. The coordinator retains at most one unresolved acquisition; this is
+not a bound on resources allocated internally by the injected adapter. No claim
+of live backend compatibility or production unsubscribe follows from synthetic
+close acknowledgments.
 
 ## BDD verification
 
@@ -60,11 +85,22 @@ bounded. No claim of live backend compatibility follows from synthetic tests.
   then they cannot repopulate the selected task and owned handles close.
 - Given unknown unsubscribe outcome, when reconnect is requested, then no new
   subscription call occurs and uncertainty remains visible.
+- Given pending acquisition A, when B/C or reconnect is requested after invalidation,
+  then only A was subscribed, callbacks are fenced, and cleanup remains unknown.
+- Given a valid late handle, when synchronous close confirms unsubscribe, then it
+  closes exactly once and only an explicit new request may subscribe again.
+- Given rejected acquisition or missing/malformed/throwing/asynchronous cleanup,
+  when later requests arrive, then no new subscription is created.
+- Given an acquired subscription, when abort or cleanup callbacks reenter connect,
+  then the new call is refused until teardown completes and allocated synthetic
+  subscriptions never overlap.
 - Given a passive view, when the stream disconnects, then close is requested and
   no control call occurs; server-side revocation remains unverified.
 
 Run `npm test` and `python3 tools/validate.py`. The new tests use synthetic callback
 spies and no network. A subprocess mutation disables the buffer bound and must
-fail the independently asserted overflow status. Temporary files are removed in
+fail the independently asserted overflow status. Another removes the pending
+acquisition guard and must fail the independently asserted subscribe-call count
+in the synthetic navigation regression. Temporary files are removed in
 `finally`; subprocess runtime is bounded. UI/accessibility/live/native/durability
 acceptance and isolated runner CI are not established by these component tests.

@@ -232,33 +232,166 @@ test("absent adapters and missing clock fail explicitly; disposal cannot reconne
   assert.throws(() => fixture({ maxBuffered: 0 }), TypeError);
 });
 
-test("late unsubscribe failure makes a newer subscription unknown and closes it", async () => {
+test("pending acquisition deduplicates identity and blocks repeated task switches until confirmed cleanup", async () => {
   const late = deferred();
-  let count = 0;
-  let currentCloses = 0;
+  /** @type {any[]} */
+  const subscriptions = [];
+  let closes = 0,
+    reads = 0,
+    controls = 0,
+    views = 0;
   const f = fixture({
-    subscribe: async () =>
-      ++count === 1
+    subscribe: (target, callbacks) => {
+      subscriptions.push({ target, ...callbacks });
+      return subscriptions.length === 1
         ? late.promise
         : {
-            close() {
-              currentCloses++;
+            close: () => {
+              closes++;
             },
-          },
+          };
+    },
+    readSnapshot: async (target) => {
+      reads++;
+      return update(5, { identity: target });
+    },
+    control: () => controls++,
+    openPassive: () => views++,
   });
   const first = f.stream.connect(identity);
+  assert.equal(f.stream.connect({ ...identity }), first);
+  assert.equal(f.stream.state().status, "loading");
   const next = { ...identity, task: "task-2" };
-  await f.stream.connect(next);
+  const third = { ...identity, task: "task-3" };
+  assert.equal(await f.stream.connect(next), false);
+  assert.equal(await f.stream.connect(third), false);
+  assert.equal(await f.stream.connect(identity), false);
+  assert.equal(
+    subscriptions.length,
+    1,
+    "only one unresolved acquisition is allowed",
+  );
+  assert.equal(subscriptions[0].signal.aborted, true);
+  const stopped = f.stream.state();
+  assert.equal(stopped.status, "unknown");
+  assert.equal(stopped.subscriptionCleanup, "unknown");
+  assert.deepEqual(stopped.identity, identity);
+  assert.equal(stopped.record, null);
+  subscriptions[0].onEvent(update(99));
+  subscriptions[0].onDisconnect();
+  subscriptions[0].onError(new Error("secret-canary"));
+  assert.deepEqual(f.stream.state(), stopped);
+  assert.equal(await f.stream.view(), false);
   late.resolve({
-    close() {
-      throw new Error("unconfirmed old unsubscribe");
+    close: () => {
+      closes++;
     },
   });
   assert.equal(await first, false);
-  assert.equal(f.stream.state().status, "unknown");
-  assert.equal(f.stream.state().subscriptionCleanup, "unknown");
-  assert.equal(currentCloses, 1);
-  assert.equal(await f.stream.connect(identity), false);
+  assert.equal(closes, 1);
+  assert.equal(reads, 0);
+  assert.equal(
+    subscriptions.length,
+    1,
+    "confirmed cleanup must not automatically reconnect",
+  );
+  assert.equal(
+    f.stream.state().subscriptionCleanup,
+    "no_unconfirmed_unsubscribe",
+  );
+  assert.equal(f.stream.state().status, "offline");
+  assert.equal(await f.stream.connect(third), true);
+  assert.equal(subscriptions.length, 2);
+  assert.equal(reads, 1);
+  assert.deepEqual(f.stream.state().identity, third);
+  subscriptions[0].onEvent(update(100));
+  subscriptions[0].onDisconnect();
+  subscriptions[0].onError();
+  assert.equal(f.stream.state().record.revision, 5);
+  assert.equal(f.stream.state().status, "ready");
+  assert.equal(f.stream.state().canExecute, false);
+  assert.equal(controls, 0);
+  assert.equal(views, 0);
+  f.stream.dispose();
+  assert.equal(closes, 2);
+});
+
+test("disconnect and dispose retain pending acquisition until its late handle closes once", async () => {
+  for (const operation of ["disconnect", "dispose"]) {
+    const late = deferred();
+    let calls = 0,
+      closes = 0,
+      reads = 0;
+    /** @type {import('../src/stream.js').Callbacks | undefined} */ let callbacks;
+    /** @type {Promise<boolean> | undefined} */ let duringClose;
+    const f = fixture({
+      subscribe: (_target, events) => {
+        calls++;
+        callbacks = events;
+        return calls === 1
+          ? late.promise
+          : {
+              close: () => {
+                closes++;
+              },
+            };
+      },
+      readSnapshot: async () => {
+        reads++;
+        return update();
+      },
+    });
+    const first = f.stream.connect(identity);
+    if (operation === "disconnect") {
+      f.stream.disconnect();
+      f.stream.disconnect();
+    } else {
+      f.stream.dispose();
+      f.stream.dispose();
+    }
+    assert.ok(callbacks);
+    assert.equal(callbacks.signal.aborted, true);
+    assert.equal(await f.stream.connect(identity), false);
+    assert.equal(
+      await f.stream.connect({ ...identity, task: "task-2" }),
+      false,
+    );
+    assert.equal(calls, 1);
+    assert.equal(f.stream.state().subscriptionCleanup, "unknown");
+    assert.equal(f.stream.state().status, "unknown");
+    callbacks.onEvent(update(9));
+    callbacks.onDisconnect();
+    callbacks.onError();
+    assert.equal(f.stream.state().record, null);
+    late.resolve({
+      close: () => {
+        closes++;
+        // Even a reentrant request cannot run before close returns confirmation.
+        duringClose = f.stream.connect(identity);
+      },
+    });
+    assert.equal(await first, false);
+    assert.equal(await duringClose, false);
+    assert.equal(closes, 1);
+    assert.equal(calls, 1);
+    assert.equal(reads, 0);
+    assert.equal(
+      f.stream.state().subscriptionCleanup,
+      "no_unconfirmed_unsubscribe",
+    );
+    if (operation === "disconnect") {
+      assert.equal(await f.stream.connect(identity), true);
+      assert.equal(calls, 2);
+      assert.equal(reads, 1);
+    } else {
+      assert.equal(await f.stream.connect(identity), false);
+      assert.equal(calls, 1);
+    }
+    f.stream.disconnect();
+    f.stream.dispose();
+    assert.equal(await f.stream.connect(identity), false);
+    assert.equal(closes, operation === "disconnect" ? 2 : 1);
+  }
 });
 
 test("buffer overflow assertion detects a deliberately disabled bound", async () => {
@@ -345,27 +478,182 @@ test("clock failure never prevents teardown during disconnect navigation or disp
   }
 });
 
-test("late subscription rejection also tears down a newer known subscription", async () => {
-  const late = deferred();
-  let calls = 0;
-  let closes = 0;
-  const f = fixture({
-    subscribe: async () =>
-      ++calls === 1
-        ? late.promise
-        : {
-            close() {
-              closes++;
-            },
+test("late rejection, malformed handles and unconfirmed close permanently block acquisition", async () => {
+  for (const outcome of [
+    "reject",
+    "missing",
+    "null",
+    "malformed",
+    "bad-close",
+    "throw",
+    "async",
+    "async-reject",
+    "thenable",
+  ]) {
+    const late = deferred();
+    let calls = 0,
+      closes = 0,
+      reads = 0,
+      controls = 0;
+    const f = fixture({
+      subscribe: () => {
+        calls++;
+        return late.promise;
+      },
+      readSnapshot: async () => {
+        reads++;
+        return update();
+      },
+      control: () => controls++,
+    });
+    const first = f.stream.connect(identity);
+    assert.equal(
+      await f.stream.connect({ ...identity, task: "task-2" }),
+      false,
+    );
+    assert.equal(calls, 1);
+    if (outcome === "reject") late.reject(new Error("secret-canary"));
+    else if (outcome === "missing") late.resolve(undefined);
+    else if (outcome === "null") late.resolve(null);
+    else if (outcome === "malformed") late.resolve({});
+    else if (outcome === "bad-close") late.resolve({ close: "not a function" });
+    else
+      late.resolve({
+        close: () => {
+          closes++;
+          if (outcome === "throw") throw new Error("secret-canary");
+          if (outcome === "async") return Promise.resolve();
+          if (outcome === "async-reject")
+            return Promise.reject(new Error("secret-canary"));
+          return { then() {} };
+        },
+      });
+    assert.equal(await first, false);
+    await Promise.resolve();
+    assert.equal(f.stream.state().status, "unknown", outcome);
+    assert.equal(f.stream.state().subscriptionCleanup, "unknown", outcome);
+    assert.equal(await f.stream.connect(identity), false);
+    assert.equal(
+      await f.stream.connect({ ...identity, task: "task-3" }),
+      false,
+    );
+    assert.equal(calls, 1);
+    assert.equal(reads, 0);
+    assert.equal(await f.stream.view(), false);
+    assert.equal(controls, 0);
+    assert.doesNotMatch(JSON.stringify(f.stream.state()), /secret-canary/);
+    f.stream.disconnect();
+    f.stream.dispose();
+    assert.equal(
+      closes,
+      ["throw", "async", "async-reject", "thenable"].includes(outcome) ? 1 : 0,
+    );
+  }
+});
+
+test("abort, passive cleanup and close callbacks cannot acquire until teardown confirms cleanup", async () => {
+  for (const trigger of ["abort", "passive-close", "subscription-close"]) {
+    let calls = 0,
+      allocated = 0,
+      peak = 0,
+      closes = 0,
+      controls = 0;
+    /** @type {Promise<boolean> | undefined} */ let attempted;
+    const third = { ...identity, task: "task-3" };
+    const reenter = () => {
+      attempted = f.stream.connect(third);
+      assert.equal(
+        calls,
+        1,
+        "teardown must finish before another subscribe call",
+      );
+      assert.equal(f.stream.state().subscriptionCleanup, "unknown");
+      assert.equal(f.stream.state().status, "unknown");
+    };
+    const f = fixture({
+      subscribe: (_target, callbacks) => {
+        calls++;
+        allocated++;
+        peak = Math.max(peak, allocated);
+        if (calls === 1 && trigger === "abort")
+          callbacks.signal.addEventListener("abort", reenter);
+        let closed = false;
+        return {
+          close: () => {
+            assert.equal(closed, false, "each handle closes once");
+            closed = true;
+            if (calls === 1 && trigger === "subscription-close") reenter();
+            allocated--;
+            closes++;
           },
-  });
-  const first = f.stream.connect(identity);
-  await f.stream.connect({ ...identity, task: "task-2" });
-  late.reject(new Error("secret-canary"));
-  assert.equal(await first, false);
-  assert.equal(f.stream.state().status, "unknown");
-  assert.equal(f.stream.state().subscriptionCleanup, "unknown");
-  assert.equal(f.subscriptions.length, 0);
-  assert.equal(closes, 1);
-  assert.equal(await f.stream.connect(identity), false);
+        };
+      },
+      readSnapshot: async (target) => update(1, { identity: target }),
+      openPassive: async () => ({ close: reenter }),
+      control: () => controls++,
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    if (trigger === "passive-close") assert.equal(await f.stream.view(), true);
+    const next = { ...identity, task: "task-2" };
+    assert.equal(await f.stream.connect(next), true);
+    assert.equal(await attempted, false);
+    assert.equal(peak, 1, "replacement cannot overlap allocated subscription");
+    assert.equal(calls, 2);
+    assert.equal(closes, 1);
+    assert.equal(allocated, 1);
+    assert.deepEqual(f.stream.state().identity, next);
+    assert.equal(f.stream.state().status, "ready");
+    assert.equal(
+      f.stream.state().subscriptionCleanup,
+      "no_unconfirmed_unsubscribe",
+    );
+    assert.equal(f.stream.state().canExecute, false);
+    assert.equal(controls, 0);
+    f.stream.dispose();
+    assert.equal(closes, 2);
+    assert.equal(allocated, 0);
+  }
+});
+
+test("dispose from abort or cleanup callbacks prevents the outer replacement acquisition", async () => {
+  for (const trigger of ["abort", "passive-close", "subscription-close"]) {
+    let calls = 0,
+      closes = 0;
+    const dispose = () => f.stream.dispose();
+    const f = fixture({
+      subscribe: (_target, callbacks) => {
+        calls++;
+        if (trigger === "abort")
+          callbacks.signal.addEventListener("abort", dispose);
+        return {
+          close: () => {
+            if (trigger === "subscription-close") dispose();
+            closes++;
+          },
+        };
+      },
+      openPassive: async () => ({ close: dispose }),
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    if (trigger === "passive-close") assert.equal(await f.stream.view(), true);
+    assert.equal(
+      await f.stream.connect({ ...identity, task: "task-2" }),
+      false,
+    );
+    assert.equal(
+      calls,
+      1,
+      "reentrant disposal must prevent the outer replacement subscribe call",
+    );
+    assert.equal(closes, 1);
+    assert.equal(await f.stream.connect(identity), false);
+    assert.equal(await f.stream.view(), false);
+    assert.equal(
+      f.stream.state().subscriptionCleanup,
+      "no_unconfirmed_unsubscribe",
+    );
+    f.stream.disconnect();
+    f.stream.dispose();
+    assert.equal(closes, 1);
+  }
 });

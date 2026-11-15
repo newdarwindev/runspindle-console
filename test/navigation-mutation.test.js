@@ -12,23 +12,38 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-/** @type {Array<[string,string,string,RegExp]>} */
+/** @type {Array<[string,string,string,string,RegExp]>} */
 const mutations = [
   [
     "duplicate history",
+    "src/navigation.js",
     "if (selected === key && !unavailable) return !connecting;",
     "if (false) return true;",
     /4 !== 3/,
   ],
-  ["refused admission", "if (result !== true) {", "if (false) {", /Unknown/],
+  [
+    "refused admission",
+    "src/navigation.js",
+    "if (result !== true) {",
+    "if (false) {",
+    /Unknown/,
+  ],
   [
     "pending success",
+    "src/navigation.js",
     "if (selected === key && !unavailable) return !connecting;",
     "if (selected === key && !unavailable) return true;",
     /true !== false/,
   ],
+  [
+    "unbounded pending acquisition",
+    "src/stream.js",
+    "cleanupUnknown || pendingAcquisition !== null",
+    "cleanupUnknown",
+    /only one unresolved acquisition is allowed/,
+  ],
 ];
-for (const [name, needle, replacement, expected] of mutations) {
+for (const [name, fileToMutate, needle, replacement, expected] of mutations) {
   test(`Navigation double detects ${name} mutation (not browser evidence)`, () => {
     const root = fileURLToPath(new URL("../", import.meta.url));
     const temporary = mkdtempSync(
@@ -47,7 +62,7 @@ for (const [name, needle, replacement, expected] of mutations) {
         "test/dom-double.js",
       ]) {
         let source = readFileSync(join(root, file), "utf8");
-        if (file === "src/navigation.js") {
+        if (file === fileToMutate) {
           assert.equal(source.split(needle).length, 2);
           source = source.replace(needle, replacement);
         }

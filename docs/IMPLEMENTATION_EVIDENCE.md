@@ -49,7 +49,8 @@ lengths and integer inputs are bounded. It has no event history, durable store,
 transport implementation, secret masker, authenticated observation verification,
 view protocol qualification, control requests or execution authority. It neither
 restores authority across restart nor claims to revoke server-side viewer sessions.
-An adapter close failure is caught; closure acknowledgment is not proven.
+An adapter close failure is retained as unknown cleanup and blocks new passive
+admission within its ownership scope; server-side closure is not proven.
 
 ## Synchronous cancellation and cleanup ordering
 
@@ -78,6 +79,50 @@ and exactly-once local cleanup. The ordinary projection tests and actual retaine
 SQLite/Node reader integration still run separately. See
 [the local evidence record](projection-reentrancy-evidence.json) for commands,
 counts, source hashes and unchanged acceptance boundaries.
+
+## Passive resource ownership across task replacement
+
+The passive-view lifecycle now retains one acquisition/resource slot after abort,
+selection, source change or stream projection replacement. A late valid handle is
+closed exactly once before another explicit passive request may open. Rejection,
+missing/malformed handles, throwing close and any non-void close return preserve
+unknown cleanup and block further passive admission within that ownership scope.
+A promise resolving later is not promoted to a confirmed close. No automatic retry,
+new timer, network request, control path or server acknowledgment is introduced.
+
+`state().viewCleanup` is independent of observation `status` and freshness. A new
+task's observation can be ready while cleanup of an old passive resource is unknown;
+`view()` still refuses. `createStreamProjection` shares one private resource owner
+across task projections and reads its cleanup state even after disconnect/disposal.
+`createProjection` creates a standalone scope; `createProjectionFactory` is the
+explicit shared-scope constructor. Unrelated scopes do not coordinate external
+resources. Creating a new scope is not evidence that an old resource was closed.
+
+Compatibility is intentionally conservative: the trusted injected handle's existing
+`close()` must return `undefined` only after synchronous local cleanup. Failed or
+asynchronous cleanup remains sticky unknown for the scope's lifetime. This is local
+adapter-contract evidence, not proof of KasmVNC revocation or remote cancellation.
+A hung adapter is not forcibly terminated; it retains the slot. Reads, projection
+updates and stream observation may continue without granting passive or control
+admission. `canExecute` remains false.
+
+On exact main base `617e421ebc016cfc9ec5cdde0a2419bc6dc8fe20`, deterministic probes
+observed two passive opens before the first resolved (zero closes), both directly
+and through stream task replacement. A throwing close also allowed another open.
+Regression tests now assert adapter call counts before awaiting potentially pending
+calls, plus exact cleanup counts, identity, zero control, error-canary exclusion,
+late success/rejection, malformed handles and failed/non-void cleanup. A final
+readiness-clock callback is followed by fresh admission fences, so reentrant task
+replacement/disposal cannot report stale success or close a newer handle. Three bounded
+mutations remove the pending bound, discard uncertainty, or reset ownership on stream
+replacement; each must fail an independent behavioral assertion. Two older reentrancy
+tests were tightened: replacement admission now waits for late cleanup while retaining
+their newer-selection and exactly-once cleanup checks.
+
+This is partial component work for Console #1/#3/#11, complementing #9's stream
+lifecycle. Actual viewer integration, authenticated runtime, shared mappings, rendered
+accessibility and server-side revocation remain unimplemented/unqualified. No issue is
+closed by this change. See [passive lifecycle evidence](passive-view-lifecycle-evidence.json).
 
 ## Executed local checks
 

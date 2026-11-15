@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-15",
+  "evidence_class": "synthetic_component",
+  "main_base_commit": "617e421ebc016cfc9ec5cdde0a2419bc6dc8fe20",
+  "issues": [
+    1,
+    3,
+    9,
+    11
+  ],
+  "scope": "One process-local passive-resource ownership scope across selection, source invalidation and stream projection replacement; no runtime/backend adapter or server revocation claim.",
+  "source_sha256": {
+    "src/projection.js": "6a612226ad0934cbe2e35a3bc185be443dc9d7040794d05a6e4e8ef130476955",
+    "src/stream.js": "61901f4534d55cf4b9b4a9a9375fb3f6d2987266d0435f9e702ee655a1a65aef",
+    "test/projection-reentrancy.test.js": "90f81d976e6bf6f87561db21ee620629692a8e7929635f5aa2c2074601c2a15e",
+    "test/passive-view-lifecycle.test.js": "eb9b7d2aa8157fd7446a837397d0c65b368290ee74afe629231a5be813f631bb",
+    "test/passive-view-mutation.test.js": "bd63b0c85589a3eb3df6492b5fc8572fbe6afaabf50d15499f80b14b12e2c75d",
+    "specs/stream-coordination.md": "7f13a9669ffb68b7942f2ba6f9e098b4a5ab25634289df58131320bc37c78e85",
+    "docs/IMPLEMENTATION_EVIDENCE.md": "cb8d426f3eab71efe2f8a60e2506be5152fce8e55b3ad4d07d71592cb9343e52"
+  },
+  "toolchain": {
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "quality_packages": "Existing requirements-quality.txt and tools/quality-node/package-lock.json pins; no install or baseline change."
+  },
+  "fixtures": {
+    "clock_unix_ms": 1000,
+    "randomness": "none",
+    "identities": "invented task/host/workspace values",
+    "viewer_origin": "https://viewer.invalid",
+    "ports": "injected process-local fakes; no browser/network calls"
+  },
+  "commands": [
+    "node --test test/passive-view-lifecycle.test.js test/passive-view-mutation.test.js",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> node --test test/*.test.js",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 -m unittest discover -s tests -v",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 -O -m unittest discover -s tests -v",
+    "python3 tools/check_scaffold.py",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/check_retained_source.py",
+    "python3 tools/check_artifacts.py",
+    "python3 tools/check_vision.py",
+    "python3 tools/check_repo_hygiene.py",
+    "python3 tools/check_projection_mutations.py",
+    "MYPYPATH=<verified pinned checkout> RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/static_quality.py"
+  ],
+  "results": {
+    "lifecycle_tests": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "lifecycle_mutations": {
+      "detected": 3,
+      "missed": 0
+    },
+    "full_node_tests": {
+      "passed": 78,
+      "failed": 0,
+      "skipped": 0
+    },
+    "python_tests": {
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0
+    },
+    "optimized_python_tests": {
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0
+    },
+    "scaffold": "passed",
+    "retained_source_integrity": "passed",
+    "artifact_integrity": "passed",
+    "vision_static_integrity": "passed",
+    "repository_hygiene": "passed",
+    "existing_projection_mutations": "3 detected",
+    "static_quality": {
+      "status": "passed",
+      "new_diagnostics": 0,
+      "existing_debt": 117,
+      "baseline_changed": false
+    },
+    "aggregate_validation": "blocked"
+  },
+  "aggregate_blocker": {
+    "command": "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/validate.py",
+    "status": "blocked_offline_scope",
+    "reason": "The aggregate did not complete under the offline-only scope because registry.npmjs.org access was reported. It was not rerun.",
+    "observed_execution": "The aggregate log remained empty. Which subcommand began and whether any HTTPS request completed are unknown.",
+    "separate_checks": "Direct Node/Python and named integrity/static checks were run independently. They do not constitute a completed aggregate receipt."
+  },
+  "base_reproductions": [
+    {
+      "case": "task switch while passive open unresolved",
+      "observed_opens_before_first_resolution": 2,
+      "observed_closes": 0,
+      "second_admitted": true
+    },
+    {
+      "case": "throwing close followed by task switch",
+      "observed_opens": 2,
+      "observed_failed_closes": 1,
+      "reopened": true,
+      "cleanup_state": "absent"
+    },
+    {
+      "case": "stream replacement while passive open unresolved",
+      "observed_opens_before_first_resolution": 2,
+      "observed_closes": 0,
+      "second_admitted": true
+    }
+  ],
+  "mutation_observations": [
+    {
+      "mutation": "remove pending resource bound",
+      "expected_failure": "unresolved passive ownership must prevent another open",
+      "status": "detected"
+    },
+    {
+      "mutation": "ignore cleanup uncertainty",
+      "expected_failure": "uncertain passive acquisition must block retries",
+      "status": "detected"
+    },
+    {
+      "mutation": "reset ownership on stream replacement",
+      "expected_failure": "stream replacement must preserve passive ownership",
+      "status": "detected"
+    }
+  ],
+  "compatibility": {
+    "close_contract": "Only synchronous undefined return confirms local cleanup under the trusted injected-adapter contract; promises/thenables/other returns and thrown close retain unknown.",
+    "view_cleanup": "Independent from observation status/freshness and subscriptionCleanup; unknown blocks new passive admission but does not suppress read-only observations.",
+    "resource_bound": "One retained slot per factory/stream scope, not a global, cross-process, durable or internal-adapter resource bound.",
+    "uncertain_cleanup": "Sticky for the scope lifetime; no automatic retry, timeout inference or public reset mechanism.",
+    "reentrancy": "Admission fences are rechecked after the final callback-bearing clock read; newer resources are preserved.",
+    "control": "canExecute remains false; tests observe zero injected control calls."
+  },
+  "retained_dependency": {
+    "commit": "670989839a0fccbcf2014d01609778ae6e4df424",
+    "pin": "dependencies/tether-snapshot.json",
+    "checkout": "existing clean local checkout; no fetch or clone"
+  },
+  "remaining_gates": {
+    "authenticated_runtime": "not_implemented",
+    "shared_wire_mapping": "not_implemented",
+    "actual_desktop_KasmVNC": "not_run",
+    "server_revocation": "not_run",
+    "actual_DOM_visual_accessibility": "not_run",
+    "live_acceptance": "not_run",
+    "github_CI": "not_run",
+    "issue_closure": "not_claimed"
+  }
+}

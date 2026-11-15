@@ -153,19 +153,38 @@ export function createProjection({
   let pendingRead = /** @type {AbortController|null} */ (null),
     pendingView = /** @type {AbortController|null} */ (null),
     activeView = /** @type {{close:()=>void}|null} */ (null),
-    disposed = false;
+    disposed = false,
+    releasingView = false;
 
+  /** @param {{close:()=>void}} handle */
+  function closeView(handle) {
+    const previousRelease = releasingView;
+    releasingView = true;
+    try {
+      handle.close();
+    } finally {
+      releasingView = previousRelease;
+    }
+  }
   function releaseView() {
-    pendingView?.abort();
+    // Detach owned resources before adapter callbacks can create newer work.
+    const pending = pendingView,
+      active = activeView;
     pendingView = null;
-    if (activeView) {
-      try {
-        activeView.close();
-      } catch {
-        /* No authority is granted when adapter cleanup fails. */
-      } finally {
-        activeView = null;
+    activeView = null;
+    const previousRelease = releasingView;
+    releasingView = true;
+    try {
+      pending?.abort();
+      if (active) {
+        try {
+          closeView(active);
+        } catch {
+          /* No authority is granted when adapter cleanup fails. */
+        }
       }
+    } finally {
+      releasingView = previousRelease;
     }
   }
   /** @param {unknown} next */
@@ -173,12 +192,13 @@ export function createProjection({
     if (disposed) throw new Error("projection disposed");
     const parsed = identity(next);
     generation++;
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     pendingRead = null;
-    releaseView();
     target = parsed;
     record = null;
     phase = "empty";
+    releaseView();
+    previousRead?.abort();
   }
   /** @param {any} update @param {{snapshot?:boolean}} options */
   function merge(update, { snapshot = false } = {}) {
@@ -248,6 +268,7 @@ export function createProjection({
       gap,
       viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
     });
+    phase = "ready";
     if (
       previous &&
       (previous.viewUrl !== record.viewUrl ||
@@ -257,7 +278,6 @@ export function createProjection({
         record.observedAt === null)
     )
       releaseView();
-    phase = "ready";
     return true;
   }
   function state() {
@@ -308,13 +328,21 @@ export function createProjection({
       phase = "unsupported";
       return false;
     }
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     const controller = new AbortController(),
       expectedGeneration = generation,
       request = ++latestRequest;
     pendingRead = controller;
     phase = "loading";
     try {
+      previousRead?.abort();
+      if (
+        controller.signal.aborted ||
+        disposed ||
+        expectedGeneration !== generation ||
+        request !== latestRequest
+      )
+        return false;
       const update = await readSnapshot(target, { signal: controller.signal });
       if (
         controller.signal.aborted ||
@@ -328,6 +356,13 @@ export function createProjection({
         return true;
       }
       const accepted = merge(update, { snapshot: true });
+      if (
+        controller.signal.aborted ||
+        disposed ||
+        expectedGeneration !== generation ||
+        request !== latestRequest
+      )
+        return false;
       phase = record ? "ready" : "error";
       return accepted;
     } catch {
@@ -346,6 +381,7 @@ export function createProjection({
   async function view() {
     if (
       disposed ||
+      releasingView ||
       pendingView ||
       activeView ||
       state().status !== "ready" ||
@@ -376,7 +412,7 @@ export function createProjection({
         record !== admittedRecord ||
         state().status !== "ready"
       ) {
-        opened.close();
+        closeView(opened);
         return false;
       }
       activeView = opened;
@@ -388,14 +424,16 @@ export function createProjection({
     }
   }
   function dispose() {
+    if (disposed) return;
     generation++;
     disposed = true;
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     pendingRead = null;
-    releaseView();
     target = null;
     record = null;
     phase = "empty";
+    releaseView();
+    previousRead?.abort();
   }
   return Object.freeze({ select, merge, state, refresh, view, dispose });
 }

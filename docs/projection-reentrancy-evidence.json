@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "evidence_class": "synthetic_component",
+  "date": "2026-11-15",
+  "main_base_commit": "f4a8f86814e6ec480a7805062fe905da47dca998",
+  "issues": [
+    9,
+    10,
+    11
+  ],
+  "scope": "Existing projection synchronous abort/close callback ordering; no new backend, authority or viewer model.",
+  "source_sha256": {
+    "src/projection.js": "6599f8577afb5b01a81df7d13b15815293a8426bda3a5775917807f06a3f425c",
+    "test/projection-reentrancy.test.js": "dd92953e8bf10ae49ee0e010ef7aa102d62332205a124daf4dece2c4b4813417",
+    "docs/IMPLEMENTATION_EVIDENCE.md": "2f4f0e0d558b53183d14dae014f16a232b2ec1c42ce675c7b003cdcce18ce156"
+  },
+  "toolchain": {
+    "node": "v24.22.1",
+    "python": "3.12.14"
+  },
+  "commands": [
+    "node --test test/projection.test.js test/projection-reentrancy.test.js",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/validate.py",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 -O -m unittest discover -s tests -v"
+  ],
+  "results": {
+    "focused_node_tests": 21,
+    "full_node_tests": 65,
+    "main_python_tests": 34,
+    "optimized_main_python_tests": 34,
+    "failed": 0,
+    "skipped": 0,
+    "main_aggregate": "passed"
+  },
+  "negative_proof": {
+    "source": "main_base_commit:src/projection.js",
+    "test": "refresh reserves its request before abort so the newer callback read wins",
+    "command": "node --test --test-name-pattern=\"refresh reserves\" test/projection-reentrancy.test.js",
+    "method": "Copied exact base projection and new test into an isolated temporary module; no source mutation or live adapter. Bounded subprocess timeout was 20 seconds.",
+    "exit_code": 1,
+    "assertion": "superseded outer refresh must not invoke the adapter",
+    "actual_read_calls": 3,
+    "expected_read_calls": 2
+  },
+  "cases": [
+    "Newer refresh started by read abort wins; superseded outer read never invokes the adapter.",
+    "Read abort selection or disposal prevents further old adapter invocation.",
+    "Selection publishes new identity before read/view abort and preserves newer resources.",
+    "Dispose publishes terminal state before callbacks; active local handle closes once.",
+    "Merge abort/close callbacks cannot restore ready over a new selection or disposal.",
+    "Refresh rechecks its fence after merge cleanup starts a newer read.",
+    "Nested synchronous passive cleanup excludes new passive admission until cleanup returns.",
+    "Late stale handle close uses the same synchronous admission guard."
+  ],
+  "hygiene_validation": {
+    "base_commit": "a985fecf11b80d1013ce37859f17108587b41614",
+    "projection_sha256": "c239b14e05cab3f1d14b59496fa12ff4a476d16a6020c90c7f37238a74184aec",
+    "same_executable_ast": "verified; comments and grouping parentheses excluded, declaration kinds/operators retained",
+    "aggregate": "passed",
+    "static_quality": "passed",
+    "new_diagnostics": 0,
+    "existing_debt": 117,
+    "baseline_changed": false,
+    "tool_versions": "existing requirements-quality.txt and tools/quality-node/package-lock.json pins; no install",
+    "optimized_python_tests": 96
+  },
+  "retained_test_dependency": {
+    "commit": "670989839a0fccbcf2014d01609778ae6e4df424",
+    "source": "existing clean local checkout verified against dependencies/tether-snapshot.json",
+    "network_for_tests": "not_used"
+  },
+  "boundaries": {
+    "runtime_backend": "not_implemented",
+    "shared_wire_mapping": "not_implemented",
+    "actual_dom_tests": "blocked_environment",
+    "rendered_accessibility": "not_run",
+    "server_view_revocation": "not_run",
+    "durability": "not_implemented",
+    "github_ci": "not_run",
+    "live_acceptance": "not_run",
+    "deployment": "not_run",
+    "control_calls": "none"
+  },
+  "remaining_limit": "Synchronous local callback exclusion does not confirm asynchronous cleanup, bound resources inside ignoring adapters, or revoke server-side viewers. Issues remain open."
+}

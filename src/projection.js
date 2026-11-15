@@ -49,23 +49,36 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
   if (typeof clock !== 'function' || !Number.isSafeInteger(maxAgeMs) || maxAgeMs <= 0) throw new TypeError('invalid clock or age');
   if (!Array.isArray(allowedViewOrigins) || allowedViewOrigins.some(origin => safeViewUrl(origin, [origin]) !== `${origin}/`)) throw new TypeError('invalid allowed origins');
   let target = null, generation = 0, latestRequest = 0, phase = 'empty', record = null;
-  let pendingRead = null, pendingView = null, activeView = null, disposed = false;
+  let pendingRead = null, pendingView = null, activeView = null, disposed = false, releasingView = false;
 
+  function closeView(handle) {
+    const previousRelease = releasingView;
+    releasingView = true;
+    try { handle.close(); } finally { releasingView = previousRelease; }
+  }
   function releaseView() {
-    pendingView?.abort();
+    // Detach owned resources before adapter callbacks can create newer work.
+    const pending = pendingView, active = activeView;
     pendingView = null;
-    if (activeView) { try { activeView.close(); } catch { /* No authority is granted when adapter cleanup fails. */ } finally { activeView = null; } }
+    activeView = null;
+    const previousRelease = releasingView;
+    releasingView = true;
+    try {
+      pending?.abort();
+      if (active) { try { closeView(active); } catch { /* No authority is granted when adapter cleanup fails. */ } }
+    } finally { releasingView = previousRelease; }
   }
   function select(next) {
     if (disposed) throw new Error('projection disposed');
     const parsed = identity(next);
     generation++;
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     pendingRead = null;
-    releaseView();
     target = parsed;
     record = null;
     phase = 'empty';
+    releaseView();
+    previousRead?.abort();
   }
   function merge(update, {snapshot = false} = {}) {
     if (disposed || !target) return false;
@@ -86,8 +99,8 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
       simulated: update.simulated, gap,
       viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
     });
-    if (previous && (previous.viewUrl !== record.viewUrl || previous.simulated !== record.simulated || previous.evidenceClass !== record.evidenceClass || record.connection !== 'online' || record.observedAt === null)) releaseView();
     phase = 'ready';
+    if (previous && (previous.viewUrl !== record.viewUrl || previous.simulated !== record.simulated || previous.evidenceClass !== record.evidenceClass || record.connection !== 'online' || record.observedAt === null)) releaseView();
     return true;
   }
   function state() {
@@ -109,15 +122,18 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
   async function refresh() {
     if (disposed || !target) return false;
     if (typeof readSnapshot !== 'function') { phase = 'unsupported'; return false; }
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     const controller = new AbortController(), expectedGeneration = generation, request = ++latestRequest;
     pendingRead = controller;
     phase = 'loading';
     try {
+      previousRead?.abort();
+      if (controller.signal.aborted || disposed || expectedGeneration !== generation || request !== latestRequest) return false;
       const update = await readSnapshot(target, {signal: controller.signal});
       if (controller.signal.aborted || disposed || expectedGeneration !== generation || request !== latestRequest) return false;
       if (update === null) { phase = record ? 'ready' : 'empty'; return true; }
       const accepted = merge(update, {snapshot: true});
+      if (controller.signal.aborted || disposed || expectedGeneration !== generation || request !== latestRequest) return false;
       phase = record ? 'ready' : 'error';
       return accepted;
     } catch {
@@ -126,27 +142,29 @@ export function createProjection({clock, readSnapshot, openPassive, allowedViewO
     } finally { if (pendingRead === controller) pendingRead = null; }
   }
   async function view() {
-    if (disposed || pendingView || activeView || state().status !== 'ready' || !record.viewUrl || typeof openPassive !== 'function') return false;
+    if (disposed || releasingView || pendingView || activeView || state().status !== 'ready' || !record.viewUrl || typeof openPassive !== 'function') return false;
     const controller = new AbortController(), expectedGeneration = generation, admittedRecord = record;
     pendingView = controller;
     try {
       const opened = await openPassive(Object.freeze({identity: target, url: record.viewUrl, mode: 'passive', simulated: record.simulated}), {signal: controller.signal});
       if (!opened || typeof opened.close !== 'function') return false;
-      if (controller.signal.aborted || disposed || expectedGeneration !== generation || record !== admittedRecord || state().status !== 'ready') { opened.close(); return false; }
+      if (controller.signal.aborted || disposed || expectedGeneration !== generation || record !== admittedRecord || state().status !== 'ready') { closeView(opened); return false; }
       activeView = opened;
       return true;
     } catch { return false; }
     finally { if (pendingView === controller) pendingView = null; }
   }
   function dispose() {
+    if (disposed) return;
     generation++;
     disposed = true;
-    pendingRead?.abort();
+    const previousRead = pendingRead;
     pendingRead = null;
-    releaseView();
     target = null;
     record = null;
     phase = 'empty';
+    releaseView();
+    previousRead?.abort();
   }
   return Object.freeze({select, merge, state, refresh, view, dispose});
 }

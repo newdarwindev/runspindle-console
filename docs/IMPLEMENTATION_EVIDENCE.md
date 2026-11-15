@@ -51,6 +51,34 @@ view protocol qualification, control requests or execution authority. It neither
 restores authority across restart nor claims to revoke server-side viewer sessions.
 An adapter close failure is caught; closure acknowledgment is not proven.
 
+## Synchronous cancellation and cleanup ordering
+
+The existing projection now publishes a selection or terminal disposal and detaches
+its old owned resources before invoking synchronous adapter abort/close callbacks.
+A refresh reserves its request before aborting the previous read, checks its fence
+before invoking the read adapter, and checks again after merge cleanup. A newer
+reentrant selection, refresh or disposal therefore wins; an older outer operation
+cannot reset it, issue a superseded read, or restore ready over an empty record.
+View cleanup owns only its captured handles, closes them once, and excludes passive
+admission until synchronous cleanup returns, including nested cleanup and late stale
+handle close. An explicit later request is required; there is no retry queue.
+
+This is a bounded correction to the existing process-local adapter contract for
+Console #9, not a new transport or viewer model. The guard does not acknowledge
+asynchronous/server-side closure, revoke remote viewers, bound resources inside
+an ignoring adapter, or qualify browser/native behavior. Issues #9–11 retain their
+existing transport, shared mapping, sanitization and authority prerequisites.
+
+On 2026-11-15, the exact main base f4a8f86814e6ec480a7805062fe905da47dca998
+reproduced the race with three read calls and the older refresh winning. The new
+behavioral regression rejects that base with an independent adapter-call assertion
+(3 instead of 2). Eight new tests cover read/view abort, active and late close,
+newer selection/refresh/disposal, preserved newer resources, duplicate admission
+and exactly-once local cleanup. The ordinary projection tests and actual retained
+SQLite/Node reader integration still run separately. See
+[the local evidence record](projection-reentrancy-evidence.json) for commands,
+counts, source hashes and unchanged acceptance boundaries.
+
 ## Executed local checks
 
 On 2026-11-13, based on console `8d76a3919b019539aa4201294fef88cf2de645eb`,

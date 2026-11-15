@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "scope": "Partial synthetic component implementation for Console #10/#9/#3; no issue closure or runtime qualification.",
+  "base_main": "617e421ebc016cfc9ec5cdde0a2419bc6dc8fe20",
+  "candidate_identity": "The containing commit identifies these source bytes. No future commit or aggregate receipt is claimed.",
+  "changed_files": [
+    "src/navigation.js",
+    "test/navigation-retry.test.js",
+    "specs/task-navigation.md",
+    "docs/observation-retry-evidence.json"
+  ],
+  "source_sha256": {
+    "src/navigation.js": "67d69a25438939b139a48fec52392c2e78fe76d304bd0f45bc156659f3706c1e",
+    "test/navigation-retry.test.js": "2cc8ff6631533997576721e5a719f70e2967e2964d3f69a7d8210b3ff715b557",
+    "specs/task-navigation.md": "ba4eaef0f4b959f9437edfafb87be51d62dc2c7bfe39aba307aa27953f920127"
+  },
+  "node_version": "v24.22.1",
+  "evidence_class": "synthetic_component",
+  "runtime_boundary": "Actual process-local navigation, stream and projection modules; existing synthetic fixture catalog, explicit DOM/history doubles and injected transport callbacks. No actual DOM, native disabled-button or browser keyboard semantics, backend transport, remote revocation or durability qualification.",
+  "commands": [
+    "node --test test/navigation-retry.test.js test/navigation.test.js test/stream.test.js test/projection.test.js test/projection-reentrancy.test.js test/view.test.js"
+  ],
+  "verification": {
+    "main_selected_node_tests": {
+      "status": "passed",
+      "tests": 55,
+      "failed": 0,
+      "skipped": 0
+    },
+    "new_retry_tests": {
+      "status": "passed",
+      "tests": 7
+    },
+    "retry_mutation": {
+      "status": "detected",
+      "mutation": "Change forced selection to ordinary deduplicated selection; independent fresh-subscription count must reject the mutant."
+    },
+    "existing_stream_mutation": {
+      "status": "passed",
+      "initial_attempt": "Blocked by read-only temporary-directory filesystem before mutation ran.",
+      "final_attempt": "The same reviewed direct test passed with scoped temporary-file write permission. No npm, network, aggregate or browser route was used."
+    },
+    "scaffold": "not_run; isolated source subset, not a full checkout",
+    "full_node_suite": "not_run; selected named suites only",
+    "pinned_static_quality": "not_run; required pinned tools unavailable",
+    "aggregate": "not_run; existing held aggregate route was not retried",
+    "actual_dom_accessibility_visual": "not_run",
+    "backend_native_live_durability": "not_run",
+    "ci": "not_run"
+  },
+  "pr21_composition": {
+    "head": "fa326036a9cb4921c1234fb7a87a72245bbfe54b",
+    "tree": "dd820c67ed97b920303e00bea32b322f50f35a02",
+    "boundary": "Replace reference src/projection.js, src/stream.js and test/projection-reentrancy.test.js with unchanged PR21 bytes and add its unchanged test/passive-view-lifecycle.test.js in an isolated synthetic test directory. No PR21 lifecycle source modified.",
+    "source_sha256": {
+      "src/stream.js": "61901f4534d55cf4b9b4a9a9375fb3f6d2987266d0435f9e702ee655a1a65aef",
+      "src/projection.js": "6a612226ad0934cbe2e35a3bc185be443dc9d7040794d05a6e4e8ef130476955"
+    },
+    "command": "node --test test/navigation-retry.test.js test/navigation.test.js test/stream.test.js test/projection.test.js test/projection-reentrancy.test.js test/view.test.js test/passive-view-lifecycle.test.js",
+    "status": "passed",
+    "tests": 65,
+    "failed": 0,
+    "skipped": 0
+  },
+  "provenance": "Original navigation extension and invented tests; reuse existing cleared synthetic fixtures. No imported third-party source, private data, accounts, credentials or screenshots."
+}

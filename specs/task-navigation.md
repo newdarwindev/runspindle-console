@@ -17,3 +17,29 @@ Call `update()` after stream events or clock changes. There are no automatic tim
 `npm test` runs the existing suites plus real stream coordination composed with explicit DOM/history doubles. It covers click/selection, duplicate history effects, Back/Forward sequencing, late snapshot replies, exact identity on refused connect, unknown routes, focus retention/restoration, disposal during pending reads, forbidden viewer calls and failed history push/cleanup. Four bounded subprocess mutations remove repeated-selection suppression, ignore refused admission, report premature success during pending admission, or remove the pending subscription-acquisition guard. Independent history-entry counts, rendered-state/result assertions and subscribe-call counts must fail. An unresolved subscription blocks repeated task switches until its late handle confirms synchronous cleanup; the selected task stays unavailable without old data, and a successful cleanup requires explicit retry. The existing unsafe text mutation still fails after extracting the shared DOM double.
 
 These tests are **not actual DOM, keyboard, accessibility or visual acceptance**. Existing Chromium startup is blocked by local IPC restrictions; no browser sandbox is bypassed. The existing real-DOM renderer harness does not yet test this navigation shell. Runtime discovery, shared envelopes, backend integration, real desktop viewing, rendered responsive/zoom/keyboard behavior, durable navigation and live/native acceptance remain not implemented/not run. No control, deployment, service or source-lift permission follows from this code.
+
+## Explicit observation retry
+
+The named `Retry observation` button and `retryObservation()` API request one fresh
+observation for the currently selected task without pushing a history entry or
+moving focus. This is a manual action, not an automatic retry or runtime adapter.
+The button is disabled with no selected task or while admission is loading; the
+API independently enforces the same guard. If an acquired subscription reports
+offline/error while its snapshot promise is still unresolved, explicit retry can
+proceed without waiting for that old read. Call update after stream events to
+refresh button availability. Repeated clicks cannot queue work.
+
+Retry first invalidates the current selection generation and disconnects through
+the existing stream owner, then uses its normal connect/snapshot path. Unknown
+subscription cleanup still refuses admission and is shown as unknown; retry does
+not replace the stream or infer cleanup success. Task changes and disposal fence
+late retry completions. Ordinary same-task navigation remains deduplicated; use
+the explicit retry action after disconnect/error or to request a fresh snapshot.
+
+`node --test test/navigation-retry.test.js` uses real process-local modules with
+the existing synthetic DOM/history boundaries. It checks disconnect/error retry,
+repeated clicks, unchanged history and selected identity, task-switch races, late
+events, failed cleanup, disposal and zero viewer/control effects. A source mutation
+that removes forced admission must fail the independent subscription count.
+These checks do not qualify native disabled-button, keyboard, browser history,
+layout, accessibility, actual runtime transport or remote revocation behavior.

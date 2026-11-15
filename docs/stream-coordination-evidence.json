@@ -1,27 +1,32 @@
 {
   "schema_version": 1,
   "evidence_class": "synthetic_component",
-  "base_commit": "d89ce7efd3545ba78e25452383ee88bc4c59e48f",
+  "base_commit": "08d8c77952ae23e27f3593da887ca39244da7758",
   "source_sha256": {
-    "src/stream.js": "b1e66d61232de06765c48e832273a1d757f1f128fd4b94210612f92b1a9a3f47",
-    "src/projection.js": "daf72b3303a88e18742ab86380dff1f540b095116255845b6a80b4753f466d64",
-    "test/stream.test.js": "ab6cc2fcddfea6b7e3551ea21b2479af58c2fba31f5b611fa04d387128a99ea0",
+    "src/stream.js": "fdae7c84b7fd3eb2b0ddbabcee58598b325f8f5384c0655999633f9bda3a116e",
+    "src/projection.js": "6d679f093deeb856c198934a873f132eb3e425cb22b130b462a8876144649e88",
+    "test/stream.test.js": "e4f145d3135ea74be8a6f36ae5e862d259fba959f3169fa2f7b3c6d6ae860c95",
     "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
-    "specs/stream-coordination.md": "f12698c3eb3c3424207f77d2648f01c85a6192b52b916fbfad9ac27281ee2cd1"
+    "specs/stream-coordination.md": "f22e658cc69a17af78b58b6f2cf43713f6862d7bb0af69f8c01554b14b2d41ec",
+    "test/navigation.test.js": "06068de7dcc40c28815f786321f1e417cb937707bc83f55bd06b911c1d620d6d",
+    "test/navigation-mutation.test.js": "6c72a6b29ff6b9724639d9a2d2496ed0da83644e943b912bbd7179e0ecc699c8"
   },
   "toolchain": {
-    "node": "v24.22.1"
+    "node": "v24.22.1",
+    "python": "3.12.14"
   },
   "commands": [
-    "npm test",
-    "python3 tools/validate.py"
+    "node --test test/stream.test.js test/navigation.test.js test/navigation-mutation.test.js",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> npm test",
+    "python3 tools/check_scaffold.py",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/validate.py"
   ],
   "node_tests": {
-    "passed": 28,
+    "passed": 57,
     "failed": 0,
     "skipped": 0
   },
-  "mutation": "disabled_buffer_bound_fails_overflow_status_assertion",
+  "mutation": "buffer overflow, duplicate history, refused admission, pending success and removed pending-acquisition guard all detected by assertions; removed guard fails subscribe-call count",
   "boundaries": {
     "runtime_backend": "not_implemented",
     "shared_wire_mapping": "not_implemented",
@@ -30,9 +35,32 @@
     "durability": "not_implemented",
     "github_ci": "not_run"
   },
-  "issues": [
-    1,
-    3,
-    9
-  ]
+  "issues": [1, 3, 9],
+  "targeted_tests": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_tests": {
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0
+  },
+  "retained_test_dependency": {
+    "commit": "670989839a0fccbcf2014d01609778ae6e4df424",
+    "source": "existing clean local checkout verified against dependencies/tether-snapshot.json",
+    "network": "not_used"
+  },
+  "pending_acquisition": {
+    "evidence_class": "synthetic_component_with_DOM_and_history_doubles",
+    "unresolved_call_bound": 1,
+    "invalidation": "abort and fence callbacks; report unknown cleanup until late valid handle closes synchronously",
+    "confirmed_late_close": "exactly once; explicit reconnect only; disposal remains terminal",
+    "unknown_cleanup": "rejection, missing/malformed handle, throwing or asynchronous close remain sticky",
+    "navigation": "refused selected identity stays unavailable without old observation",
+    "controls_invoked": 0,
+    "production_unsubscribe": "not_established",
+    "issue_9": "remains_open; authenticated transport and runtime mapping require root #43 and Tether #8/#10; actual viewer revocation is separate",
+    "reentrant_teardown": "abort listeners, passive cleanup and subscription close cannot acquire until teardown returns; peak allocated synthetic subscriptions remains one; reentrant disposal prevents outer replacement acquisition"
+  }
 }

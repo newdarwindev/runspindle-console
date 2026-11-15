@@ -1,26 +1,30 @@
 {
-  "base_commit": "f673bcf9a17d4ccc8fd16a66e82b040f5bdd39e3",
+  "base_commit": "08d8c77952ae23e27f3593da887ca39244da7758",
   "evidence_class": "synthetic_stream_with_DOM_and_history_doubles",
   "node": "v24.22.1",
   "commands": [
-    "npm test",
-    "python3 tools/validate.py"
+    "node --test test/stream.test.js test/navigation.test.js test/navigation-mutation.test.js",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> npm test",
+    "python3 tools/check_scaffold.py",
+    "RUNSPINDLE_RETAINED_TETHER=<verified pinned checkout> python3 tools/validate.py"
   ],
   "tests": {
-    "passed": 41,
+    "passed": 57,
     "failed": 0,
     "skipped": 0
   },
-  "mutation": "duplicate_history_refused_admission_and_pending_success_mutants_each_rejected",
+  "mutation": "buffer overflow, duplicate history, refused admission, pending success and removed pending-acquisition guard all detected by assertions; removed guard fails subscribe-call count",
   "source_sha256": {
     "src/navigation.js": "b91b35056c167e81d012c1566e2c09e2e1c4d7593017f81139fd5207ccc89d8e",
-    "src/stream.js": "b1e66d61232de06765c48e832273a1d757f1f128fd4b94210612f92b1a9a3f47",
-    "src/view.js": "e72f490027567b3e6f26ecb5a5d1c30b365a25bcaadee5f1b1d95a6e0e0fa7a4",
+    "src/stream.js": "fdae7c84b7fd3eb2b0ddbabcee58598b325f8f5384c0655999633f9bda3a116e",
+    "src/view.js": "fce8176d3784c2f9fa2bd38c8ad18156ba08ed15e618ed1fc8d5e688f7093fdc",
     "fixtures/console-ui/scenarios.js": "ab43faf5d8451a1204fb892303b227e252d6e40b4e914c87bef057e590294ea1",
-    "test/navigation.test.js": "350644bc808462e47075fac2b1e4a6eec48dae89a97c26734459cfd001af7473",
-    "test/navigation-mutation.test.js": "3c93b74ba361423be391a54336dda9d10b7836bfbf46a2306fc697ef99ec307c",
+    "test/navigation.test.js": "06068de7dcc40c28815f786321f1e417cb937707bc83f55bd06b911c1d620d6d",
+    "test/navigation-mutation.test.js": "6c72a6b29ff6b9724639d9a2d2496ed0da83644e943b912bbd7179e0ecc699c8",
     "test/dom-double.js": "353fcf34d78c1f7100ece03e7e9dc8251f1b4082c05d5b61f327cd241ff5b70c",
-    "specs/task-navigation.md": "aa1497e8fce141660a26a48112f0a033c570db338b7cda236e3c82d483fc2a55"
+    "specs/task-navigation.md": "1ad5a411a755c47865d77f51fdf0e4f5c31f3de4e338515d5b0e0d3de13d2558",
+    "test/stream.test.js": "e4f145d3135ea74be8a6f36ae5e862d259fba959f3169fa2f7b3c6d6ae860c95",
+    "specs/stream-coordination.md": "f22e658cc69a17af78b58b6f2cf43713f6862d7bb0af69f8c01554b14b2d41ec"
   },
   "not_run": [
     "actual_DOM_navigation",
@@ -30,10 +34,32 @@
     "live_acceptance",
     "remote_CI"
   ],
-  "issues_remain_open": [
-    1,
-    3,
-    6,
-    10
-  ]
+  "issues_remain_open": [1, 3, 6, 9, 10],
+  "targeted_tests": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_tests": {
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0
+  },
+  "retained_test_dependency": {
+    "commit": "670989839a0fccbcf2014d01609778ae6e4df424",
+    "source": "existing clean local checkout verified against dependencies/tether-snapshot.json",
+    "network": "not_used"
+  },
+  "pending_acquisition": {
+    "evidence_class": "synthetic_component_with_DOM_and_history_doubles",
+    "unresolved_call_bound": 1,
+    "invalidation": "abort and fence callbacks; report unknown cleanup until late valid handle closes synchronously",
+    "confirmed_late_close": "exactly once; explicit reconnect only; disposal remains terminal",
+    "unknown_cleanup": "rejection, missing/malformed handle, throwing or asynchronous close remain sticky",
+    "navigation": "refused selected identity stays unavailable without old observation",
+    "controls_invoked": 0,
+    "production_unsubscribe": "not_established",
+    "issue_9": "remains_open; authenticated transport and runtime mapping require root #43 and Tether #8/#10; actual viewer revocation is separate",
+    "reentrant_teardown": "abort listeners, passive cleanup and subscription close cannot acquire until teardown returns; peak allocated synthetic subscriptions remains one; reentrant disposal prevents outer replacement acquisition"
+  }
 }

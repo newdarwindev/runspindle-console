@@ -111,3 +111,16 @@ substitution, UTF-8/chunk limits, truncation/reordering, timeout, cancellation,
 stale task completion and disabled control. A deliberate source-pin-check removal
 must fail a behavioral rejection assertion. Optimized Python exporter output must
 match normal output. Source tests are not live provider/native browser evidence.
+
+
+## Partitioned hygiene integration
+
+Quality and component jobs each materialize the same exact producer checkout.
+A required retained-source check runs before static analysis; quality receives
+MYPYPATH for that verified source and this repository. Component inventory includes
+retained-snapshot-integration in addition to the existing Python/JavaScript suites.
+Missing source fails visibly. The aggregate still requires every existing partition
+receipt and exact image binding; no baseline, image pin or prior check is removed.
+Projection/test formatting and type annotations preserve reviewed runtime ASTs.
+Two textual mutation anchors are updated for formatting, retaining all three
+behavioral mutants. No live backend or broader qualification is inferred.

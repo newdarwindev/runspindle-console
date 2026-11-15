@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "evidence_class": "local_synthetic_runtime_hygiene_integration",
+  "hygiene_parent": "f94231053b35dc1878201bb8a7d716c3a004289c",
+  "merged_runtime_main": "874cd6d130959f06ebfee352e10ee60f2fba3a63",
+  "candidate_identity": "The containing commit identifies these exact source bytes. Separate final clean-source aggregate receipts record the exact commit/tree. No recursive self-hash or future revision qualification is claimed.",
+  "runtime_integration": "The newly integrated src/stream.js, test/stream.test.js, test/navigation.test.js and test/navigation-mutation.test.js retain exact merged-main bytes. Existing src/projection.js and test/projection.test.js retain exact hygiene-parent formatting and type documentation; this integration makes no changes to them.",
+  "verification": {
+    "normal_python": 96,
+    "optimized_python": 96,
+    "skipped": 0,
+    "full_static_new_diagnostics": 0,
+    "unchanged_existing_static_debt": 117,
+    "scaffold": "passed",
+    "repository_hygiene": "passed",
+    "artifacts": "passed",
+    "strict_aggregate_receipts": "Recorded separately against the final clean commit after this evidence is committed.",
+    "optimized_aggregate_scope": "The optimized aggregate driver retains existing normal child commands; the separate optimized Python suite exercises optimized guards.",
+    "node": 57,
+    "projection_mutation_gate": "passed",
+    "navigation_pending_acquisition_mutation": "detected",
+    "focused_teardown_guard_removal_mutations": 2,
+    "retained_source": "verified clean at existing pin",
+    "vision": "static integrity passed; visual acceptance remains blocked"
+  },
+  "current_source_sha256": {
+    "src/stream.js": "fdae7c84b7fd3eb2b0ddbabcee58598b325f8f5384c0655999633f9bda3a116e",
+    "test/stream.test.js": "e4f145d3135ea74be8a6f36ae5e862d259fba959f3169fa2f7b3c6d6ae860c95",
+    "test/navigation.test.js": "06068de7dcc40c28815f786321f1e417cb937707bc83f55bd06b911c1d620d6d",
+    "test/navigation-mutation.test.js": "6c72a6b29ff6b9724639d9a2d2496ed0da83644e943b912bbd7179e0ecc699c8",
+    "specs/stream-coordination.md": "f22e658cc69a17af78b58b6f2cf43713f6862d7bb0af69f8c01554b14b2d41ec",
+    "specs/task-navigation.md": "1ad5a411a755c47865d77f51fdf0e4f5c31f3de4e338515d5b0e0d3de13d2558"
+  },
+  "historical_evidence": {
+    "scope": "Verbatim prior public records retained without relabeling old test counts or hashes as results for this candidate. Imported runtime records remain results for their original runtime source; current hashes and counts are above.",
+    "sha256": {
+      "docs/stream-coordination-pre-runtime-hygiene-evidence.json": "0c35e8c2b09c22813757fc2ae75c2d1bcb7b3d50da270143a87e1206c4b4f0df",
+      "docs/task-navigation-pre-runtime-hygiene-evidence.json": "da16e2275d9d9d51183f9b734990158d25a23c2c4d9d03594ef5fb9ed53b08fd"
+    }
+  },
+  "unchanged_gate_sha256": {
+    ".github/workflows/console-build.yml": "5348f1cd131cd8567528309500e4c5182116c6ada1d6ff37328d3a4e902c35ff",
+    ".github/workflows/console-ci.yml": "97e49911644d53218a52032e82848fd67033298adf677f51ac3376c6e4962b84",
+    ".github/workflows/fleet-qualification.yml": "4877c917d24d07fb8ceb882e8c1f801576cc9f6fdd697a352f99950e83d9c829",
+    ".github/workflows/validation.yml": "7aaee533e5cc3950bf4ed1de1234b3fc119cbaf4322d379105d30d8e3c8e75b3",
+    "STATUS.json": "9ccb5a45d8f1603b0fb3cddb504129dd7739898ebc40ee9194578d60ae1db3ff",
+    "dependencies/tether-snapshot.json": "257260454260680ace6786c6369a41febc6f8bc311d350b9ba36209d804fd654",
+    "hygiene.json": "6a397dfd19c772feed83fd8f99ea700fd14c8072f697986bfa8c3315b58a2d3f",
+    "requirements-quality.txt": "9cbe1331549216b953f2922f1e8321357ca82bb985e1ea595c87fcee8a8fdc84",
+    "tools/acceptance_gate.py": "1937759346b5314da4afc48894c70a5f8b819e6696a074fb55fc254b2bfb79a9",
+    "tools/hygiene.py": "6162ab8e62cb5cc9c7816b729e76b4537cc3aaa09cf3c3477fd68e65d6889278",
+    "tools/partition_validation.py": "47ed0981e70a971ff28dde7077ce0d0c39adb77fb6ad9aa29bc6ed02bdd71ffc",
+    "tools/quality-baseline.json": "0051ed9357181fc489802f28c313651018552733953135cbd2a554c2eb89cc37",
+    "tools/quality-node/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+    "tools/quality-node/eslint.config.mjs": "f48003564507c08e3fe966b64589fef8ba0e879abe8f0aa702e31e38fe2f4977",
+    "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db",
+    "tools/quality-node/package.json": "728009d6ffdd0ae4629f8d55c43e8ac43c7a90ba9925b92fbdafb86e7092f752",
+    "tools/static_quality.py": "ba3599da610e22a39a016170b6829948399e872368ec6653b747f8b482944b2f",
+    "tools/validate.py": "b29f49b6ae71b4427328df21ee855f9ac809ea452af9729a3d1f5ada5695118a",
+    "validation-partitions.json": "8e1c56c52f21d710f0b967905672581a62259214d03158b602cf15d3f853d0a1"
+  },
+  "unchanged_artifact_sha256": {
+    "docs/product/LICENSE-SRC-010.txt": "fcf64df3e04554728cc4f082f244fa3dc672c2c6368f22360e6491a113204895",
+    "docs/product/LICENSE-SRC-013.txt": "fcf64df3e04554728cc4f082f244fa3dc672c2c6368f22360e6491a113204895",
+    "docs/product/README.md": "c6d18b75211f8d73d87cb9fffbe094156bf17ee549dcd3a572913dc3bf63d02b",
+    "docs/product/SRC-010-lift.json": "80e4fbae10af2b29b9712cfc3c4754bda32266f5597940244ed9b998afa40e0d",
+    "docs/product/SRC-010-validation.md": "d551d121efb1525d8a73ef2f73099935ad9092c4f3ec38cb20a438debe20bb6b",
+    "docs/product/THIRD_PARTY_NOTICES.md": "2afe22dabdeffa7e19438910c1f5051d73d0466285a3eed6c5e7d3ef75ccd2a5",
+    "docs/product/artifacts.json": "52017a9039d1132994af29791c422d7a859dbe9b6f7d0ec46e22375ca1869c1f",
+    "docs/product/browser.html": "cfa1744917d2088f430e588c489590f1b3c3adf25bf15b277012345d6a2245c5",
+    "docs/product/index.html": "81a27aba679a08c0db9547adada4b925c5631991f3708801a5fb0e9a8d8ebed4",
+    "docs/product/vision.html": "39a546f71fce360129b06e4978c589769d79b19a05d14917066dadf0816d41e7",
+    "docs/vision-hygiene-integration.json": "4379b0a02d36420b51523d34a5b1ee01e9a96ed6addfa8b2d3dfb088e3c460d3",
+    "tests/test_vision.py": "52144c9fbbb73f58a8c0c0fd6c3783f710ee8415363cbab5ad50e9ccae5bb5be",
+    "tools/check_vision.py": "d656bd3e88f6ef63276e1e07d2b15bc2b2794a3f94bc5ff36a5170f131d5e7ea"
+  },
+  "remaining_limits": [
+    "Independent integration review pending.",
+    "Image-bound partition CI and exact-head remote CI not run for this candidate.",
+    "Runner image binding and all existing workflow, inventory, baseline and status gates remain unchanged.",
+    "No native, browser, server, live provider, production, deployment or activation qualification.",
+    "No install, image build, fleet operation, dispatch, access or credential change.",
+    "Selected-source migration remains partial; no unpublished paper import."
+  ]
+}

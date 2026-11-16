@@ -84,8 +84,7 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
   async function select(key, focus = false, retry = false) {
     if (disposed) return false;
     const task = typeof key === "string" ? tasks.get(key) : undefined;
-    if (task && selected === key && !unavailable && !retry)
-      return !connecting;
+    if (task && selected === key && !unavailable && !retry) return !connecting;
     const ticket = ++generation;
     selected = task ? task.key : null;
     unavailable = !task;
@@ -188,6 +187,9 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = task.label;
+    // Keep full task identity visible when a catalog label has no break points.
+    button.style.maxWidth = "100%";
+    button.style.overflowWrap = "anywhere";
     button.setAttribute("data-task-key", key);
     button.setAttribute("aria-current", "false");
     const listener = () => {

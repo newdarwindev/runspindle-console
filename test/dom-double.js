@@ -9,6 +9,7 @@ export class ElementDouble {
     this.text = "";
     /** @type {ElementDouble | null} */ this.parent = null;
     this.tabIndex = 0;
+    /** @type {Record<string,string>} */ this.style = {};
     /** @type {Map<string, Set<() => void>>} */ this.listeners = new Map();
   }
   /** @param {string} text */

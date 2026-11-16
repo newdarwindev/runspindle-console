@@ -14,7 +14,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_case(browser: str, directory: Path, mutation: bool = False) -> dict[str, Any]:
+def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dict[str, Any]:
     sources = []
     for name in (
         "src/projection.js",
@@ -23,11 +23,16 @@ def run_case(browser: str, directory: Path, mutation: bool = False) -> dict[str,
         "test/view.assertions.js",
     ):
         source = (ROOT / name).read_text()
-        if mutation and name == "src/view.js":
+        if mutation is True and name == "src/view.js":
             needle = "node.textContent = displayText(value)"
             if source.count(needle) != 1:
                 raise RuntimeError("mutation target missing")
             source = source.replace(needle, "node.innerHTML = displayText(value)")
+        if mutation == "reflow" and name == "src/view.js":
+            needle = 'panel.style.overflowWrap = "anywhere";'
+            if source.count(needle) != 1:
+                raise RuntimeError("reflow mutation target missing")
+            source = source.replace(needle, 'panel.style.overflowWrap = "normal";')
         sources.append(source.replace("export ", ""))
     script = (
         "\n".join(sources)
@@ -37,7 +42,11 @@ def run_case(browser: str, directory: Path, mutation: bool = False) -> dict[str,
   try {
     const count = await assertProjectionDom(document, createProjectionView, createProjection, consoleScenarios);
     result.textContent = JSON.stringify({status: 'passed', assertions: count});
-  } catch { result.textContent = JSON.stringify({status: 'failed'}); }
+  } catch (error) {
+    result.textContent = JSON.stringify({status: 'failed', reason:
+      error instanceof Error && error.message === 'long text reflows without horizontal overflow'
+        ? 'long_text_overflow' : 'assertion_failed'});
+  }
 })();
 """
     )
@@ -103,7 +112,7 @@ def run_case(browser: str, directory: Path, mutation: bool = False) -> dict[str,
 
 
 def main() -> int:
-    browser = shutil.which("chromium")
+    browser = shutil.which(os.environ.get("RUNSPINDLE_DOM_BROWSER", "chromium"))
     if not browser:
         print(json.dumps({"status": "blocked", "reason": "chromium_missing"}))
         return 78
@@ -111,7 +120,11 @@ def main() -> int:
         [browser, "--version"], capture_output=True, text=True, timeout=5, check=True
     ).stdout.strip()
     results = {}
-    for name, mutation in [("actual_dom", False), ("unsafe_text_mutation", True)]:
+    for name, mutation in [
+        ("actual_dom", False),
+        ("unsafe_text_mutation", True),
+        ("reflow_mutation", "reflow"),
+    ]:
         try:
             with tempfile.TemporaryDirectory(prefix="console-dom-") as temporary:
                 results[name] = run_case(browser, Path(temporary), mutation)
@@ -127,6 +140,8 @@ def main() -> int:
     passed = (
         results["actual_dom"]["status"] == "passed"
         and results["unsafe_text_mutation"]["status"] == "failed"
+        and results["reflow_mutation"]["status"] == "failed"
+        and results["reflow_mutation"].get("reason") == "long_text_overflow"
     )
     print(
         json.dumps(

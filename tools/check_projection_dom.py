@@ -16,12 +16,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dict[str, Any]:
     sources = []
-    for name in (
+    names = (
         "src/projection.js",
         "src/view.js",
         "fixtures/console-ui/scenarios.js",
         "test/view.assertions.js",
-    ):
+    )
+    navigation = mutation in ("navigation", "history")
+    if navigation:
+        names += (
+            "src/stream.js",
+            "src/navigation.js",
+            "test/navigation-browser.assertions.js",
+        )
+    for name in names:
         source = (ROOT / name).read_text()
         if mutation is True and name == "src/view.js":
             needle = "node.textContent = displayText(value)"
@@ -33,6 +41,18 @@ def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dic
             if source.count(needle) != 1:
                 raise RuntimeError("reflow mutation target missing")
             source = source.replace(needle, 'panel.style.overflowWrap = "normal";')
+        if name in ("src/stream.js", "src/navigation.js"):
+            source = re.sub(
+                r'^import \{[^\n]+\} from "\./[^"\n]+";\n',
+                "", source, flags=re.MULTILINE,
+            )
+        if mutation == "history" and name == "src/navigation.js":
+            needle = 'browser.addEventListener("popstate", callback);'
+            if source.count(needle) != 1:
+                raise RuntimeError("history mutation target missing")
+            source = source.replace(
+                needle, 'browser.addEventListener("never-popstate", callback);'
+            )
         sources.append(source.replace("export ", ""))
     script = (
         "\n".join(sources)
@@ -50,6 +70,14 @@ def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dic
 })();
 """
     )
+    if navigation:
+        script = script.replace(
+            "assertProjectionDom(document, createProjectionView, createProjection, consoleScenarios)",
+            "assertNavigationBrowser(window, createTaskNavigator, createBrowserTaskHistory, createStreamProjection, consoleScenarios, consoleTaskCatalog)",
+        )
+        script = script.replace(
+            "'long text reflows without horizontal overflow'", "'history navigation timeout'"
+        ).replace("'long_text_overflow'", "'history_navigation_timeout'")
     script = script.replace("</script", "<\\/script")
     page = directory / "test.html"
     page.write_text(
@@ -81,6 +109,7 @@ def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dic
             "--host-resolver-rules=MAP * ~NOTFOUND",
             "--disable-extensions",
             "--user-data-dir=" + str(directory / "profile"),
+            "--virtual-time-budget=3000",
             "--dump-dom",
             page.as_uri(),
         ],
@@ -124,6 +153,8 @@ def main() -> int:
         ("actual_dom", False),
         ("unsafe_text_mutation", True),
         ("reflow_mutation", "reflow"),
+        ("navigation_actual", "navigation"),
+        ("history_mutation", "history"),
     ]:
         try:
             with tempfile.TemporaryDirectory(prefix="console-dom-") as temporary:
@@ -142,6 +173,8 @@ def main() -> int:
         and results["unsafe_text_mutation"]["status"] == "failed"
         and results["reflow_mutation"]["status"] == "failed"
         and results["reflow_mutation"].get("reason") == "long_text_overflow"
+        and results["navigation_actual"]["status"] == "passed"
+        and results["history_mutation"].get("reason") == "history_navigation_timeout"
     )
     print(
         json.dumps(

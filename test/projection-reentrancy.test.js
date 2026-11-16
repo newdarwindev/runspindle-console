@@ -153,7 +153,14 @@ test("selection publishes new identity before callbacks and never cleans their n
     assert.deepEqual(projection.state().identity, newest);
     assert.equal(reads[0].aborted, true);
     assert.equal(views[0].aborted, true);
-    assert.equal((trigger === "read-abort" ? views : reads)[1].aborted, false);
+    if (trigger === "read-abort") {
+      assert.equal(
+        views.length,
+        1,
+        "pending passive acquisition retains ownership",
+      );
+      assert.equal(await reentrant, false);
+    } else assert.equal(reads[1].aborted, false);
     oldRead.resolve(observation({ revision: 99 }));
     oldView.resolve({
       close() {
@@ -163,13 +170,15 @@ test("selection publishes new identity before callbacks and never cleans their n
     assert.equal(await reading, false);
     assert.equal(await viewing, false);
     assert.equal(oldCloses, 1);
-    if (trigger === "read-abort")
+    if (trigger === "read-abort") {
+      reentrant = projection.view();
+      assert.equal(views[1].aborted, false);
       newView.resolve({
         close() {
           newCloses++;
         },
       });
-    else newRead.resolve(observation({ identity: newest, revision: 2 }));
+    } else newRead.resolve(observation({ identity: newest, revision: 2 }));
     assert.equal(await reentrant, true);
     assert.equal(projection.state().status, "ready");
     projection.dispose();
@@ -350,10 +359,10 @@ test("passive admission waits for synchronous cleanup, including nested cleanup"
     assert.deepEqual(await Promise.all(refused), [false, false]);
     assert.equal(opens, 1, "cleanup must return before another passive call");
     assert.equal(projection.state().record.revision, 3);
-    assert.equal(await projection.view(), true);
-    assert.equal(opens, 2);
-    assert.equal(await projection.view(), false);
     if (trigger === "view-abort") {
+      assert.equal(await projection.view(), false);
+      assert.equal(opens, 1, "pending passive acquisition retains ownership");
+      assert.equal(projection.state().viewCleanup, "unknown");
       old.resolve({
         close() {
           oldCloses++;
@@ -362,6 +371,9 @@ test("passive admission waits for synchronous cleanup, including nested cleanup"
       assert.equal(await viewing, false);
     }
     assert.equal(oldCloses, 1);
+    assert.equal(await projection.view(), true);
+    assert.equal(opens, 2);
+    assert.equal(await projection.view(), false);
     projection.dispose();
     assert.equal(newCloses, 1);
   }

@@ -1,12 +1,9 @@
 // Process-local transport coordination, not a runtime wire protocol or authority.
-import { createProjection } from "./projection.js";
+import { createProjectionFactory } from "./projection.js";
 
 /** @typedef {{close: () => unknown}} Subscription */
 /** @typedef {{signal: AbortSignal, onEvent: (update: unknown) => void, onDisconnect: () => void, onError: (error?: unknown) => void}} Callbacks */
 /** @typedef {{clock: () => number, readSnapshot?: (...args: any[]) => any, openPassive?: (...args: any[]) => any, allowedViewOrigins?: string[], maxAgeMs?: number, subscribe?: (identity: Readonly<Record<string, unknown>>, callbacks: Callbacks) => Subscription | Promise<Subscription>, maxBuffered?: number}} StreamOptions */
-// The existing projection's provisional adapter boundary is dynamically typed.
-/** @type {(options: any) => any} */
-const projectionFactory = createProjection;
 /** @typedef {{key: string, identity: Readonly<Record<string, unknown>>, projection: any, controller: AbortController, buffer: any[], synchronizing: boolean, closed: boolean, handle: Subscription | null, promise: Promise<boolean> | null}} Session */
 
 /** @param {StreamOptions} options */
@@ -25,6 +22,10 @@ export function createStreamProjection(
   ) {
     throw new TypeError("invalid buffer bound");
   }
+  // Pending/uncertain passive resources outlive an individual task projection.
+  // Preserve the existing dynamically typed provisional projection boundary.
+  /** @type {(() => any) & {viewCleanup: () => string}} */
+  const projectionFactory = createProjectionFactory(options);
   /** @type {Session | null} */
   let current = null;
   /** @type {Session | null} */
@@ -32,7 +33,7 @@ export function createStreamProjection(
   let disposed = false;
   let cleanupUnknown = false;
   let tearingDown = false;
-  const empty = projectionFactory(options);
+  const empty = projectionFactory();
   let last = empty.state();
   empty.dispose();
 
@@ -98,7 +99,7 @@ export function createStreamProjection(
   function normalized(session, update) {
     // Store only the projection's bounded validated fields, never arbitrary
     // adapter object graphs or raw transport errors.
-    const probe = projectionFactory(options);
+    const probe = projectionFactory();
     try {
       probe.select(session.identity);
       if (!probe.merge(update, { snapshot: true })) return null;
@@ -118,7 +119,7 @@ export function createStreamProjection(
   function connect(identity) {
     if (disposed || cleanupUnknown || tearingDown)
       return Promise.resolve(false);
-    const projection = projectionFactory(options);
+    const projection = projectionFactory();
     projection.select(identity);
     let selected;
     try {
@@ -243,6 +244,7 @@ export function createStreamProjection(
       cleanupUnknown || tearingDown || !!pendingAcquisition?.closed;
     return Object.freeze({
       ...observed,
+      viewCleanup: projectionFactory.viewCleanup(),
       status: unconfirmed
         ? "unknown"
         : current && !current.closed && current.synchronizing

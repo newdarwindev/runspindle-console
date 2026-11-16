@@ -124,14 +124,114 @@ export function escapeText(value) {
   );
 }
 
+/** @typedef {{controller:AbortController, invalidated:boolean, close:(()=>unknown)|null}} PassiveSlot */
+
+// One resource owner survives task changes and stream projection replacement.
+// Abort is a cancellation request, not a receipt that acquisition did not occur.
+function createPassiveOwner() {
+  let slot = /** @type {PassiveSlot|null} */ (null);
+  let unknown = false,
+    releasing = 0;
+  function blocked() {
+    return unknown || releasing > 0 || slot !== null;
+  }
+  /** @param {AbortController} controller */
+  function reserve(controller) {
+    if (blocked()) return null;
+    slot = { controller, invalidated: false, close: null };
+    return slot;
+  }
+  /** @param {PassiveSlot} token */
+  function release(token) {
+    token.invalidated = true;
+    releasing++;
+    try {
+      token.controller.abort();
+    } catch {
+      unknown = true;
+    } finally {
+      const close = token.close;
+      token.close = null;
+      if (close) {
+        try {
+          // Only the existing synchronous void-close contract confirms local
+          // cleanup. A promise/other receipt needs a separately reviewed adapter.
+          const result = close();
+          if (result !== undefined) {
+            unknown = true;
+            void Promise.resolve(result).catch(() => {});
+          }
+        } catch {
+          unknown = true;
+        } finally {
+          if (slot === token) slot = null;
+        }
+      }
+      releasing--;
+    }
+  }
+  /** @param {PassiveSlot} token */
+  function fail(token) {
+    unknown = true;
+    release(token);
+    if (slot === token) slot = null;
+  }
+  /** @param {PassiveSlot} token @param {any} handle */
+  function acquired(token, handle) {
+    const close = handle?.close;
+    if (typeof close !== "function") {
+      fail(token);
+      return false;
+    }
+    token.close = () => close.call(handle);
+    return true;
+  }
+  return Object.freeze({
+    blocked,
+    reserve,
+    release,
+    fail,
+    acquired,
+    /** @param {PassiveSlot} token */
+    owns: (token) => slot === token,
+    cleanup: () =>
+      unknown || releasing || slot?.invalidated
+        ? "unknown"
+        : "no_unconfirmed_close",
+  });
+}
+
+/**
+ * A private ownership scope for projections sharing one passive adapter.
+ * Stream task replacement must use this factory, not reset unresolved ownership.
+ * The returned projections cannot grant control or confirm server-side closure.
+ * @param {ProjectionOptions} options
+ */
+export function createProjectionFactory(options = {}) {
+  const views = createPassiveOwner();
+  return Object.freeze(
+    Object.assign(() => createScopedProjection(options, views), {
+      viewCleanup: views.cleanup,
+    }),
+  );
+}
+
 /** @param {ProjectionOptions} options */
-export function createProjection({
-  clock,
-  readSnapshot,
-  openPassive,
-  allowedViewOrigins = [],
-  maxAgeMs = 30_000,
-} = {}) {
+export function createProjection(options = {}) {
+  return createProjectionFactory(options)();
+}
+
+/** @param {ProjectionOptions} options @param {ReturnType<typeof createPassiveOwner>} views */
+function createScopedProjection(
+  {
+    clock,
+    readSnapshot,
+    openPassive,
+    allowedViewOrigins = [],
+    maxAgeMs = 30_000,
+  } = {},
+  views,
+) {
   if (
     typeof clock !== "function" ||
     !Number.isSafeInteger(maxAgeMs) ||
@@ -151,41 +251,13 @@ export function createProjection({
     phase = "empty",
     record = /** @type {Readonly<ProjectionRecord>|null} */ (null);
   let pendingRead = /** @type {AbortController|null} */ (null),
-    pendingView = /** @type {AbortController|null} */ (null),
-    activeView = /** @type {{close:()=>void}|null} */ (null),
-    disposed = false,
-    releasingView = false;
+    ownedView = /** @type {PassiveSlot|null} */ (null),
+    disposed = false;
 
-  /** @param {{close:()=>void}} handle */
-  function closeView(handle) {
-    const previousRelease = releasingView;
-    releasingView = true;
-    try {
-      handle.close();
-    } finally {
-      releasingView = previousRelease;
-    }
-  }
   function releaseView() {
-    // Detach owned resources before adapter callbacks can create newer work.
-    const pending = pendingView,
-      active = activeView;
-    pendingView = null;
-    activeView = null;
-    const previousRelease = releasingView;
-    releasingView = true;
-    try {
-      pending?.abort();
-      if (active) {
-        try {
-          closeView(active);
-        } catch {
-          /* No authority is granted when adapter cleanup fails. */
-        }
-      }
-    } finally {
-      releasingView = previousRelease;
-    }
+    const token = ownedView;
+    ownedView = null;
+    if (token) views.release(token);
   }
   /** @param {unknown} next */
   function select(next) {
@@ -315,6 +387,7 @@ export function createProjection({
       freshness,
       authority: record?.authority ?? "unknown",
       canExecute: false,
+      viewCleanup: views.cleanup(),
       viewLabel: !record?.viewUrl
         ? "View unavailable"
         : record.simulated
@@ -381,9 +454,7 @@ export function createProjection({
   async function view() {
     if (
       disposed ||
-      releasingView ||
-      pendingView ||
-      activeView ||
+      views.blocked() ||
       state().status !== "ready" ||
       !(/** @type {Readonly<ProjectionRecord>} */ (record).viewUrl) ||
       typeof openPassive !== "function"
@@ -392,7 +463,9 @@ export function createProjection({
     const controller = new AbortController(),
       expectedGeneration = generation,
       admittedRecord = record;
-    pendingView = controller;
+    const token = views.reserve(controller);
+    if (!token) return false;
+    ownedView = token;
     try {
       const opened = await openPassive(
         Object.freeze({
@@ -404,23 +477,31 @@ export function createProjection({
         }),
         { signal: controller.signal },
       );
-      if (!opened || typeof opened.close !== "function") return false;
+      if (!views.acquired(token, opened)) return false;
+      // The injected clock can reenter selection/disposal while computing state.
+      // Recheck every admission fence after that callback-bearing observation.
+      const ready = state().status === "ready";
       if (
+        token.invalidated ||
         controller.signal.aborted ||
         disposed ||
         expectedGeneration !== generation ||
         record !== admittedRecord ||
-        state().status !== "ready"
+        !views.owns(token) ||
+        !ready
       ) {
-        closeView(opened);
+        views.release(token);
         return false;
       }
-      activeView = opened;
       return true;
     } catch {
+      // Rejection or malformed acquisition gives no proof of non-allocation.
+      // If a handle is already known, close it before discarding ownership.
+      if (token.close) views.release(token);
+      else views.fail(token);
       return false;
     } finally {
-      if (pendingView === controller) pendingView = null;
+      if (ownedView === token && !views.owns(token)) ownedView = null;
     }
   }
   function dispose() {

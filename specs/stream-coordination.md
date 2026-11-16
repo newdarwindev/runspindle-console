@@ -49,6 +49,32 @@ inside a teardown callback also prevents the outer replacement from subscribing.
 This preserves the existing passive-view
 revocation limitation; it does not add a server acknowledgment.
 
+## Passive-view resource ownership
+
+The stream's task projections share one private passive owner through
+`createProjectionFactory`. An unresolved passive open keeps its slot after abort,
+task replacement, source revocation or disconnect. A valid late handle must close
+synchronously before another explicit `view()` may invoke the adapter. Rejected or
+malformed opens and throwing/non-void closes leave sticky uncertainty. A returned
+promise is observed to avoid an unhandled rejection, but even successful settlement
+is not a cleanup receipt under this synchronous contract. Each acquired handle is
+closed at most once; no retry or automatic replacement is scheduled.
+
+`viewCleanup` is `unknown` during synchronous teardown, after an invalidated pending
+open, and after unconfirmed cleanup. Otherwise it is `no_unconfirmed_close`, which
+means no unresolved local cleanup obligation, not that a viewer is absent or that
+server revocation was verified. This field is independent from `subscriptionCleanup`,
+observation `status`, and freshness. Read-only observation may continue for another
+task while passive admission stays blocked. Disconnect/dispose retain the shared
+cleanup state rather than returning a stale projection copy. `canExecute` is false.
+
+Standalone `createProjection` owns one scope; an explicit factory groups projections
+using one adapter. Separate stream/factory objects do not provide a global or durable
+resource registry. Constructing another object never establishes cleanup of an old
+one. A real adapter remains responsible for bounded acquisition, cancellation and
+server-side revocation. No real desktop or asynchronous cleanup compatibility is
+established by synchronous synthetic handles.
+
 ## Observation bounds and transitions
 
 Subscribe precedes snapshot acquisition. Events received meanwhile are validated

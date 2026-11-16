@@ -85,8 +85,18 @@ tests; no universal hot-journal, hostile-filesystem or power-loss claim is made.
 `createRetainedSnapshotReader` provides the existing projection's readSnapshot
 callback, configured with trusted source/database paths and exact revision.
 It launches one Python child, closes stdin, discards raw stderr and accepts stdout
-only after complete framing and successful process close. Timeout or abort kills
-the owned child and rejects after close. Existing projection generation fencing
+only after complete framing and successful process close. Each reader permits at
+most one pending read; overlapping calls reject without starting another child.
+Timeout, abort, malformed streaming output or pipe failure requests termination
+of the owned leader, closes the owned pipes and rejects without waiting for
+inherited descriptors held by descendants. This is a bounded consumer response,
+not proof of descendant termination. Cleanup becomes permanently `unknown` for
+that reader, and subsequent reads reject without spawning a replacement.
+`reader.state()` exposes pending status and cleanup uncertainty;
+`no_unconfirmed_process` means this reader has no recorded uncertain stop, not a
+universal process-cleanup guarantee. An already-aborted request or spawn failure
+before a PID is acquired does not poison an unused reader. Creating a new reader
+does not establish cleanup of an old one. Existing projection generation fencing
 prevents old completion from populating a newly selected task. This does not add
 a second subscription coordinator or claim server-side unsubscribe semantics.
 
@@ -95,7 +105,7 @@ a second subscription coordinator or claim server-side unsubscribe semantics.
 Prepare a clean exact pinned Tether checkout using existing authorized access.
 Set RUNSPINDLE_RETAINED_TETHER to it. Then run:
 
-- `node --test test/retained-snapshot.test.js`
+- `node --test test/retained-snapshot.test.js test/retained-process.test.js`
 - `python3 tools/validate.py`
 - `python3 -O -m unittest discover -s tests -v`
 
@@ -124,3 +134,10 @@ receipt and exact image binding; no baseline, image pin or prior check is remove
 Projection/test formatting and type annotations preserve reviewed runtime ASTs.
 Two textual mutation anchors are updated for formatting, retaining all three
 behavioral mutants. No live backend or broader qualification is inferred.
+
+Synthetic subprocess regressions also retain inherited stdout/stderr after the
+leader exits, verify bounded rejection and sticky retry fencing, and exercise
+abort/overlap and pre-spawn failures. Descendants in the test self-terminate; no
+production process-group cleanup is claimed. A deliberately extended-deadline
+mutant must fail the independent elapsed-time assertion. These are offline local
+process tests, not live backend or native-browser qualification.

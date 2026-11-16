@@ -197,60 +197,121 @@ export function createRetainedSnapshotReader({
     Number.isSafeInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 30000,
   );
   require(Number.isSafeInteger(revision) && revision > 0);
+  let pending = false;
+  let cleanupUnknown = false;
+  function unavailable() {
+    return Object.assign(new Error("retained snapshot unavailable"), {
+      cleanup: cleanupUnknown ? "unknown" : "no_unconfirmed_process",
+    });
+  }
   /** @param {any} selected @param {{signal?:AbortSignal}} options */
-  return function readSnapshot(selected, { signal } = {}) {
+  function readSnapshot(selected, { signal } = {}) {
     const expected = identity(selected);
     const decoder = createRetainedDecoder(expected, revision);
+    if (pending || cleanupUnknown || signal?.aborted)
+      return Promise.reject(unavailable());
+    pending = true;
     return new Promise((resolve, reject) => {
-      if (signal?.aborted) {
-        reject(new Error("retained snapshot unavailable"));
+      /** @type {import("node:child_process").ChildProcessByStdio<null, import("node:stream").Readable, import("node:stream").Readable>} */
+      let child;
+      try {
+        child = spawn(
+          python,
+          [
+            "-I",
+            "-B",
+            exporter,
+            "--source",
+            source,
+            "--database",
+            database,
+            "--task",
+            expected.task,
+            "--revision",
+            String(revision),
+          ],
+          { stdio: ["ignore", "pipe", "pipe"] },
+        );
+      } catch {
+        pending = false;
+        reject(unavailable());
         return;
       }
-      const child = spawn(
-        python,
-        [
-          "-I",
-          "-B",
-          exporter,
-          "--source",
-          source,
-          "--database",
-          database,
-          "--task",
-          expected.task,
-          "--revision",
-          String(revision),
-        ],
-        { stdio: ["ignore", "pipe", "pipe"] },
-      );
-      let failed = false;
+      let settled = false;
+      let exited = false;
+      function release() {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", stop);
+        pending = false;
+      }
       function stop() {
-        failed = true;
-        child.kill("SIGKILL");
+        if (settled) return;
+        // A deadline/abort is not a descendant-cleanup receipt. Fence all later
+        // reads even if closing our pipes subsequently produces a close event.
+        cleanupUnknown = true;
+        settled = true;
+        release();
+        if (!exited && child.exitCode === null && child.signalCode === null) {
+          try {
+            child.kill("SIGKILL");
+          } catch {
+            /* uncertainty retained */
+          }
+        }
+        // Descendants can inherit these descriptors after the owned leader
+        // exits. Do not wait for their EOF, signal a reused PID or claim cleanup.
+        child.stdout.destroy();
+        child.stderr.destroy();
+        child.unref();
+        reject(unavailable());
       }
       const timer = setTimeout(stop, timeoutMs);
       signal?.addEventListener("abort", stop, { once: true });
       child.stderr.resume(); // Never expose raw dependency paths or errors.
       child.stdout.on("data", (chunk) => {
+        if (settled) return;
         try {
           decoder.push(chunk);
         } catch {
           stop();
         }
       });
+      child.stdout.on("error", stop);
+      child.stderr.on("error", stop);
+      child.on("exit", () => {
+        exited = true;
+      });
       child.on("error", () => {
-        failed = true;
+        if (settled) return;
+        if (child.pid !== undefined) {
+          stop();
+          return;
+        }
+        // Failure before acquiring a PID allocated no owned child.
+        settled = true;
+        release();
+        reject(unavailable());
       });
       child.on("close", (code) => {
-        clearTimeout(timer);
-        signal?.removeEventListener("abort", stop);
+        if (settled) return;
+        settled = true;
+        release();
         try {
-          require(!failed && !signal?.aborted && code === 0);
+          require(!signal?.aborted && code === 0);
           resolve(decoder.finish());
         } catch {
-          reject(new Error("retained snapshot unavailable"));
+          reject(unavailable());
         }
       });
+      // Cover cancellation between the initial check and listener attachment.
+      if (signal?.aborted) stop();
     });
-  };
+  }
+  return Object.assign(readSnapshot, {
+    state: () =>
+      Object.freeze({
+        pending,
+        cleanup: cleanupUnknown ? "unknown" : "no_unconfirmed_process",
+      }),
+  });
 }

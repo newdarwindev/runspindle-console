@@ -148,6 +148,32 @@ export async function assertProjectionDom(
     controlCalls === 0 && viewCalls === 0,
     "rendering causes zero capability effects",
   );
+  // DOM doubles cannot establish reflow. These assertions run only in a real
+  // layout engine and do not stand in for screenshot or browser-zoom review.
+  if (typeof panel.getBoundingClientRect === "function") {
+    current = {
+      status: "unknown",
+      identity: { task: "t".repeat(256) },
+      record: { label: "x".repeat(4096) },
+    };
+    view.update();
+    for (const width of [320, 390, 768, 1440]) {
+      root.style.width = `${width}px`;
+      for (const size of [16, 32]) {
+        root.style.fontSize = `${size}px`;
+        check(
+          panel.scrollWidth <= panel.clientWidth + 1,
+          "long text reflows without horizontal overflow",
+        );
+        check(
+          field("task") === "t".repeat(256) &&
+            field("label") === "x".repeat(4096),
+          "reflow never truncates identity or observation",
+        );
+        check(document.activeElement === panel, "reflow preserves focus");
+      }
+    }
+  }
   view.dispose();
   view.dispose();
   check(

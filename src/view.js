@@ -59,6 +59,8 @@ export function createProjectionView(root, { readState }) {
   panel.setAttribute("aria-label", "Read-only task projection");
   panel.setAttribute("data-console-projection", "");
   panel.tabIndex = -1;
+  // Preserve complete long identities and observations at narrow text widths.
+  panel.style.overflowWrap = "anywhere";
   const heading = document.createElement("h2");
   heading.textContent = "Task projection";
   const notice = document.createElement("p");

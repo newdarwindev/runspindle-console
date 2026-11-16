@@ -38,7 +38,12 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
   message.textContent =
     "Synthetic catalog. No runtime task discovery or control.";
   const content = document.createElement("div");
-  container.append(navigation, message, content);
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.textContent = "Retry observation";
+  retryButton.setAttribute("data-retry-observation", "");
+  retryButton.disabled = true;
+  container.append(navigation, message, retryButton, content);
   root.append(container);
   let disposed = false,
     generation = 0;
@@ -49,7 +54,6 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     const identity = selected === null ? null : tasks.get(selected)?.identity;
     const unknown = { status: "unknown", identity, record: null };
     if (unavailable) return unknown;
-    if (connecting) return { ...unknown, status: "loading" };
     const state = stream.state();
     if (
       !identity ||
@@ -60,6 +64,15 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
       )
     )
       return unknown;
+    if (connecting)
+      return {
+        ...unknown,
+        status: ["offline", "error", "unknown", "unsupported"].includes(
+          state.status,
+        )
+          ? state.status
+          : "loading",
+      };
     return state;
   }
   const view = createProjectionView(content, { readState: readSelectedState });
@@ -67,15 +80,17 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
   /** @type {Array<() => void>} */ const removers = [];
   /** @type {(() => void) | null} */ let unsubscribe = null;
 
-  /** @param {unknown} key @param {boolean} [focus] @returns {Promise<boolean>} */
-  async function select(key, focus = false) {
+  /** @param {unknown} key @param {boolean} [focus] @param {boolean} [retry] @returns {Promise<boolean>} */
+  async function select(key, focus = false, retry = false) {
     if (disposed) return false;
     const task = typeof key === "string" ? tasks.get(key) : undefined;
-    if (task && selected === key && !unavailable) return !connecting;
+    if (task && selected === key && !unavailable && !retry)
+      return !connecting;
     const ticket = ++generation;
     selected = task ? task.key : null;
     unavailable = !task;
     connecting = !!task;
+    retryButton.disabled = !task || connecting;
     for (const [id, button] of buttons)
       button.setAttribute("aria-current", id === selected ? "page" : "false");
     if (!task) {
@@ -91,11 +106,18 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     if (focus) buttons.get(task.key)?.focus();
     message.textContent = "Synthetic task selected. Read-only observation.";
     try {
+      if (retry) {
+        // Reuse the stream owner: it fences callbacks and refuses acquisition
+        // when cleanup is unknown. A UI retry never overrides that refusal.
+        stream.disconnect();
+        if (disposed || ticket !== generation) return false;
+      }
       const pending = stream.connect(task.identity);
       view.update();
       const result = await pending;
       if (disposed || ticket !== generation) return false;
       connecting = false;
+      retryButton.disabled = false;
       if (result !== true) {
         unavailable = true;
         message.textContent = "Observation unavailable.";
@@ -111,6 +133,7 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
       if (!disposed && ticket === generation) {
         unavailable = true;
         connecting = false;
+        retryButton.disabled = false;
         try {
           stream.disconnect();
         } catch {
@@ -135,6 +158,32 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     }
     return select(key, true);
   }
+  function retryAvailable() {
+    if (disposed || selected === null) return false;
+    if (!connecting) return true;
+    const ticket = generation;
+    try {
+      const status = stream.state().status;
+      // A terminal subscription can outlive its unresolved snapshot promise.
+      // Loading still suppresses duplicates; the stream owns cleanup admission.
+      return (
+        !disposed &&
+        ticket === generation &&
+        (status === "offline" || status === "error")
+      );
+    } catch {
+      return false;
+    }
+  }
+  async function retryObservation() {
+    if (!retryAvailable()) return false;
+    return select(selected, false, true);
+  }
+  const retryListener = () => {
+    void retryObservation();
+  };
+  retryButton.addEventListener("click", retryListener);
+  removers.push(() => retryButton.removeEventListener("click", retryListener));
   for (const [key, task] of tasks) {
     const button = document.createElement("button");
     button.type = "button";
@@ -150,7 +199,9 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     navigation.append(button);
   }
   function update() {
-    return !disposed && view.update();
+    if (disposed) return false;
+    retryButton.disabled = !retryAvailable();
+    return view.update();
   }
   function dispose() {
     if (disposed) return;
@@ -183,7 +234,7 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
     dispose();
     throw new Error("navigation initialization unavailable");
   }
-  return Object.freeze({ navigate, update, dispose });
+  return Object.freeze({ navigate, retryObservation, update, dispose });
 }
 
 /**

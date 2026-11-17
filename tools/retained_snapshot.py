@@ -15,6 +15,7 @@ from typing import Any, NoReturn, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "runspindle.console.retained.v1"
+LATEST_VERSION = "runspindle.console.retained-head.v2"
 LIMIT = 16384
 
 
@@ -89,10 +90,12 @@ def load_source(source: Path) -> dict[str, Any]:
 
 
 def snapshot(
-    source: Path, database: Path, task: str, revision: int
+    source: Path, database: Path, task: str, revision: int | None
 ) -> list[dict[str, Any]]:
     identifier(task)
-    counter(revision)
+    latest = revision is None
+    if not latest:
+        counter(revision)
     pin = load_source(source)
     from tether.admission import SCHEMA
     from tether.sanitization import Sanitizer
@@ -129,12 +132,17 @@ def snapshot(
         head = db.execute(
             "SELECT revision,scope,deleted FROM heads WHERE task=?", (task,)
         ).fetchone()
+        if latest:
+            require(head is not None and type(head[0]) is str)
+            revision = int(head[0])
+            counter(revision)
         require(
             head is not None
             and head[0] == str(revision)
             and type(head[2]) is int
             and head[2] in (0, 1)
         )
+        revision = cast(int, revision)
         lengths = db.execute(
             "SELECT length(envelope),length(scope) FROM revisions WHERE task=? AND revision=?",
             (task, str(revision)),
@@ -252,7 +260,7 @@ def snapshot(
         }
         frames = [
             {
-                "version": VERSION,
+                "version": LATEST_VERSION if latest else VERSION,
                 "type": "begin",
                 "sequence": 0,
                 "identity": identity,
@@ -260,7 +268,7 @@ def snapshot(
                 "source": pin["commit"],
             },
             {
-                "version": VERSION,
+                "version": LATEST_VERSION if latest else VERSION,
                 "type": "snapshot",
                 "sequence": 1,
                 "identity": identity,
@@ -271,7 +279,11 @@ def snapshot(
                 "authority": "unknown",
                 "connection": "unknown",
             },
-            {"version": VERSION, "type": "end", "sequence": 2},
+            {
+                "version": LATEST_VERSION if latest else VERSION,
+                "type": "end",
+                "sequence": 2,
+            },
         ]
         require(sum(len(canonical(frame).encode()) + 1 for frame in frames) <= LIMIT)
         return frames
@@ -284,7 +296,9 @@ def main() -> int:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--database", type=Path, required=True)
     parser.add_argument("--task", required=True)
-    parser.add_argument("--revision", type=int, required=True)
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--revision", type=int)
+    selection.add_argument("--latest-head", action="store_true")
     args = parser.parse_args()
     try:
         frames = snapshot(

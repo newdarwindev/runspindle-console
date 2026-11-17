@@ -1,11 +1,12 @@
 // Application-invoked retained-head observation. No autonomous polling or authority.
+import { createRetainedHighwater } from "./retained-highwater.js";
 import { performance } from "node:perf_hooks";
 import { createRetainedHeadReader } from "./retained-snapshot.js";
 import { createStreamProjection } from "./stream.js";
 
 /** @typedef {{task:string,host:string,workspace:string}} Identity */
 /** @typedef {ReturnType<import('./retained-snapshot.js').createRetainedHeadDecoder> extends {finish:()=>infer R} ? R : never} RecordValue */
-/** @param {{source:string,database:string,identity:Identity,python?:string,timeoutMs?:number,maxReads?:number,lifetimeMs?:number}} options */
+/** @param {{source:string,database:string,identity:Identity,python?:string,timeoutMs?:number,maxReads?:number,lifetimeMs?:number,highwater?:string}} options */
 export function createRetainedStream(options) {
   const { maxReads = 32, lifetimeMs = 30000 } = options;
   if (
@@ -20,6 +21,14 @@ export function createRetainedStream(options) {
   // The strict decoder validates the configured identity before any child exists.
   const reader = createRetainedHeadReader(options);
   const selected = Object.freeze({ ...options.identity });
+  const persist =
+    options.highwater === undefined
+      ? null
+      : createRetainedHighwater({
+          ...options,
+          highwater: options.highwater,
+          identity: selected,
+        });
   let reads = 0,
     busy = false,
     terminal = false,
@@ -70,6 +79,10 @@ export function createRetainedStream(options) {
             JSON.stringify(value) !== JSON.stringify(last)))
       )
         throw new Error("retained observation regressed");
+      persist?.(value); // Commit before exposing the observation; uncertainty fails closed.
+      if (performance.now() >= expires) end("lifetime_limit");
+      if (terminal || controller.signal.aborted)
+        throw new Error("retained observation stopped");
       gap ||= last !== null && value.revision > last.revision + 1;
       last = value;
       return value;
@@ -152,6 +165,7 @@ export function createRetainedStream(options) {
           terminal,
           cleanup: reader.state().cleanup,
           history: "latest_head_only",
+          highwater: persist ? "local_durable" : "process_local",
         }),
       }),
   });

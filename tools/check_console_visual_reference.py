@@ -56,6 +56,8 @@ def compare(reference: Path, actual: Path, review_path: Path) -> dict[str, Any]:
     ImageChops = import_module("PIL.ImageChops")
 
     baseline, observed = inventory(reference), inventory(actual)
+    if baseline.get("status") != "passed" or observed.get("status") != "passed":
+        raise ValueError("native generation did not pass")
     if review_path.is_symlink() or not review_path.is_file():
         raise ValueError("missing trusted review")
     review = json.loads(review_path.read_text())

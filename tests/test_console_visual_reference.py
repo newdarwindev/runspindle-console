@@ -34,7 +34,7 @@ class NativeReferenceTests(unittest.TestCase):
         (root / "evidence.json").write_text(
             json.dumps(
                 {
-                    "status": "generated_candidate",
+                    "status": "passed",
                     "source_sha256": {"synthetic.py": "a" * 64},
                     "environment": {"synthetic": True},
                     "repeat_pixel_tolerance": 0,
@@ -66,6 +66,17 @@ class NativeReferenceTests(unittest.TestCase):
         self.assertEqual(
             before, {str(p): sha(p) for p in self.root.rglob("*") if p.is_file()}
         )
+
+    def test_failed_generation_cannot_be_approved_by_matching_review(self) -> None:
+        for status in ("failed", "generated_candidate", None):
+            for root in (self.reference, self.actual):
+                path = root / "evidence.json"
+                data = json.loads(path.read_text())
+                data["status"] = status
+                path.write_text(json.dumps(data))
+            self.approve()
+            with self.assertRaisesRegex(ValueError, "generation did not pass"):
+                compare(self.reference, self.actual, self.review)
 
     def test_pixel_mutation_with_rehashed_manifest_still_fails(self) -> None:
         path = self.actual / "sample.png"

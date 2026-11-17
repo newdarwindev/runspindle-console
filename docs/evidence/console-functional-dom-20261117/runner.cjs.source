@@ -1,0 +1,30 @@
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),cp=require('node:child_process'),assert=require('node:assert/strict');
+const {chromium}=require('/home/standard/appt/node_modules/playwright');
+const root='/tmp/console-dom-functional-20261117', expected='ce4d1202a92df7a2eb414e9187430e00721e6b5f';
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const git=(...a)=>cp.execFileSync('git',['-C',root,...a],{encoding:'utf8'}).trim();
+assert.equal(git('rev-parse','HEAD'),expected);assert.equal(git('status','--porcelain'),'');
+const profile=fs.mkdtempSync(path.join(os.tmpdir(),'console-functional-dom-'));
+let context; const blocked=[],sources={},errors=[];
+const output='/tmp/console-functional-dom-receipt-20261117.json';
+(async()=>{try{
+ context=await chromium.launchPersistentContext(profile,{executablePath:'/usr/bin/chromium',chromiumSandbox:true,headless:true,offline:true,serviceWorkers:'block',timeout:15000,args:['--disable-background-networking','--disable-component-update','--disable-sync','--host-resolver-rules=MAP * ~NOTFOUND']});
+ await context.route('**/*',async route=>{
+  const url=new URL(route.request().url());
+  if(url.origin!=='https://console-fixture.invalid'){blocked.push(url.href);return route.abort();}
+  if(url.pathname==='/')return route.fulfill({status:200,contentType:'text/html',body:`<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'nonce-fixture'; connect-src 'none'; img-src 'none'; style-src 'unsafe-inline'; base-uri 'none'"><body><script type="module" nonce="fixture">import {assertFixtureConsole} from '/test/fixture-console.assertions.js'; try {globalThis.result=await assertFixtureConsole(document)}catch(e){globalThis.failure=String(e.stack||e)} globalThis.done=true;</script></body></html>`});
+  const file=path.resolve(root,'.'+decodeURIComponent(url.pathname));
+  if(!file.startsWith(root+path.sep)||!file.endsWith('.js')||!fs.existsSync(file)){blocked.push(url.href);return route.abort();}
+  const bytes=fs.readFileSync(file);sources[path.relative(root,file)]=sha(bytes);return route.fulfill({status:200,contentType:'text/javascript',body:bytes});
+ });
+ const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto('https://console-fixture.invalid/',{waitUntil:'load',timeout:15000});
+ await page.waitForFunction(()=>globalThis.done===true,{},{timeout:30000});
+ const report=await page.evaluate(()=>({result:globalThis.result,failure:globalThis.failure||null,remainingMain:document.querySelectorAll('main').length,userAgent:navigator.userAgent}));
+ assert.equal(report.failure,null);assert.deepEqual(errors,[]);assert.deepEqual(blocked,[]);assert.equal(report.remainingMain,0);
+ const processes=cp.execFileSync('ps',['-eo','args'],{encoding:'utf8'}).split('\n').filter(x=>x.includes('--user-data-dir='+profile));assert.ok(processes.length);assert.ok(processes.every(x=>!x.includes('--no-sandbox')&&!x.includes('--disable-setuid-sandbox')));
+ const version=context.browser().version(); await context.close();context=null;
+ const after=cp.execFileSync('ps',['-eo','args'],{encoding:'utf8'}).split('\n').filter(x=>x.includes('--user-data-dir='+profile));assert.deepEqual(after,[]);
+ fs.rmSync(profile,{recursive:true});assert.equal(git('rev-parse','HEAD'),expected);assert.equal(git('status','--porcelain'),'');
+ fs.writeFileSync(output,JSON.stringify({status:'passed',source:expected,tree:git('rev-parse','HEAD^{tree}'),script_sha256:sha(fs.readFileSync(__filename)),browser:version,browser_elf_sha256:sha(fs.readFileSync('/usr/lib/chromium/chromium')),node:process.version,node_sha256:sha(fs.readFileSync(process.execPath)),playwright:require('/home/standard/appt/node_modules/playwright/package.json').version,playwright_package_sha256:sha(fs.readFileSync('/home/standard/appt/node_modules/playwright/package.json')),source_sha256:sources,sandbox:true,offline:true,unexpected_requests:blocked,report,cleanup:{context_closed:true,owned_profile_processes:0,profile_removed:!fs.existsSync(profile)},boundaries:['Actual DOM shared assertions, no screenshots, no visual baseline or live-provider qualification.','Only intercepted synthetic source responses; no real service. Browser-internal networking controlled by offline/options, not OS-wide packet proof.']},null,2)+'\n');console.log(JSON.stringify(report));
+}finally{if(context)await context.close();if(fs.existsSync(profile))fs.rmSync(profile,{recursive:true});}})().catch(e=>{console.error(e);process.exitCode=1});

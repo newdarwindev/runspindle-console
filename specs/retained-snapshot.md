@@ -141,3 +141,62 @@ abort/overlap and pre-spawn failures. Descendants in the test self-terminate; no
 production process-group cleanup is claimed. A deliberately extended-deadline
 mutant must fail the independent elapsed-time assertion. These are offline local
 process tests, not live backend or native-browser qualification.
+
+## Explicit retained-head observation v2 (partial Console #9)
+
+`createRetainedStream` is a Node-only, application-invoked adapter around the
+existing stream coordinator. `connect()` takes one snapshot; each explicit
+`poll()` takes at most one further snapshot. There is no automatic polling,
+watcher, service, network listener, persistent job, or new authority backend.
+`disconnect()` closes the local callback subscription; `connect()` may explicitly
+reopen it within the same bounds. `revoke()` and `dispose()` permanently stop this
+adapter. Local revocation is not discovery of an upstream permission change.
+
+The separately versioned `runspindle.console.retained-head.v2` transport has the
+same three strict frames and size cap as v1, but the exporter chooses the current
+head revision inside the same schema-validated SQLite read transaction. The
+`--latest-head` option and `--revision` are mutually exclusive. The legacy
+`createRetainedSnapshotReader` and v1 framing still require an exact revision.
+Every read starts a fresh bounded Python child and repeats source, schema,
+association, identity and projection checks. Nothing writes or repairs the store.
+The pinned producer schema and source are unchanged.
+
+This is latest-head observation, **not event-log replay**. Intermediate revisions
+may be skipped. The coordinator and adapter expose a gap when an observed
+revision jumps; adapter gap diagnostics survive explicit reconnect. Same-revision
+changes to decoded projection fields or revision regressions reject instead of replacing the retained
+high-water mark. That mark exists only for this adapter's lifetime, not in durable
+storage; a new process does not inherit an authenticated checkpoint. Omitted or
+erased wire/store fields are not covered by this content comparison. In particular,
+the existing decoder reduces deletion to an empty label, so an already-empty edit
+and a delete with otherwise identical decoded fields cannot be distinguished by
+this check. This does not add a deletion-state or history UI. Retained
+content remains `retained_local`, with null observation time and unknown authority,
+connection and freshness. No passive URL, execution or takeover control is added.
+A deletion empties the label; this does not implement a deletion-history UI.
+
+Bounds are explicit and cumulative across reconnects: default 32 reads, maximum
+256; default 30-second lifetime, maximum five minutes. A monotonic deadline and
+one bounded timer fence expiry even when no further polling occurs. Reads are
+strictly serial; overlap is rejected without a queue or another child. Each read
+has the existing 16 KiB wire cap, 16 MiB database/WAL caps, SQL step/lock bounds
+and child deadline. Thus accepted wire bytes are at most maxReads times 16 KiB;
+only one last record and the coordinator's one-record buffer are retained. The
+adapter never queues caller requests or reschedules a failed read. Configuration
+and local paths remain trusted application inputs, not untrusted remote data.
+
+Abort during an owned read preserves the existing sticky unknown process-cleanup
+fence. An unconfirmed close propagates to the coordinator; a new reader is not
+silently constructed to evade it. Normal source/schema failure disconnects with
+an error and unknown historical freshness. Reconnect is explicit and revalidates;
+revocation, disposal, read/lifetime exhaustion and unknown cleanup deny reuse.
+This does not claim universal descendant termination or live server unsubscribe.
+
+`test/retained-stream.test.js` uses actual pinned Tether admissions, read-only SQL,
+file hashes and fresh exporter processes for edits/deletes, gaps, reconnect,
+identity/schema rejection, overlap, cancellation and bounds. A deliberate
+revision-rollback guard mutation demonstrates forbidden regression against the
+independently queried SQLite head. Exact v1/v2 separation and optimized Python
+output are checked. These are isolated synthetic-store integration tests, not
+real account, authenticated live runtime, remote CI or production qualification.
+Console #9 remains open for those dependencies.

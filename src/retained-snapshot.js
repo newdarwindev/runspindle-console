@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const VERSION = "runspindle.console.retained.v1";
+const LATEST_VERSION = "runspindle.console.retained-head.v2";
 const PIN = JSON.parse(
   readFileSync(
     new URL("../dependencies/tether-snapshot.json", import.meta.url),
@@ -64,8 +65,23 @@ function identity(value) {
 
 /** @param {any} expectedIdentity @param {number} revision */
 export function createRetainedDecoder(expectedIdentity, revision) {
-  const expected = identity(expectedIdentity);
   require(Number.isSafeInteger(revision) && revision > 0);
+  return createDecoder(expectedIdentity, revision);
+}
+
+/** @param {unknown} expectedIdentity */
+export function createRetainedHeadDecoder(expectedIdentity) {
+  return createDecoder(expectedIdentity, null);
+}
+
+/** @param {unknown} expectedIdentity @param {number|null} revision */
+function createDecoder(expectedIdentity, revision) {
+  const expected = identity(expectedIdentity);
+  const latest = revision === null;
+  require(
+    revision === null || (Number.isSafeInteger(revision) && revision > 0),
+  );
+  const version = latest ? LATEST_VERSION : VERSION;
   const decoder = new globalThis.TextDecoder("utf-8", { fatal: true });
   let bytes = 0,
     pending = "",
@@ -87,7 +103,7 @@ export function createRetainedDecoder(expectedIdentity, revision) {
         pending = pending.slice(end + 1);
         const frame = JSON.parse(line);
         require(canonical(frame) === line);
-        require(frame.version === VERSION && frame.sequence === sequence);
+        require(frame.version === version && frame.sequence === sequence);
         if (sequence === 0) {
           keys(frame, [
             "version",
@@ -97,6 +113,10 @@ export function createRetainedDecoder(expectedIdentity, revision) {
             "revision",
             "source",
           ]);
+          if (latest) {
+            require(Number.isSafeInteger(frame.revision) && frame.revision > 0);
+            revision = frame.revision;
+          }
           require(
             frame.type === "begin" &&
               frame.source === PIN &&
@@ -135,7 +155,7 @@ export function createRetainedDecoder(expectedIdentity, revision) {
           result = Object.freeze({
             version: 1,
             identity: expected,
-            revision,
+            revision: /** @type {number} */ (revision),
             observedAt: null,
             authority: "unknown",
             connection: "unknown",
@@ -180,7 +200,18 @@ export function createRetainedDecoder(expectedIdentity, revision) {
 // Paths and interpreter are trusted application configuration, never wire fields.
 // This launches one bounded read process, not a watcher or a network service.
 /** @param {{source:string,database:string,revision:number,python?:string,timeoutMs?:number}} options */
-export function createRetainedSnapshotReader({
+export function createRetainedSnapshotReader(options) {
+  require(Number.isSafeInteger(options.revision) && options.revision > 0);
+  return createReader(options);
+}
+
+/** @param {{source:string,database:string,python?:string,timeoutMs?:number}} options */
+export function createRetainedHeadReader(options) {
+  return createReader({ ...options, revision: null });
+}
+
+/** @param {{source:string,database:string,revision:number|null,python?:string,timeoutMs?:number}} options */
+function createReader({
   source,
   database,
   revision,
@@ -196,7 +227,6 @@ export function createRetainedSnapshotReader({
   require(
     Number.isSafeInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 30000,
   );
-  require(Number.isSafeInteger(revision) && revision > 0);
   let pending = false;
   let cleanupUnknown = false;
   function unavailable() {
@@ -207,7 +237,7 @@ export function createRetainedSnapshotReader({
   /** @param {any} selected @param {{signal?:AbortSignal}} options */
   function readSnapshot(selected, { signal } = {}) {
     const expected = identity(selected);
-    const decoder = createRetainedDecoder(expected, revision);
+    const decoder = createDecoder(expected, revision);
     if (pending || cleanupUnknown || signal?.aborted)
       return Promise.reject(unavailable());
     pending = true;
@@ -227,8 +257,9 @@ export function createRetainedSnapshotReader({
             database,
             "--task",
             expected.task,
-            "--revision",
-            String(revision),
+            ...(revision === null
+              ? ["--latest-head"]
+              : ["--revision", String(revision)]),
           ],
           { stdio: ["ignore", "pipe", "pipe"] },
         );

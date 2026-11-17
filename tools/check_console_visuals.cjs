@@ -86,11 +86,18 @@ function pixelsOf(png) {
       .toString(),
   );
 }
+/** @param {unknown} value @returns {number} */
+function validateNativeZoom(value) {
+  assert.ok(
+    typeof value === "number" && Number.isFinite(value) && value > 0,
+    "missing or invalid native CDP zoom",
+  );
+  return value;
+}
 /** @param {import("./console-visual-browser-types").Page} page @param {import("./console-visual-browser-types").Session} session @param {"full" | "card" | "viewport"} mode @param {string} [selector] */
 async function nativeBitmap(page, session, mode, selector) {
   const metrics = await session.send("Page.getLayoutMetrics");
-  const zoom = metrics.visualViewport.zoom;
-  /** @type {{x:number,y:number,width:number,height:number,scale:number} | undefined} */
+  const zoom = validateNativeZoom(metrics.visualViewport.zoom);
   let clip;
   /** @type {{width:number,height:number}} */
   let expected;
@@ -555,6 +562,15 @@ async function interactionChecks(page, session, scenario, output, capture) {
       page.locator("#navigation-root [data-field=task]").innerText();
     assert.equal(await task(), "task-b");
     const old = await state();
+    assert.equal(old.projection.identity.task, "task-b");
+    assert.ok(
+      old.effects.subscriptions >= 2 && old.effects.snapshots >= 2,
+      "actual A/B observations must start before late response",
+    );
+    assert.equal(
+      await page.locator("#navigation-root [data-field=label]").innerText(),
+      "Synthetic task observation",
+    );
     await page.locator("#late-response").click();
     await page.evaluate(
       () =>
@@ -1032,6 +1048,7 @@ async function qualify(options) {
 }
 module.exports = {
   zoomPreferences,
+  validateNativeZoom,
   validatePair,
   validateBitmap,
   comparePixels,

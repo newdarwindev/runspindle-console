@@ -7,7 +7,11 @@ export interface Handle<T> {
   ): Promise<Awaited<R>>;
   dispose(): Promise<void>;
 }
-export interface Locator extends Handle<HTMLElement> {
+export interface Locator {
+  evaluate<R, A = undefined>(
+    callback: (value: HTMLElement, argument: A) => R | Promise<R>,
+    argument?: A,
+  ): Promise<Awaited<R>>;
   innerText(): Promise<string>;
   textContent(): Promise<string | null>;
   getAttribute(name: string): Promise<string | null>;
@@ -34,10 +38,8 @@ export interface Page {
   keyboard: { press(key: string): Promise<void> };
 }
 export interface Session {
-  send(
-    method: "Page.getLayoutMetrics",
-  ): Promise<{
-    visualViewport: { zoom: number };
+  send(method: "Page.getLayoutMetrics"): Promise<{
+    visualViewport: { zoom?: number };
     contentSize: { width: number; height: number };
     layoutViewport: { clientWidth: number; clientHeight: number };
   }>;

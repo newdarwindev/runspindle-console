@@ -85,3 +85,10 @@ test("normalized pixel mismatch is rejected independently of PNG file metadata",
     /dimensions/,
   );
 });
+
+test("missing or invalid native CDP zoom is rejected", () => {
+  const { validateNativeZoom } = require("../tools/check_console_visuals.cjs");
+  for (const value of [undefined, null, 0, -1, NaN, Infinity, "2"])
+    assert.throws(() => validateNativeZoom(value), /native CDP zoom/);
+  assert.equal(validateNativeZoom(2), 2);
+});

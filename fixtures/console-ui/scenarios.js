@@ -47,3 +47,27 @@ export const consoleTaskCatalog = Object.freeze(
     }),
   ),
 );
+
+export const syntheticViewerFixtures = Object.freeze({
+  simulated: Object.freeze({
+    connection: "online",
+    viewUrl: "https://viewer.invalid/passive",
+    simulated: true,
+  }),
+  unavailable: Object.freeze({
+    connection: "unsupported",
+    viewUrl: null,
+    simulated: true,
+  }),
+  unauthorized: Object.freeze({
+    connection: "online",
+    authority: "denied",
+    viewUrl: null,
+    simulated: true,
+  }),
+  disconnected: Object.freeze({
+    connection: "offline",
+    viewUrl: null,
+    simulated: true,
+  }),
+});

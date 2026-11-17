@@ -14,9 +14,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dict[str, Any]:
+def run_case(
+    browser: str, directory: Path, mutation: bool | str = False
+) -> dict[str, Any]:
     sources = []
-    names = (
+    names: tuple[str, ...] = (
         "src/projection.js",
         "src/view.js",
         "fixtures/console-ui/scenarios.js",
@@ -44,7 +46,9 @@ def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dic
         if name in ("src/stream.js", "src/navigation.js"):
             source = re.sub(
                 r'^import \{[^\n]+\} from "\./[^"\n]+";\n',
-                "", source, flags=re.MULTILINE,
+                "",
+                source,
+                flags=re.MULTILINE,
             )
         if mutation == "history" and name == "src/navigation.js":
             needle = 'browser.addEventListener("popstate", callback);'
@@ -76,7 +80,8 @@ def run_case(browser: str, directory: Path, mutation: bool | str = False) -> dic
             "assertNavigationBrowser(window, createTaskNavigator, createBrowserTaskHistory, createStreamProjection, consoleScenarios, consoleTaskCatalog)",
         )
         script = script.replace(
-            "'long text reflows without horizontal overflow'", "'history navigation timeout'"
+            "'long text reflows without horizontal overflow'",
+            "'history navigation timeout'",
         ).replace("'long_text_overflow'", "'history_navigation_timeout'")
     script = script.replace("</script", "<\\/script")
     page = directory / "test.html"
@@ -149,13 +154,14 @@ def main() -> int:
         [browser, "--version"], capture_output=True, text=True, timeout=5, check=True
     ).stdout.strip()
     results = {}
-    for name, mutation in [
+    cases: list[tuple[str, bool | str]] = [
         ("actual_dom", False),
         ("unsafe_text_mutation", True),
         ("reflow_mutation", "reflow"),
         ("navigation_actual", "navigation"),
         ("history_mutation", "history"),
-    ]:
+    ]
+    for name, mutation in cases:
         try:
             with tempfile.TemporaryDirectory(prefix="console-dom-") as temporary:
                 results[name] = run_case(browser, Path(temporary), mutation)

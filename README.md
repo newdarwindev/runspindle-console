@@ -16,6 +16,24 @@ KasmVNC provides the selected remote-display route, and Langfuse provides deeper
 
 *Upcoming work connects the rendered fleet experience to authenticated producers, actual KasmVNC sessions and verified control transitions. Real-browser layout/accessibility, full navigation and native/live acceptance remain distinct gates. A permitted URL, DOM-double test or local snapshot is not a qualified live dashboard.*
 
+## FROM AN OPERATOR QUESTION TO A TRUTHFUL DISPLAY
+
+These scenarios connect the current read-only components to the intended operator experience. *Italic text is upcoming integration, not a claim that the pictured control surface is deployed*.
+
+### OBSERVE FIRST; TAKE CONTROL EXPLICITLY
+
+“Show me what this job is doing” is an observation request, not permission to type into its session. **CONSOLE** already preserves identity, freshness and unknown cleanup states in its [projection and stream boundaries](specs/stream-coordination.md). *A qualified viewer will show the actual supported desktop read-only; a separate authenticated takeover will fence agent input, and handback will recheck context before resumption.* The outcome is visible, attributable control, not an apparently live tile backed by a stale image. [Operator observations, slide 16](https://newdarwindev.github.io/runspindle_for_bloomberg/assets/Runspindle_Revised_Gallery.pdf#page=16).
+
+### KEEP THE UNRESOLVED INVOICE UNRESOLVED
+
+The application response disappears while invoice #107 is being reconciled. **CONSOLE'S READ-ONLY SURFACE** displays supplied unknown state without manufacturing delivery or acceptance evidence. *The integrated view will link the exact operation to independent readback, retaining “unknown” until that evidence resolves the result; retry controls will not silently submit the invoice again.* [DOM evidence boundary](specs/read-only-view.md) · [Missing-response concept, slide 13](https://newdarwindev.github.io/runspindle_for_bloomberg/assets/Runspindle_Revised_Gallery.pdf#page=13).
+
+### EXPLAIN AN EX-DIVIDEND PAPER DECISION
+
+The separate Bloomberg case-10 prototype compares a $50.00 prior close, $48.90 current close and $1.20 cash dividend: the synthetic raw move is −2.2%, while price plus cash is +0.2%. Its paper decision is to reject the apparent raw-price short signal, subject to matching dates and corporate-action context. The [case-10 contract](https://github.com/newdarwindev/runspindle_for_bloomberg/blob/main/pilot/case-10-contract-v0.1.md) and [prototype](https://newdarwindev.github.io/runspindle_for_bloomberg/prototype.html) are separate conceptual/synthetic work, not this Console's integrated backend.
+
+*The qualified operator journey will show exact inputs, decision, revision-specific approval and independent record readback. Missing entitlement, stale inputs or another corporate action will pause it.* No live Terminal data, NOTE write, trade, measured return or accepted completion is established by the prototype; domain review and data-rights approval remain prerequisites.
+
 ## ENGINEERING MAP
 
 | Responsibility | Contract and evidence |

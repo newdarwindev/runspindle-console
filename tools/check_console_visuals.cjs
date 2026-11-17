@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/// <reference path="./console-visual-browser-types.d.ts" />
 "use strict";
 /* global require, module, __dirname, document, window, history, devicePixelRatio, innerWidth, outerWidth, innerHeight, outerHeight, visualViewport, getComputedStyle, scrollX, scrollY, scrollTo, consoleVisual, runAssertions, requestAnimationFrame, createStreamProjection, consoleScenarios, keyboardReceipt, createTaskNavigator, consoleTaskCatalog, createBrowserTaskHistory, keyboardNavigator */
 // Synthetic Console reference capture. No runtime authority or baseline self-approval.
@@ -10,10 +11,15 @@ const crypto = require("node:crypto");
 const assert = require("node:assert/strict");
 const { pathToFileURL } = require("node:url");
 const ROOT = path.resolve(__dirname, "..");
+/** @param {string | Uint8Array} bytes */
 const sha = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+/** @param {string} file */
 const fileHash = (file) => sha(fs.readFileSync(file));
+/** @param {string} directory */
 function inventory(directory) {
+  /** @type {Record<string,string | {symlink:string}>} */
   const result = {};
+  /** @param {string} folder */
   function visit(folder) {
     for (const entry of fs
       .readdirSync(folder, { withFileTypes: true })
@@ -30,6 +36,7 @@ function inventory(directory) {
   visit(directory);
   return { files: result, inventory_sha256: sha(JSON.stringify(result)) };
 }
+/** @param {number} percent */
 function zoomPreferences(percent) {
   assert.ok(percent === 100 || percent === 200);
   return {
@@ -38,6 +45,7 @@ function zoomPreferences(percent) {
     },
   };
 }
+/** @param {import("./console-visual-browser-types").Metrics} normal @param {import("./console-visual-browser-types").Metrics} zoomed */
 function validatePair(normal, zoomed) {
   assert.equal(normal.cssZoom, "1");
   assert.equal(zoomed.cssZoom, "1");
@@ -53,6 +61,7 @@ function validatePair(normal, zoomed) {
     "CSS viewport must halve",
   );
 }
+/** @param {Pick<import("./console-visual-browser-types").Pixels,"size" | "color_count_lower_bound">} pixels @param {{width:number,height:number}} expected */
 function validateBitmap(pixels, expected) {
   assert.ok(
     Math.abs(pixels.size[0] - expected.width) <= 1 &&
@@ -61,6 +70,7 @@ function validateBitmap(pixels, expected) {
   );
   assert.ok(pixels.color_count_lower_bound >= 8, "captured bitmap is blank");
 }
+/** @param {Uint8Array} png @returns {import("./console-visual-browser-types").Pixels} */
 function pixelsOf(png) {
   return JSON.parse(
     cp
@@ -76,10 +86,14 @@ function pixelsOf(png) {
       .toString(),
   );
 }
+/** @param {import("./console-visual-browser-types").Page} page @param {import("./console-visual-browser-types").Session} session @param {"full" | "card" | "viewport"} mode @param {string} [selector] */
 async function nativeBitmap(page, session, mode, selector) {
   const metrics = await session.send("Page.getLayoutMetrics");
   const zoom = metrics.visualViewport.zoom;
-  let clip, expected;
+  /** @type {{x:number,y:number,width:number,height:number,scale:number} | undefined} */
+  let clip;
+  /** @type {{width:number,height:number}} */
+  let expected;
   if (mode === "full") {
     clip = {
       x: 0,
@@ -96,8 +110,11 @@ async function nativeBitmap(page, session, mode, selector) {
         ),
       ),
       bottom:
-        document.querySelector("#reference").getBoundingClientRect().bottom +
-        scrollY,
+        (() => {
+          const reference = document.querySelector("#reference");
+          if (!reference) throw Error("missing reference");
+          return reference.getBoundingClientRect().bottom;
+        })() + scrollY,
     }));
     assert.ok(
       extent.right * zoom <= clip.width + 1 &&
@@ -105,6 +122,7 @@ async function nativeBitmap(page, session, mode, selector) {
       "full bitmap omits renderer content",
     );
   } else if (mode === "card") {
+    assert.ok(selector, "card selector required");
     const rect = await page.locator(selector).evaluate((e) => {
       const r = e.getBoundingClientRect();
       return {
@@ -149,6 +167,7 @@ async function nativeBitmap(page, session, mode, selector) {
     },
   };
 }
+/** @param {import("./console-visual-browser-types").Page} page @param {ReturnType<typeof import("../visual/build.mjs").build>["manifest"]["scenarios"][number]} scenario */
 async function pageChecks(page, scenario) {
   assert.equal(
     await page.locator("body").getAttribute("data-scenario"),
@@ -205,10 +224,12 @@ async function pageChecks(page, scenario) {
     "diagram alternative missing",
   );
   const contrast = await page.evaluate(() => {
+    /** @param {string} value */
     const rgb = (value) => {
       const n = value.match(/[\d.]+/g)?.map(Number);
       return n && n.length >= 3 ? n : null;
     };
+    /** @param {number[]} v */
     const luminance = (v) =>
       v
         .slice(0, 3)
@@ -218,18 +239,22 @@ async function pageChecks(page, scenario) {
         })
         .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
     const findings = [];
-    for (const e of document.querySelectorAll("#reference *")) {
+    for (const e of document.querySelectorAll("body *")) {
       if (
-        ![...e.childNodes].some(
-          (n) => n.nodeType === 3 && n.textContent.trim(),
-        ) ||
-        !e.getClientRects().length
+        (![...e.childNodes].some(
+          (n) => n.nodeType === 3 && n.textContent?.trim(),
+        ) &&
+          !(e instanceof window.HTMLSelectElement)) ||
+        !e.getClientRects().length ||
+        getComputedStyle(e).visibility === "hidden"
       )
         continue;
       const style = getComputedStyle(e),
         fg = rgb(style.color);
-      let parent = e,
-        bg = null;
+      /** @type {Element | null} */
+      let parent = e;
+      /** @type {number[] | null} */
+      let bg = null;
       while (parent && !bg) {
         const c = rgb(getComputedStyle(parent).backgroundColor);
         if (c && (c.length === 3 || c[3] === 1)) bg = c;
@@ -253,7 +278,10 @@ async function pageChecks(page, scenario) {
   );
   const metrics = await page.evaluate(() => ({
     cssZoom: getComputedStyle(document.documentElement).zoom,
-    visualViewportScale: visualViewport.scale,
+    visualViewportScale: (() => {
+      if (!visualViewport) throw Error("missing native visual viewport");
+      return visualViewport.scale;
+    })(),
     dpr: devicePixelRatio,
     innerWidth,
     outerWidth,
@@ -261,14 +289,23 @@ async function pageChecks(page, scenario) {
     outerHeight,
     overflow: [
       ...document.querySelectorAll(
-        "#reference,#reference h1,#reference h2,#reference dd,#reference button,#reference p",
+        "#reference,header,.selector,dialog,h1,h2,dd,button,p,select",
       ),
     ]
-      .filter((e) => e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1)
+      .filter(
+        (e) =>
+          getComputedStyle(e).visibility !== "hidden" &&
+          e.clientWidth > 0 &&
+          e.scrollWidth > e.clientWidth + 1,
+      )
       .map((e) => e.getAttribute("data-visual-field") || e.tagName),
     actions: [...document.querySelectorAll("[data-authority-action]")].map(
       (e) => ({
-        disabled: e.disabled,
+        disabled: (() => {
+          if (!(e instanceof window.HTMLButtonElement))
+            throw Error("authority action is not button");
+          return e.disabled;
+        })(),
         reason: e.getAttribute("aria-describedby") || e.getAttribute("title"),
       }),
     ),
@@ -282,10 +319,12 @@ async function pageChecks(page, scenario) {
   );
   return { ...metrics, contrast };
 }
+/** @param {Pick<import("./console-visual-browser-types").Pixels,"size" | "rgb_sha256">} a @param {Pick<import("./console-visual-browser-types").Pixels,"size" | "rgb_sha256">} b */
 function comparePixels(a, b) {
   assert.deepEqual(a.size, b.size, "pixel dimensions differ");
   assert.equal(a.rgb_sha256, b.rgb_sha256, "pixel mutation or drift");
 }
+/** @param {import("./console-visual-browser-types").Context} context @param {string} output */
 async function componentAssertions(context, output) {
   const names = [
     "src/projection.js",
@@ -341,7 +380,7 @@ async function componentAssertions(context, output) {
         },
       });
       globalThis.keyboardNavigator = createTaskNavigator(root, {
-        catalog: consoleTaskCatalog,
+        catalog: [...consoleTaskCatalog],
         stream,
         history: createBrowserTaskHistory(window),
       });
@@ -352,14 +391,14 @@ async function componentAssertions(context, output) {
     await page.keyboard.press("Enter");
     await page.waitForFunction(
       () =>
-        document.querySelector("[data-field=task]").textContent === "task-a",
+        document.querySelector("[data-field=task]")?.textContent === "task-a",
     );
     await page.keyboard.press("Tab");
     assert.equal(await active(), "b");
     await page.keyboard.press("Space");
     await page.waitForFunction(
       () =>
-        document.querySelector("[data-field=task]").textContent === "task-b",
+        document.querySelector("[data-field=task]")?.textContent === "task-b",
     );
     const before = await page.evaluate(() => ({
       length: history.length,
@@ -397,6 +436,7 @@ async function componentAssertions(context, output) {
     await page.close();
   }
 }
+/** @param {string} output @param {string} filename @param {Uint8Array} png */
 function repeatArtifacts(output, filename, png) {
   cp.execFileSync(
     "python3",
@@ -410,6 +450,7 @@ p=pathlib.Path(sys.argv[1]);a=Image.open(p).convert('RGB');b=Image.open(io.Bytes
     { input: png, timeout: 10000 },
   );
 }
+/** @param {string} output @param {string[]} files */
 function rasterSummary(output, files) {
   const script = `import json,sys,pathlib,hashlib\nfrom PIL import Image,ImageOps,ImageChops,ImageDraw\np=pathlib.Path(sys.argv[1]); names=json.loads(sys.argv[2]); thumbs=[]\nfor name in names:\n im=Image.open(p/name).convert('RGB'); im.thumbnail((320,500)); tile=Image.new('RGB',(340,540),'white');tile.paste(im,((340-im.width)//2,25)); ImageDraw.Draw(tile).text((5,510),name[:48],fill='black');thumbs.append(tile)\nout=Image.new('RGB',(340*4,540*((len(thumbs)+3)//4)), '#dddddd')\nfor i,im in enumerate(thumbs):out.paste(im,((i%4)*340,(i//4)*540))\nout.save(p/'contact-sheet.png')\n`;
   cp.execFileSync(
@@ -418,7 +459,9 @@ function rasterSummary(output, files) {
     { timeout: 30000 },
   );
 }
+/** @param {import("./console-visual-browser-types").Page} page @param {import("./console-visual-browser-types").Session} session @param {ReturnType<typeof import("../visual/build.mjs").build>["manifest"]["scenarios"][number]} scenario @param {string} output @param {boolean} capture */
 async function interactionChecks(page, session, scenario, output, capture) {
+  /** @type {import("./console-visual-browser-types").Interactions} */
   const results = {};
   const state = () => page.evaluate(() => consoleVisual.state());
   const before = await state();
@@ -432,11 +475,18 @@ async function interactionChecks(page, session, scenario, output, capture) {
     "inspect-preview",
   );
   await page.keyboard.press("Enter");
-  assert.ok(await page.locator("#preview-dialog").evaluate((e) => e.open));
+  assert.ok(
+    await page.locator("#preview-dialog").evaluate((e) => {
+      if (!(e instanceof window.HTMLDialogElement))
+        throw Error("missing native dialog");
+      return e.open;
+    }),
+  );
   assert.equal(
     await page.locator(":focus").getAttribute("id"),
     "preview-cancel",
   );
+  await pageChecks(page, scenario); // Include the actually open modal in visible-surface checks.
   const focused = await page.locator(":focus").evaluate((e) => ({
     rect: e.getBoundingClientRect().toJSON(),
     outline: getComputedStyle(e).outlineStyle,
@@ -450,11 +500,20 @@ async function interactionChecks(page, session, scenario, output, capture) {
   if (capture) {
     const cap = await nativeBitmap(page, session, "viewport");
     const file = "native-200-effective-390-preview-focus.png";
-    fs.writeFileSync(path.join(output, file), cap.png);
+    const destination = path.join(output, file);
+    if (fs.existsSync(destination))
+      comparePixels(pixelsOf(fs.readFileSync(destination)), cap.pixels);
+    else fs.writeFileSync(destination, cap.png);
     results.focus = { file, pixels: cap.pixels, capture: cap.capture };
   }
   await page.keyboard.press("Enter");
-  assert.ok(!(await page.locator("#preview-dialog").evaluate((e) => e.open)));
+  assert.ok(
+    !(await page.locator("#preview-dialog").evaluate((e) => {
+      if (!(e instanceof window.HTMLDialogElement))
+        throw Error("missing native dialog");
+      return e.open;
+    })),
+  );
   assert.equal(
     await page.locator(":focus").getAttribute("id"),
     "inspect-preview",
@@ -466,14 +525,26 @@ async function interactionChecks(page, session, scenario, output, capture) {
     "preview-close",
   );
   await page.keyboard.press("Space");
-  assert.ok(!(await page.locator("#preview-dialog").evaluate((e) => e.open)));
+  assert.ok(
+    !(await page.locator("#preview-dialog").evaluate((e) => {
+      if (!(e instanceof window.HTMLDialogElement))
+        throw Error("missing native dialog");
+      return e.open;
+    })),
+  );
   assert.equal(
     await page.locator(":focus").getAttribute("id"),
     "inspect-preview",
   );
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
-  assert.ok(!(await page.locator("#preview-dialog").evaluate((e) => e.open)));
+  assert.ok(
+    !(await page.locator("#preview-dialog").evaluate((e) => {
+      if (!(e instanceof window.HTMLDialogElement))
+        throw Error("missing native dialog");
+      return e.open;
+    })),
+  );
   assert.equal(
     await page.locator(":focus").getAttribute("id"),
     "inspect-preview",
@@ -512,7 +583,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     await page.waitForFunction(
       () =>
         document.querySelector("#navigation-root [data-field=task]")
-          .textContent === "task-a",
+          ?.textContent === "task-a",
     );
     assert.equal(
       await page.locator(":focus").getAttribute("data-task-key"),
@@ -522,7 +593,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     await page.waitForFunction(
       () =>
         document.querySelector("#navigation-root [data-field=task]")
-          .textContent === "task-b",
+          ?.textContent === "task-b",
     );
     assert.equal(
       await page.locator(":focus").getAttribute("data-task-key"),
@@ -538,15 +609,17 @@ async function interactionChecks(page, session, scenario, output, capture) {
   return results;
 }
 
+/** @param {{output:string,browser:string,playwright:string}} options */
 async function qualify(options) {
   const output = path.resolve(options.output),
     browser = fs.realpathSync(options.browser),
     packageRoot = fs.realpathSync(options.playwright);
   assert.ok(!fs.existsSync(output), "new output directory required");
-  const { chromium } = require(packageRoot),
-    coreRoot = path.dirname(
-      require.resolve("playwright-core/package.json", { paths: [packageRoot] }),
-    );
+  /** @type {{chromium:import("./console-visual-browser-types").Chromium}} */
+  const { chromium } = require(packageRoot);
+  const coreRoot = path.dirname(
+    require.resolve("playwright-core/package.json", { paths: [packageRoot] }),
+  );
   const browserElf = path.join(path.dirname(browser), "chrome");
   assert.ok(fs.existsSync(browserElf));
   const distributions = {
@@ -558,8 +631,9 @@ async function qualify(options) {
     cwd: ROOT,
     timeout: 10000,
   });
+  /** @type {ReturnType<typeof import("../visual/build.mjs").build>["manifest"]} */
   const manifest = JSON.parse(
-    fs.readFileSync(path.join(output, "manifest.json")),
+    fs.readFileSync(path.join(output, "manifest.json"), "utf8"),
   );
   const scenarios = manifest.scenarios;
   assert.ok(
@@ -584,6 +658,7 @@ async function qualify(options) {
     "test/view.assertions.js",
     "test/navigation-browser.assertions.js",
     "tests/probe_console_visuals.py",
+    "tools/console-visual-browser-types.d.ts",
   ];
   const sources = Object.fromEntries(
     sourceNames.map((p) => [p, fileHash(path.join(ROOT, p))]),
@@ -629,7 +704,7 @@ async function qualify(options) {
       node: process.version,
       node_sha256: fileHash(process.execPath),
       playwright: JSON.parse(
-        fs.readFileSync(path.join(packageRoot, "package.json")),
+        fs.readFileSync(path.join(packageRoot, "package.json"), "utf8"),
       ).version,
       browser_launcher_sha256: fileHash(browser),
       browser_elf_sha256: fileHash(browserElf),
@@ -642,13 +717,15 @@ async function qualify(options) {
       locale: "en-US",
       timezone: "UTC",
     },
-    cases: [],
-    sha256: {},
+    cases: /** @type {import("./console-visual-browser-types").Case[]} */ ([]),
+    sha256: /** @type {Record<string,string>} */ ({}),
+    failure: /** @type {string | undefined} */ (undefined),
     profiles_removed: 0,
     repeat_pixel_tolerance: 0,
   };
-  let context = null,
-    cancelled = false;
+  /** @type {import("./console-visual-browser-types").Context | null} */
+  let context = null;
+  let cancelled = false;
   const cancel = () => {
     cancelled = true;
     if (context) void context.close().catch(() => {});
@@ -657,8 +734,10 @@ async function qualify(options) {
   process.on("SIGINT", cancel);
   try {
     for (const width of [320, 390, 768, 1440, 640, 780, 1536, 2880]) {
+      /** @type {Record<number,Record<string,import("./console-visual-browser-types").Shot>>} */
       const pair = {};
       for (const percent of [100, 200]) {
+        /** @type {import("./console-visual-browser-types").Case | undefined} */
         let first;
         for (const repeat of [1, 2]) {
           if (cancelled) throw Error("qualification cancelled");
@@ -688,6 +767,7 @@ async function qualify(options) {
                 "--disable-background-networking",
               ],
             });
+            /** @type {string[]} */
             const blocked = [];
             await context.route("**/*", (r) => {
               if (r.request().url().startsWith("file:")) return r.continue();
@@ -714,8 +794,9 @@ async function qualify(options) {
                 ),
               "sandbox disabled",
             );
-            const session = await context.newCDPSession(page),
-              captures = {};
+            const session = await context.newCDPSession(page);
+            /** @type {Record<string,import("./console-visual-browser-types").Shot>} */
+            const captures = {};
             let metrics;
             for (const scenario of scenarios) {
               await page.evaluate(
@@ -734,7 +815,7 @@ async function qualify(options) {
                 capture: cap.capture,
                 png_sha256: sha(cap.png),
               };
-              if (width === 780 && percent === 200 && repeat === 1)
+              if (width === 780 && percent === 200)
                 captures[scenario.id].interactions = await interactionChecks(
                   page,
                   session,
@@ -746,16 +827,24 @@ async function qualify(options) {
                 fs.writeFileSync(path.join(output, filename), cap.png);
                 receipt.sha256[filename] = sha(cap.png);
               } else {
+                assert.ok(first, "first repeat required");
                 assert.deepEqual(
                   metrics,
                   first.captures[scenario.id].actual,
                   "scenario repeat metrics drift",
                 );
                 comparePixels(first.captures[scenario.id].pixels, cap.pixels);
+                assert.deepEqual(
+                  captures[scenario.id].interactions,
+                  first.captures[scenario.id].interactions,
+                  "interaction repeat drift",
+                );
                 if (width === 1440 && percent === 100)
                   repeatArtifacts(output, filename, cap.png);
               }
             }
+            assert.ok(metrics, "scenario metrics required");
+            /** @type {import("./console-visual-browser-types").Case} */
             const row = {
               requested_window_width: width,
               zoom_percent: percent,
@@ -791,6 +880,25 @@ async function qualify(options) {
               }
               assert.ok(rejected, "clipping mutant escaped");
               row.clipping_mutant = "rejected";
+              const note = page.locator("#scenario-note");
+              const noteText = await note.textContent();
+              await note.evaluate((e) => {
+                e.textContent = "";
+              });
+              rejected = false;
+              try {
+                await pageChecks(page, scenario);
+              } catch (e) {
+                if (String(e).includes("missing expected label"))
+                  rejected = true;
+                else throw e;
+              } finally {
+                await note.evaluate((e, text) => {
+                  e.textContent = text;
+                }, noteText);
+              }
+              assert.ok(rejected, "removed scenario note mutant escaped");
+              row.removed_note_mutant = "rejected";
               const labelMutant = {
                 ...scenario,
                 expected_visible: [
@@ -807,7 +915,7 @@ async function qualify(options) {
                 else throw e;
               }
               assert.ok(rejected, "label mutant escaped");
-              row.label_mutant = "rejected";
+              row.label_mutant = "missing-expected-label oracle rejected";
               const hiddenAction = await page
                 .locator("[data-authority-action]")
                 .first()
@@ -873,8 +981,10 @@ async function qualify(options) {
             if (repeat === 1) {
               first = row;
               pair[percent] = captures;
-            } else
+            } else {
+              assert.ok(first, "first repeat required");
               assert.deepEqual(row.actual, first.actual, "repeat layout drift");
+            }
             receipt.cases.push(row);
           } finally {
             try {
@@ -930,13 +1040,18 @@ module.exports = {
 if (require.main === module) {
   const args = process.argv.slice(2);
   assert.equal(args.length, 6);
+  /** @type {Record<string,string>} */
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
     assert.ok(["--browser", "--playwright", "--output"].includes(args[i]));
     options[args[i].slice(2)] = args[i + 1];
   }
   assert.ok(options.browser && options.playwright && options.output);
-  qualify(options)
+  qualify({
+    browser: options.browser,
+    playwright: options.playwright,
+    output: options.output,
+  })
     .then((r) =>
       console.log(JSON.stringify({ status: r.status, cases: r.cases.length })),
     )

@@ -117,3 +117,12 @@ test("publication is local, refuses overwrite and produces deterministic bytes",
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("slash-separated native-zoom note retains explicit readable wrapping", () => {
+  const css = fs.readFileSync(path.join(ROOT, "visual/layout.css"), "utf8");
+  assert.match(css, /(?:^|\n)p\s*\{[^}]*overflow-wrap:\s*anywhere\s*;/);
+  const scenario = visualScenarios.find((s) => s.id === "duplicate-events");
+  assert.ok(scenario);
+  assert.match(scenario.note, /Duplicate\/lost\/queued\/exported\/persisted/);
+  // Source safeguard only. Real native-200 clipping checks run on Strix.
+});

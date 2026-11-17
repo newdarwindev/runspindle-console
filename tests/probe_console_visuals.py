@@ -31,7 +31,9 @@ def main() -> None:
     args = parser.parse_args()
     if args.report.exists():
         raise ValueError("new report required")
-    with tempfile.TemporaryDirectory(prefix="console-visual-cancel-probe-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="console-visual-cancel-probe-"
+    ) as directory:
         root = Path(directory)
         with (root / "log").open("w") as log:
             process = subprocess.Popen(

@@ -101,7 +101,7 @@
     "destination": "fixtures/shared-v1",
     "pin": "fixtures/shared-v1.pin.json",
     "runtime_qualification": "not_established",
-    "source_commit": "e8cd5779968fede213443db13a591c992cd0e183",
+    "source_commit": "e283957d80aebc48fb0bd3b6e2a600850ff6dc97",
     "source_repository": "newdarwindev/runspindle"
   },
   "retained_snapshot_source": {

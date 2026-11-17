@@ -350,3 +350,32 @@ test("unprojected real head fails without repair; explicit reconnect accepts lat
   historical(stream);
   assert.equal(f.hash(), projected);
 });
+
+test("durable fence survives fresh consumers and rejects actual SQLite rollback", async (t) => {
+  const f = setup(t);
+  const highwater = f.database + ".highwater";
+  python(["tools/retained_highwater.py", highwater, "--initialize"]);
+  f.produce("edit");
+  const before = f.hash();
+  const first = createRetainedStream({ ...f, highwater });
+  t.after(() => first.dispose());
+  assert.equal(await first.connect(), true);
+  historical(first);
+  assert.equal(first.state().retained.highwater, "local_durable");
+  first.dispose();
+  assert.equal(f.hash(), before);
+  f.sql("UPDATE heads SET revision='1' WHERE task='task'");
+  const rolledBack = f.hash();
+  const next = createRetainedStream({ ...f, highwater });
+  t.after(() => next.dispose());
+  assert.equal(await next.connect(), false);
+  assert.equal(next.state().record, null);
+  assert.equal(next.state().canExecute, false);
+  assert.equal(f.hash(), rolledBack);
+  // A process-local-only consumer does accept the restored old source: the
+  // durable fence is the independently observed distinction, not fake data.
+  const unguarded = createRetainedStream(f);
+  t.after(() => unguarded.dispose());
+  assert.equal(await unguarded.connect(), true);
+  assert.equal(unguarded.state().record.revision, 1);
+});

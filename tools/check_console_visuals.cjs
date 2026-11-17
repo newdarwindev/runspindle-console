@@ -467,6 +467,46 @@ function rasterSummary(output, files) {
     { timeout: 30000 },
   );
 }
+/** @param {{rect:{top:number,bottom:number,left:number,right:number},bounds:{top:number,bottom:number,left:number,right:number},outline:string,width:number,offset:number}} value */
+function validateFocusOutline(value) {
+  assert.ok(
+    value.outline !== "none" && value.width > 0,
+    "focus outline missing",
+  );
+  const extent = Math.max(0, value.width + value.offset);
+  assert.ok(
+    value.rect.top - extent >= value.bounds.top &&
+      value.rect.bottom + extent <= value.bounds.bottom &&
+      value.rect.left - extent >= value.bounds.left &&
+      value.rect.right + extent <= value.bounds.right,
+    "focus outline clipped",
+  );
+}
+/** @param {import("./console-visual-browser-types").Page} page */
+async function focusedOutline(page) {
+  const measurement = await page.locator(":focus").evaluate((e) => {
+    const d = document.querySelector("#preview-dialog");
+    if (!(d instanceof window.HTMLDialogElement))
+      throw Error("missing native dialog");
+    const rect = e.getBoundingClientRect().toJSON(),
+      dr = d.getBoundingClientRect(),
+      style = getComputedStyle(e);
+    return {
+      rect,
+      bounds: {
+        top: Math.max(0, dr.top + d.clientTop),
+        bottom: Math.min(innerHeight, dr.top + d.clientTop + d.clientHeight),
+        left: Math.max(0, dr.left + d.clientLeft),
+        right: Math.min(innerWidth, dr.left + d.clientLeft + d.clientWidth),
+      },
+      outline: style.outlineStyle,
+      width: parseFloat(style.outlineWidth),
+      offset: parseFloat(style.outlineOffset),
+    };
+  });
+  validateFocusOutline(measurement);
+  return measurement;
+}
 /** @param {import("./console-visual-browser-types").Page} page @param {import("./console-visual-browser-types").Session} session @param {ReturnType<typeof import("../visual/build.mjs").build>["manifest"]["scenarios"][number]} scenario @param {string} output @param {boolean} capture */
 async function interactionChecks(page, session, scenario, output, capture) {
   /** @type {import("./console-visual-browser-types").Interactions} */
@@ -495,16 +535,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     "preview-cancel",
   );
   await pageChecks(page, scenario); // Include the actually open modal in visible-surface checks.
-  const focused = await page.locator(":focus").evaluate((e) => ({
-    rect: e.getBoundingClientRect().toJSON(),
-    outline: getComputedStyle(e).outlineStyle,
-    height: innerHeight,
-  }));
-  assert.notEqual(focused.outline, "none");
-  assert.ok(
-    focused.rect.top >= 0 && focused.rect.bottom <= focused.height,
-    "modal focus obscured",
-  );
+  await focusedOutline(page);
   if (capture) {
     const cap = await nativeBitmap(page, session, "viewport");
     const file = "native-200-effective-390-preview-focus.png";
@@ -532,6 +563,16 @@ async function interactionChecks(page, session, scenario, output, capture) {
     await page.locator(":focus").getAttribute("id"),
     "preview-close",
   );
+  await focusedOutline(page);
+  if (capture) {
+    const cap = await nativeBitmap(page, session, "viewport");
+    const file = "native-200-effective-390-close-focus.png";
+    const destination = path.join(output, file);
+    if (fs.existsSync(destination))
+      comparePixels(pixelsOf(fs.readFileSync(destination)), cap.pixels);
+    else fs.writeFileSync(destination, cap.png);
+    results.close_focus = { file, pixels: cap.pixels, capture: cap.capture };
+  }
   await page.keyboard.press("Space");
   assert.ok(
     !(await page.locator("#preview-dialog").evaluate((e) => {
@@ -1050,6 +1091,7 @@ async function qualify(options) {
 module.exports = {
   zoomPreferences,
   validateNativeZoom,
+  validateFocusOutline,
   validatePair,
   validateBitmap,
   comparePixels,

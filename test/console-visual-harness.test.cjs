@@ -92,3 +92,31 @@ test("missing or invalid native CDP zoom is rejected", () => {
     assert.throws(() => validateNativeZoom(value), /native CDP zoom/);
   assert.equal(validateNativeZoom(2), 2);
 });
+
+test("entire outline must fit viewport and modal scrollport", () => {
+  const {
+    validateFocusOutline,
+  } = require("../tools/check_console_visuals.cjs");
+  const good = {
+    rect: { top: 20, bottom: 60, left: 20, right: 80 },
+    bounds: { top: 0, bottom: 100, left: 0, right: 100 },
+    outline: "solid",
+    width: 3,
+    offset: 2,
+  };
+  validateFocusOutline(good);
+  assert.throws(
+    () =>
+      validateFocusOutline({ ...good, bounds: { ...good.bounds, bottom: 62 } }),
+    /clipped/,
+  );
+  assert.throws(
+    () =>
+      validateFocusOutline({ ...good, bounds: { ...good.bounds, left: 18 } }),
+    /clipped/,
+  );
+  assert.throws(
+    () => validateFocusOutline({ ...good, outline: "none" }),
+    /missing/,
+  );
+});

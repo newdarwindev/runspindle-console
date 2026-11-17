@@ -125,6 +125,7 @@ export interface Capture {
   coordinate_space: string;
 }
 export interface Interactions {
+  close_focus?: { file: string; pixels: Pixels; capture: Capture };
   focus?: { file: string; pixels: Pixels; capture: Capture };
   dialog?: string;
   late_response?: string;

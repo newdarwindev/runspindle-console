@@ -288,6 +288,7 @@ header.top p {
   margin-bottom: 1rem;
 }
 dialog {
+  scroll-padding-block: 0.75rem;
   border: 2px solid #315e8c;
   border-radius: 0.65rem;
   padding: 1rem;
@@ -304,6 +305,7 @@ dialog h2 {
   font-size: 1.15rem;
 }
 dialog button {
+  scroll-margin-block: 0.75rem;
   max-width: 100%;
 }
 [hidden] {
@@ -342,4 +344,9 @@ dialog button {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+/* Leave room for the complete focus outline inside the modal scrollport. */
+dialog .actions {
+  padding-block: 0.5rem;
 }

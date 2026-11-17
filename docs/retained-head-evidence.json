@@ -1,0 +1,255 @@
+{
+  "aggregate_details": {
+    "base_sha": "2af17121c0fb8d888bf6b1dc63d48eb7a27716a9",
+    "checks": [
+      {
+        "component_pins": {},
+        "id": "reproducible-inputs",
+        "lock_sha256": {
+          "requirements-quality.txt": "9cbe1331549216b953f2922f1e8321357ca82bb985e1ea595c87fcee8a8fdc84",
+          "tools/quality-baseline.json": "0051ed9357181fc489802f28c313651018552733953135cbd2a554c2eb89cc37",
+          "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db"
+        },
+        "problems": [],
+        "status": "passed"
+      },
+      {
+        "child_cpu_seconds": 0.050369,
+        "child_maxrss_high_water": 13056,
+        "command_sha256": "c757e485bdf3b9967e3129f145f00e9d940e9199a3cf5612cd1a73592cacb705",
+        "exit_code": 0,
+        "id": "scaffold",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 0.05084
+      },
+      {
+        "child_cpu_seconds": 0.07719,
+        "child_maxrss_high_water": 13056,
+        "command_sha256": "5c5a1021c80d4a896927104503e00dcf6ed7a419eb4e64bb142e66652f6a30c5",
+        "exit_code": 0,
+        "id": "retained-source",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 0.077387
+      },
+      {
+        "child_cpu_seconds": 37.714755,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "6febfc1a5dc7b57ee68f97a799962a93e11b57fda35ec9aa49a4e92273666cdc",
+        "exit_code": 1,
+        "id": "static-quality",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "reported_diagnostic": {
+          "category": "unclassified",
+          "provenance": "child_output_unverified"
+        },
+        "status": "failed",
+        "wall_seconds": 29.47908
+      },
+      {
+        "child_cpu_seconds": 0.044007,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "ced3d4b2ec9029d629a013839ef1fcfcb99ba118d24a86dfb470b4ad7be71b82",
+        "exit_code": 0,
+        "id": "repository-hygiene",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 0.044389
+      },
+      {
+        "child_cpu_seconds": 0.038075,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "e8eb378a920df3540890e71adcd6f785d9ac36f0cc30665b47ba675a0e86ee6a",
+        "exit_code": 0,
+        "id": "check-artifacts",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 0.038358
+      },
+      {
+        "child_cpu_seconds": 0.069631,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "15b3f576886537584aa06e55908083cad1eebdc72fa257e8989d55c02e4194c7",
+        "exit_code": 0,
+        "id": "check-vision",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 0.070021
+      },
+      {
+        "child_cpu_seconds": 1.421906,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "3f0d5f78180b7ddb91df03408e5748a47928bbe842990aed1577af318810d23b",
+        "exit_code": 0,
+        "id": "check-projection-mutations",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "wall_seconds": 1.190295
+      },
+      {
+        "child_cpu_seconds": 6.943148,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "44fa9645f19d8045b1414c7e89327cc7b2ad0dbab36751d27b541345d2155f91",
+        "exit_code": 0,
+        "id": "python-tests",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "test_summary": "unittest_trailing_summary",
+        "tests_run": 118,
+        "tests_skipped": 0,
+        "wall_seconds": 6.975651
+      },
+      {
+        "child_cpu_seconds": 34.382572,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "6f616b28b01d527eb4b2060aecd0b3ef595ce0a967cc3dadff17b2452185cdd6",
+        "exit_code": 0,
+        "id": "javascript-tests",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "test_summary": "node_trailing_summary",
+        "tests_run": 122,
+        "tests_skipped": 0,
+        "wall_seconds": 13.851979
+      },
+      {
+        "id": "distributable-build",
+        "reason": "No distributable build command exists in this repository validation contract; this does not claim release acceptance.",
+        "status": "not_applicable"
+      },
+      {
+        "child_cpu_seconds": 6.045452,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "dded3febf7dc555b645e264623694fd226b6d7de986e1945f339ce06f2b100c2",
+        "exit_code": 0,
+        "id": "retained-snapshot-integration",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "test_summary": "node_trailing_summary",
+        "tests_run": 11,
+        "tests_skipped": 0,
+        "wall_seconds": 5.893783
+      }
+    ],
+    "limitations": [
+      "Profiling measures deterministic validation workloads, not native/provider performance.",
+      "No evidence upload or retention policy is enabled.",
+      "Native/live acceptance gates remain in their existing separate workflows.",
+      "Raw child output is not included in sanitized verification reports.",
+      "Command output and argv are deliberately omitted; fingerprints identify manifest commands.",
+      "Profiles are report-only single samples, not regression thresholds or provider benchmarks."
+    ],
+    "profiles": [
+      {
+        "child_cpu_seconds": 31.473724,
+        "child_maxrss_high_water": 331948,
+        "command_sha256": "6f616b28b01d527eb4b2060aecd0b3ef595ce0a967cc3dadff17b2452185cdd6",
+        "enforcement": "report_only",
+        "exit_code": 0,
+        "id": "projection-regression-workload",
+        "kind": "validation",
+        "maxrss_scope": "process-wide child high-water, not per-workload peak",
+        "maxrss_unit": "KiB",
+        "output_complete": true,
+        "status": "passed",
+        "test_summary": "node_trailing_summary",
+        "tests_run": 122,
+        "tests_skipped": 0,
+        "wall_seconds": 14.395927
+      }
+    ],
+    "source_identity": "commit_only_when_clean; dirty worktree is not an exact-source receipt",
+    "source_sha": "2674551cfaf72c349ddf5adfbc5dfa01cec9a680",
+    "source_worktree_dirty": true,
+    "status": "failed",
+    "tracked_worktree_dirty": false,
+    "untracked_file_count": 1
+  },
+  "aggregate_original_sha256": "fd38385b6f4e5eff904c19e1ea6169085d53ab1fc1d1e93e5be21657fb38cd38",
+  "evidence_class": "synthetic_actual_store_and_fresh_process_integration",
+  "focused_tests": 13,
+  "full_node_tests": 122,
+  "local_equivalent": "2674551cfaf72c349ddf5adfbc5dfa01cec9a680",
+  "logs_sha256": {
+    "console-retained-stream-final-aggregate.log": "80557d4a55fb7c6bd7965b1a77fa3dd3b2e4007b42d2ab38426329e9a44950a8",
+    "console-retained-stream-final-optimized.log": "9c39670a7e91ed7bc4e839aedd8f9ffa131b4dd24e93b573570c24612e513e4f",
+    "console-retained-stream-final-static.log": "9523e30d7ef691f71e45aead62a1656874fe08e55cb9564c6e4ecdd0652ab90d"
+  },
+  "not_qualified": [
+    "authenticated_live_runtime",
+    "current_upstream_permission_revocation",
+    "event_log_replay",
+    "durable_highwater",
+    "omitted_or_erased_fields_integrity",
+    "power_loss",
+    "universal_descendant_cleanup",
+    "remote_CI",
+    "deployment"
+  ],
+  "python_normal_tests": 118,
+  "python_optimized_tests": 118,
+  "recorded_at": "2026-11-17T19:03:39.378506+00:00",
+  "retained_integration_tests": 11,
+  "retained_tether_commit": "670989839a0fccbcf2014d01609778ae6e4df424",
+  "schema_version": 1,
+  "scope": "partial_console_9_retained_store_adapter",
+  "seed": 1,
+  "skipped": 0,
+  "source_commit": "9dfa83e76a42352ce91bbcc96c10675e57624937",
+  "source_sha256": {
+    "dependencies/tether-snapshot.json": "257260454260680ace6786c6369a41febc6f8bc311d350b9ba36209d804fd654",
+    "package.json": "6102a049c225c418c7523b095249200f5672cbca0bf6d5be29c2748b00c3a627",
+    "requirements-quality.txt": "9cbe1331549216b953f2922f1e8321357ca82bb985e1ea595c87fcee8a8fdc84",
+    "specs/retained-snapshot.md": "ffe0815a4eb787dc91d0fe000f2e0ee47df03ccbd1db03f02dadef3a745a323b",
+    "src/projection.js": "6a612226ad0934cbe2e35a3bc185be443dc9d7040794d05a6e4e8ef130476955",
+    "src/retained-snapshot.js": "6b56649356e2dda35ecf6e966a52497562a67325f45be471b6acc18e6d04724f",
+    "src/retained-stream.js": "ef46505cc27afaf8814f498e20d1c7430a70cfaeb8a2699513eed0d04961e814",
+    "src/stream.js": "61901f4534d55cf4b9b4a9a9375fb3f6d2987266d0435f9e702ee655a1a65aef",
+    "test/retained-process.test.js": "a38fb121c2b1667511c9fa675ff46a6f26a6f065758a795efa733e97c781083a",
+    "test/retained-snapshot.test.js": "a5936dbd648abe8a30c2807804a3aeda18b857cad1154ed8d117c4eca97fcfb4",
+    "test/retained-stream.test.js": "f49fcabb29dc2743a9970d7101ca64b822b4bbed694496a4cf38a87e135353c3",
+    "test_support/retained_producer.py": "7e422ad4c2743b489c6f78cefc823b3267ab2a0ee619b330dd5978422c90d7f7",
+    "tools/quality-baseline.json": "0051ed9357181fc489802f28c313651018552733953135cbd2a554c2eb89cc37",
+    "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db",
+    "tools/retained_snapshot.py": "39c7e05f0b3772df60201bec33e094c2ed88b1ead059a89c5220084b390850af",
+    "tools/shared_fixtures.py": "191a9e091824372714ac88bc59d2567e17a4f4eafe4d2ad29b1c571a0eead654"
+  },
+  "source_stability": "no_source_change_failure_recorded; runner emits this check only on failure",
+  "source_tree": "2351d6a19a3e8540d383a6412ed21f6d980da25d",
+  "static_quality": {
+    "diagnostic": "ruff-format tools/shared_fixtures.py; unchanged from base main",
+    "existing_debt": 47,
+    "new_diagnostics": 1,
+    "status": "failed"
+  },
+  "toolchain": {
+    "machine": "x86_64",
+    "node": "v24.22.1",
+    "platform": "Linux",
+    "python": "3.12.14",
+    "ruff": "ruff 0.14.5",
+    "sqlite": "3.53.1"
+  },
+  "untracked_explanation": "Single local node_modules symlink to existing locked tooling; tracked files clean"
+}

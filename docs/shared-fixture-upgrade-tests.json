@@ -1,0 +1,64 @@
+{
+  "evidence_class": "synthetic_fixture_consumer_conformance",
+  "component": "console",
+  "source_commit": "e283957d80aebc48fb0bd3b6e2a600850ff6dc97",
+  "source_tree": "dee5e9fc7ab96420075dea3cc7ee59d0cb5012b2",
+  "component_base": "352fd2d582fecf6e637fef11af8cac7a11313344",
+  "python": "3.14.8",
+  "deterministic_seed": 90210,
+  "scenarios": [
+    "duplicate",
+    "reorder",
+    "timeout",
+    "partial-response",
+    "retry",
+    "restart",
+    "uncertain-effect"
+  ],
+  "fault_evidence": "separate_in_memory_model_and_actual_spy_records_not_durable_recovery",
+  "mutations": [
+    "extra-effect",
+    "wrong-order",
+    "regress-sequence",
+    "unauthorized-retry",
+    "wrong-effect-identity"
+  ],
+  "expected_and_receipt_identity_boolean_rejection": "passed",
+  "full_python": {
+    "normal": 118,
+    "optimized": 118,
+    "skipped_each": 0,
+    "status": "passed"
+  },
+  "focused_fixture_tests": 9,
+  "scaffold": "passed",
+  "new_test_strict_mypy": "passed",
+  "logs": {
+    "normal": "3a36c3dc559320b66431dadf37a923a4d92edb41463a995fbffd8cab0f1b29e7",
+    "optimized": "f82d48676e66ded8cd1ee935aa6956b8c826318beaa4842e783bd1a629870eca"
+  },
+  "input_sha256": {
+    "fixtures/shared-v1.pin.json": "2b1f06bbf11a1c7ae9633c300c9973eb996d71bb8fa70619b3db895e6b463cc9",
+    "tests/test_shared_fault_fixtures.py": "48f5b2539dcf0913a676cc18377b2ea764259de24677e338448a30b460d3dca7",
+    "tools/shared_fixtures.py": "191a9e091824372714ac88bc59d2567e17a4f4eafe4d2ad29b1c571a0eead654",
+    "fixtures/shared-v1/artifact.txt": "5d331381d2f6ae517386fdda84eb4f92011915473935b57385c69648cc85bbc8",
+    "fixtures/shared-v1/contract.json": "f707f1d2b7147797042292b6374afd34aecc39c09916ec7a809ae7587ee556a9",
+    "fixtures/shared-v1/faults.json": "21c1ed0e14e37c0904acd4a8fd90649c83ded15180e35e828e9c4d9df710b934",
+    "fixtures/shared-v1/fixturekit.py": "29857e337c30f84e673387a2ac27c7f0fc95bada1d783b346085286251f65279",
+    "fixtures/shared-v1/golden.json": "9a42bcbb6950179931c07e3e4768e91859b873834687346ace8f96e32e047728",
+    "fixtures/shared-v1/manifest.json": "5fa997387ad990c1f8314f5549a1d452b2b7fcf1ef3ae811f6f9cd286af30235",
+    "fixtures/shared-v1/vectors.json": "0d60f635ccaa9535c05fc9ca98e9982c618fb86e70c50bdac56f230f3ab3d8ed"
+  },
+  "runtime_pins": "unchanged",
+  "runtime_integration": "not_rerun",
+  "live_acceptance": "not_run",
+  "independent_review": "pending_final_head",
+  "compatibility": "shared-fixture-compatibility.json",
+  "historical_evidence": "preserved_not_relabeled",
+  "node_tests": {
+    "passed": 89,
+    "runtime": "v24.21.0",
+    "log_sha256": "0bd9520df284eaaf1d594b7d6db6031b5c6bb09ac55b7dc96e113f81c6bb2d2b",
+    "retained_Tether_test_input": "670989839a0fccbcf2014d01609778ae6e4df424"
+  }
+}

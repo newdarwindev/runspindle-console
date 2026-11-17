@@ -8,7 +8,7 @@ import types
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / 'fixtures/shared-v1'
 PIN = ROOT / 'fixtures/shared-v1.pin.json'
-FILES = {'artifact.txt', 'contract.json', 'fixturekit.py', 'golden.json', 'vectors.json'}
+FILES = {'faults.json', 'artifact.txt', 'contract.json', 'fixturekit.py', 'golden.json', 'vectors.json'}
 
 
 def _read(path):

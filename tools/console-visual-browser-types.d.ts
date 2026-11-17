@@ -152,6 +152,7 @@ export interface Case {
   actual_browser_argv: string;
   sandbox_disable_flags_absent: boolean;
   clipping_mutant?: string;
+  close_event_mutant?: string;
   removed_note_mutant?: string;
   label_mutant?: string;
   action_mutant?: string;

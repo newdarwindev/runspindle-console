@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /// <reference path="./console-visual-browser-types.d.ts" />
 "use strict";
-/* global require, module, __dirname, document, window, history, devicePixelRatio, innerWidth, outerWidth, innerHeight, outerHeight, visualViewport, getComputedStyle, scrollX, scrollY, scrollTo, consoleVisual, runAssertions, requestAnimationFrame, createStreamProjection, consoleScenarios, keyboardReceipt, createTaskNavigator, consoleTaskCatalog, createBrowserTaskHistory, keyboardNavigator */
+/* global AbortController, require, module, __dirname, document, window, history, devicePixelRatio, innerWidth, outerWidth, innerHeight, outerHeight, visualViewport, getComputedStyle, scrollX, scrollY, scrollTo, consoleVisual, runAssertions, requestAnimationFrame, createStreamProjection, consoleScenarios, keyboardReceipt, createTaskNavigator, consoleTaskCatalog, createBrowserTaskHistory, keyboardNavigator */
 // Synthetic Console reference capture. No runtime authority or baseline self-approval.
 const fs = require("node:fs");
 const path = require("node:path");
@@ -507,6 +507,97 @@ async function focusedOutline(page) {
   validateFocusOutline(measurement);
   return measurement;
 }
+/** @param {import("./console-visual-browser-types").Page} page @param {string} key */
+async function closeDialogWithKey(page, key) {
+  const observer = await page
+    .locator("#preview-dialog")
+    .evaluateHandle((dialog) => {
+      if (!(dialog instanceof window.HTMLDialogElement) || !dialog.open)
+        throw Error("expected open native dialog");
+      const controller = new AbortController();
+      dialog.dataset.qualificationClose = "pending";
+      dialog.addEventListener(
+        "close",
+        () => {
+          dialog.dataset.qualificationClose = "delivered";
+        },
+        { once: true, signal: controller.signal },
+      );
+      return controller;
+    });
+  try {
+    await page.keyboard.press(key);
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector("#preview-dialog")
+          ?.getAttribute("data-qualification-close") === "delivered",
+    );
+    assert.equal(
+      await page.locator(":focus").getAttribute("id"),
+      "inspect-preview",
+      "native close event must restore focus before advancing",
+    );
+  } finally {
+    try {
+      await observer.evaluate((controller) => controller.abort());
+    } finally {
+      await observer.dispose();
+      await page
+        .locator("#preview-dialog")
+        .evaluate((e) => e.removeAttribute("data-qualification-close"));
+    }
+  }
+}
+
+/** @param {import("./console-visual-browser-types").Page} page */
+async function closeEventMutation(page) {
+  await page.evaluate(() => consoleVisual.select("fresh"));
+  await page.locator("#inspect-preview").click();
+  await page
+    .locator("#preview-dialog")
+    .evaluate((dialog) =>
+      dialog.addEventListener(
+        "close",
+        (event) => event.stopImmediatePropagation(),
+        { capture: true, once: true },
+      ),
+    );
+  let rejected = false;
+  page.setDefaultTimeout(250);
+  try {
+    await closeDialogWithKey(page, "Enter");
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError")
+      rejected = true;
+    else throw error;
+  } finally {
+    page.setDefaultTimeout(5000);
+  }
+  assert.ok(rejected, "missing native close event escaped");
+  assert.equal(
+    await page.locator("#preview-dialog").evaluate((e) => {
+      if (!(e instanceof window.HTMLDialogElement))
+        throw Error("missing dialog");
+      return e.open;
+    }),
+    false,
+  );
+  assert.equal(
+    await page.locator(":focus").getAttribute("id"),
+    "inspect-preview",
+  );
+  assert.equal(
+    await page
+      .locator("#preview-dialog")
+      .getAttribute("data-qualification-close"),
+    null,
+    "observer cleanup missing",
+  );
+  await page.locator("#inspect-preview").click();
+  await closeDialogWithKey(page, "Enter");
+  return "suppressed close rejected despite closed dialog and restored focus; observer removed; subsequent real close passed";
+}
 /** @param {import("./console-visual-browser-types").Page} page @param {import("./console-visual-browser-types").Session} session @param {ReturnType<typeof import("../visual/build.mjs").build>["manifest"]["scenarios"][number]} scenario @param {string} output @param {boolean} capture */
 async function interactionChecks(page, session, scenario, output, capture) {
   /** @type {import("./console-visual-browser-types").Interactions} */
@@ -545,7 +636,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     else fs.writeFileSync(destination, cap.png);
     results.focus = { file, pixels: cap.pixels, capture: cap.capture };
   }
-  await page.keyboard.press("Enter");
+  await closeDialogWithKey(page, "Enter");
   assert.ok(
     !(await page.locator("#preview-dialog").evaluate((e) => {
       if (!(e instanceof window.HTMLDialogElement))
@@ -573,7 +664,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     else fs.writeFileSync(destination, cap.png);
     results.close_focus = { file, pixels: cap.pixels, capture: cap.capture };
   }
-  await page.keyboard.press("Space");
+  await closeDialogWithKey(page, "Space");
   assert.ok(
     !(await page.locator("#preview-dialog").evaluate((e) => {
       if (!(e instanceof window.HTMLDialogElement))
@@ -586,7 +677,7 @@ async function interactionChecks(page, session, scenario, output, capture) {
     "inspect-preview",
   );
   await page.keyboard.press("Enter");
-  await page.keyboard.press("Escape");
+  await closeDialogWithKey(page, "Escape");
   assert.ok(
     !(await page.locator("#preview-dialog").evaluate((e) => {
       if (!(e instanceof window.HTMLDialogElement))
@@ -684,6 +775,8 @@ async function qualify(options) {
     playwright: inventory(packageRoot),
     playwright_core: inventory(coreRoot),
     browser: inventory(path.dirname(browser)),
+    dejavu_fonts: inventory("/usr/share/fonts/truetype/dejavu"),
+    fontconfig: inventory("/etc/fonts"),
   };
   cp.execFileSync(process.execPath, ["visual/build.mjs", "--output", output], {
     cwd: ROOT,
@@ -753,6 +846,21 @@ async function qualify(options) {
       python_binary_sha256: fileHash(pythonInfo.executable),
       pillow: pythonInfo.pillow,
       pillow_imaging_sha256: fileHash(pythonInfo.imaging),
+      font_resolution: Object.fromEntries(
+        [
+          "DejaVu Sans",
+          "DejaVu Sans:style=Bold",
+          "DejaVu Sans Mono",
+          "DejaVu Sans Mono:style=Bold",
+        ].map((name) => {
+          const file = cp
+            .execFileSync("fc-match", ["-f", "%{file}", name], {
+              encoding: "utf8",
+            })
+            .trim();
+          return [name, { file, sha256: fileHash(file) }];
+        }),
+      ),
       fonts: Object.fromEntries(
         [
           "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -1030,6 +1138,7 @@ async function qualify(options) {
                 /pixel mutation/,
               );
               row.pixel_mutant = "rejected";
+              row.close_event_mutant = await closeEventMutation(page);
               row.component_assertions = await componentAssertions(
                 context,
                 output,
@@ -1070,6 +1179,11 @@ async function qualify(options) {
     assert.deepEqual(inventory(packageRoot), distributions.playwright);
     assert.deepEqual(inventory(coreRoot), distributions.playwright_core);
     assert.deepEqual(inventory(path.dirname(browser)), distributions.browser);
+    assert.deepEqual(
+      inventory("/usr/share/fonts/truetype/dejavu"),
+      distributions.dejavu_fonts,
+    );
+    assert.deepEqual(inventory("/etc/fonts"), distributions.fontconfig);
     receipt.status = "passed";
   } catch (e) {
     receipt.status = "failed";
@@ -1098,6 +1212,8 @@ module.exports = {
   componentAssertions,
   pageChecks,
   interactionChecks,
+  closeDialogWithKey,
+  closeEventMutation,
 };
 if (require.main === module) {
   const args = process.argv.slice(2);

@@ -16,18 +16,37 @@ import {
   referenceState,
 } from "./scenarios.mjs";
 
+/** @template {HTMLElement} T
+ * @param {string} selector
+ * @param {{new(...args: never[]): T}} type
+ * @returns {T}
+ */
+function requiredElement(selector, type) {
+  const node = document.querySelector(selector);
+  if (!(node instanceof type))
+    throw new TypeError(`missing or invalid reference element: ${selector}`);
+  return node;
+}
 const byId = new Map(visualScenarios.map((s) => [s.id, s]));
-const selector = document.querySelector("#scenario");
-const projectionRoot = document.querySelector("#projection");
-const navigationRoot = document.querySelector("#navigation-root");
-const dialog = document.querySelector("#preview-dialog");
-const previewButton = document.querySelector("#inspect-preview");
-let projection = null,
-  navigator = null,
-  stream = null,
-  releaseLate = null;
-let generation = 0,
-  selected = null;
+const selector = requiredElement("#scenario", window.HTMLSelectElement);
+const projectionRoot = requiredElement("#projection", window.HTMLElement);
+const navigationRoot = requiredElement("#navigation-root", window.HTMLElement);
+const dialog = requiredElement("#preview-dialog", window.HTMLDialogElement);
+const previewButton = requiredElement(
+  "#inspect-preview",
+  window.HTMLButtonElement,
+);
+/** @type {ReturnType<typeof createProjectionView> | null} */
+let projection = null;
+/** @type {ReturnType<typeof createTaskNavigator> | null} */
+let navigator = null;
+/** @type {ReturnType<typeof createStreamProjection> | null} */
+let stream = null;
+/** @type {(() => void) | null} */
+let releaseLate = null;
+let generation = 0;
+/** @type {typeof visualScenarios[number] | null} */
+let selected = null;
 let effects = {
   subscriptions: 0,
   closes: 0,
@@ -35,6 +54,7 @@ let effects = {
   passive: 0,
   control: 0,
 };
+/** @param {string} key @param {string} value */
 function putVisual(key, value) {
   const node = document.querySelector(`[data-visual-field="${key}"]`);
   if (node) node.textContent = String(value);
@@ -46,12 +66,14 @@ function closeReference() {
 previewButton.addEventListener("click", () => {
   if (!dialog.open) dialog.showModal();
 });
-document
-  .querySelector("#preview-close")
-  .addEventListener("click", closeReference);
-document
-  .querySelector("#preview-cancel")
-  .addEventListener("click", closeReference);
+requiredElement("#preview-close", window.HTMLElement).addEventListener(
+  "click",
+  closeReference,
+);
+requiredElement("#preview-cancel", window.HTMLElement).addEventListener(
+  "click",
+  closeReference,
+);
 dialog.addEventListener("cancel", () => {
   queueMicrotask(() => previewButton.focus());
 });
@@ -59,6 +81,7 @@ dialog.addEventListener("close", () => {
   previewButton.focus();
 });
 
+/** @param {string} id */
 async function selectScenario(id) {
   const scenario = byId.get(id);
   if (!scenario) throw new TypeError("unknown synthetic visual scenario");
@@ -82,8 +105,10 @@ async function selectScenario(id) {
   };
   selected = scenario;
   selector.value = id;
-  document.querySelector("#scenario-title").textContent = scenario.title;
-  document.querySelector("#scenario-note").textContent = scenario.note;
+  requiredElement("#scenario-title", window.HTMLElement).textContent =
+    scenario.title;
+  requiredElement("#scenario-note", window.HTMLElement).textContent =
+    scenario.note;
   const state = referenceState(scenario);
   projection = createProjectionView(projectionRoot, { readState: () => state });
   const visible = {
@@ -104,17 +129,15 @@ async function selectScenario(id) {
     controlReason: scenario.reason,
   };
   for (const [key, value] of Object.entries(visible)) putVisual(key, value);
-  document
-    .querySelector("#simulated-frame")
-    .setAttribute(
-      "aria-label",
-      `SIMULATED desktop reference. ${scenario.desktop}. No real screen or input.`,
-    );
+  requiredElement("#simulated-frame", window.HTMLElement).setAttribute(
+    "aria-label",
+    `SIMULATED desktop reference. ${scenario.desktop}. No real screen or input.`,
+  );
   const demo =
     scenario.interaction !== "inspect-only" &&
     scenario.interaction !== "preview";
-  document.querySelector("#navigation-demo").hidden = !demo;
-  document.querySelector("#late-response").hidden =
+  requiredElement("#navigation-demo", window.HTMLElement).hidden = !demo;
+  requiredElement("#late-response", window.HTMLElement).hidden =
     scenario.interaction !== "late-switch";
   if (demo) {
     let held = false;
@@ -173,20 +196,25 @@ async function selectScenario(id) {
   document.body.dataset.ready = "true";
   return true;
 }
-document.querySelector("#late-response").addEventListener("click", async () => {
-  const release = releaseLate;
-  releaseLate = null;
-  release?.();
-  await Promise.resolve();
-  await Promise.resolve();
-  navigator?.update();
-});
-document
-  .querySelector("#history-back")
-  .addEventListener("click", () => history.back());
-document
-  .querySelector("#history-forward")
-  .addEventListener("click", () => history.forward());
+requiredElement("#late-response", window.HTMLElement).addEventListener(
+  "click",
+  async () => {
+    const release = releaseLate;
+    releaseLate = null;
+    release?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    navigator?.update();
+  },
+);
+requiredElement("#history-back", window.HTMLElement).addEventListener(
+  "click",
+  () => history.back(),
+);
+requiredElement("#history-forward", window.HTMLElement).addEventListener(
+  "click",
+  () => history.forward(),
+);
 selector.addEventListener("change", () => {
   void selectScenario(selector.value);
 });

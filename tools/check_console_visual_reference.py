@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +50,10 @@ def inventory(root: Path) -> dict[str, Any]:
 
 
 def compare(reference: Path, actual: Path, review_path: Path) -> dict[str, Any]:
-    from PIL import Image, ImageChops
+    # Optional image dependency is loaded only in the visual qualification lane.
+    # Missing Pillow raises ImportError; the CLI never reports a skipped pass.
+    Image = import_module("PIL.Image")
+    ImageChops = import_module("PIL.ImageChops")
 
     baseline, observed = inventory(reference), inventory(actual)
     if review_path.is_symlink() or not review_path.is_file():

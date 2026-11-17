@@ -18,8 +18,10 @@ export const SOURCES = [
   "visual/scenarios.mjs",
   "visual/page.mjs",
 ];
+/** @param {string | Uint8Array} data */
 const sha = (data) => crypto.createHash("sha256").update(data).digest("hex");
 export function build() {
+  /** @type {Record<string,string>} */
   const sources = {};
   const script = SOURCES.map((name) => {
     const original = fs.readFileSync(path.join(ROOT, name), "utf8");
@@ -144,6 +146,7 @@ View status is below.
 No interactive input attached.</pre></div><div class="actions"><button id="preview-cancel" type="button">Cancel reference preview</button><button id="preview-close" type="button">Close reference preview</button></div></dialog><script nonce="console-reference">${script.replaceAll("</script", "<\\/script")}</script></body></html>`;
   return { html, manifest };
 }
+/** @param {string} destination */
 export function publish(destination) {
   if (fs.existsSync(destination))
     throw Error("refuse existing output directory");

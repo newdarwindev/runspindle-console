@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import importlib.util
+import json
 import tempfile
 import unittest
+from importlib import import_module
 from pathlib import Path
 
 from tools.check_console_visual_reference import compare, sha
@@ -17,9 +18,7 @@ from tools.check_console_visual_reference import compare, sha
 )
 class NativeReferenceTests(unittest.TestCase):
     def setUp(self) -> None:
-        from PIL import Image
-
-        self.Image = Image
+        self.Image = import_module("PIL.Image")
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)

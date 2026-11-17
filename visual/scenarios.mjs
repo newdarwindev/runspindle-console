@@ -9,7 +9,7 @@ export const visualIdentity = Object.freeze({
 const defaults = {
   status: "ready",
   freshness: "fresh",
-  observedAt: 1000,
+  observedAt: /** @type {number | null} */ (1000),
   authority: "denied",
   gap: false,
   desktop: "Unavailable — no desktop adapter is connected",
@@ -25,6 +25,7 @@ const defaults = {
   interaction: "inspect-only",
   long: false,
 };
+/** @param {string} id @param {string} title @param {Partial<typeof defaults>} [patch] */
 const row = (id, title, patch = {}) =>
   Object.freeze({ ...defaults, id, title, ...patch });
 export const visualScenarios = Object.freeze([
@@ -198,6 +199,7 @@ export const visualScenarios = Object.freeze([
   }),
 ]);
 
+/** @param {typeof visualScenarios[number]} scenario */
 export function referenceState(scenario) {
   const id = scenario.long
     ? {

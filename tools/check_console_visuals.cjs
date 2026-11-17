@@ -98,6 +98,7 @@ function validateNativeZoom(value) {
 async function nativeBitmap(page, session, mode, selector) {
   const metrics = await session.send("Page.getLayoutMetrics");
   const zoom = validateNativeZoom(metrics.visualViewport.zoom);
+  /** @type {{x:number,y:number,width:number,height:number,scale:number}|undefined} */
   let clip;
   /** @type {{width:number,height:number}} */
   let expected;

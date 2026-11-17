@@ -141,6 +141,13 @@ async function selectScenario(id) {
     scenario.interaction !== "late-switch";
   if (demo) {
     let held = false;
+    /** @type {() => void} */
+    let markInitialSnapshot = () => {
+      throw Error("snapshot checkpoint not initialized");
+    };
+    const initialSnapshotStarted = new Promise((resolve) => {
+      markInitialSnapshot = () => resolve(undefined);
+    });
     stream = createStreamProjection({
       clock: () => 1000,
       subscribe: () => {
@@ -153,6 +160,7 @@ async function selectScenario(id) {
       },
       readSnapshot: (identity) => {
         effects.snapshots++;
+        if (identity.task === "task-a") markInitialSnapshot();
         const answer = { ...consoleScenarios.observation, identity };
         if (
           scenario.interaction === "late-switch" &&
@@ -183,7 +191,12 @@ async function selectScenario(id) {
       stream,
       history: createBrowserTaskHistory(window),
     });
-    await navigator.navigate("b");
+    // Wait for the real initial read, not merely the rendered fallback identity.
+    // This also ensures synchronous subscription acquisition has settled before B.
+    await initialSnapshotStarted;
+    if (ticket !== generation) return false;
+    if (!(await navigator.navigate("b")))
+      throw Error("synthetic task B observation failed");
     // All ready-state promises below are actual view/font settlement, not timers.
     navigator.update();
   }

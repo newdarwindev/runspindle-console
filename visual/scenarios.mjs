@@ -4,7 +4,7 @@ export const visualIdentity = Object.freeze({
   ...consoleScenarios.identity,
   nativeSession: "native-synthetic-007",
   span: "span-synthetic-1",
-  artifactDigest: "7".repeat(64),
+  artifactDigest: "sha256:" + "7".repeat(64),
 });
 const defaults = {
   status: "ready",

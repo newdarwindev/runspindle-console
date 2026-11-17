@@ -1054,6 +1054,8 @@ module.exports = {
   validateBitmap,
   comparePixels,
   componentAssertions,
+  pageChecks,
+  interactionChecks,
 };
 if (require.main === module) {
   const args = process.argv.slice(2);

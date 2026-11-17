@@ -5,7 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { build, publish, ROOT, SOURCES } from "../visual/build.mjs";
-import { visualScenarios, referenceState } from "../visual/scenarios.mjs";
+import {
+  visualScenarios,
+  visualIdentity,
+  referenceState,
+} from "../visual/scenarios.mjs";
 import { createProjectionView } from "../src/view.js";
 import { ElementDouble } from "./dom-double.js";
 
@@ -126,3 +130,123 @@ test("slash-separated native-zoom note retains explicit readable wrapping", () =
   assert.match(scenario.note, /Duplicate\/lost\/queued\/exported\/persisted/);
   // Source safeguard only. Real native-200 clipping checks run on Strix.
 });
+
+test(
+  "canonical visual identity drives real A to B stream observation before releasing held A",
+  { timeout: 2000 },
+  async () => {
+    const { createStreamProjection } = await import("../src/stream.js");
+    const { createTaskNavigator } = await import("../src/navigation.js");
+    const { consoleScenarios, consoleTaskCatalog } = await import(
+      "../fixtures/console-ui/scenarios.js"
+    );
+    const { setImmediate } = await import("node:timers/promises");
+    /** @type {{activeElement: ElementDouble | null, createElement: (tag:string) => ElementDouble}} */
+    const document = {
+      activeElement: null,
+      createElement: (tag) => new ElementDouble(tag, document),
+    };
+    const root = document.createElement("main");
+    const counts = { subscriptions: 0, snapshots: 0, closes: 0, passive: 0 };
+    /** @type {() => void} */
+    let markStarted = () => {
+      throw Error("checkpoint uninitialized");
+    };
+    const started = new Promise((resolve) => {
+      markStarted = () => resolve(undefined);
+    });
+    /** @type {() => void} */
+    let releaseA = () => {
+      throw Error("no held A response");
+    };
+    const stream = createStreamProjection({
+      clock: () => 1000,
+      subscribe: () => {
+        counts.subscriptions++;
+        return {
+          close: () => {
+            counts.closes++;
+          },
+        };
+      },
+      readSnapshot: (identity) => {
+        counts.snapshots++;
+        const response = { ...consoleScenarios.observation, identity };
+        if (identity.task === "task-a") {
+          markStarted();
+          return new Promise((resolve) => {
+            releaseA = () => resolve(response);
+          });
+        }
+        return response;
+      },
+      openPassive: () => {
+        counts.passive++;
+        throw Error("forbidden passive call");
+      },
+    });
+    const navigator = createTaskNavigator(
+      /** @type {HTMLElement} */ (/** @type {unknown} */ (root)),
+      {
+        catalog: consoleTaskCatalog.map((task) => ({
+          ...task,
+          identity: { ...visualIdentity, ...task.identity },
+        })),
+        stream,
+        history: {
+          current: () => "a",
+          push: () => {},
+          subscribe: () => () => {},
+        },
+      },
+    );
+    try {
+      await started;
+      assert.deepEqual(counts, {
+        subscriptions: 1,
+        snapshots: 1,
+        closes: 0,
+        passive: 0,
+      });
+      assert.equal(await navigator.navigate("b"), true);
+      assert.deepEqual(counts, {
+        subscriptions: 2,
+        snapshots: 2,
+        closes: 1,
+        passive: 0,
+      });
+      assert.equal(stream.state().status, "ready");
+      assert.equal(stream.state().identity.task, "task-b");
+      assert.equal(
+        stream.state().record.revision,
+        consoleScenarios.observation.revision,
+      );
+      assert.equal(
+        stream.state().identity.artifactDigest,
+        visualIdentity.artifactDigest,
+      );
+      assert.match(visualIdentity.artifactDigest, /^sha256:[a-f0-9]{64}$/);
+      assert.equal(
+        root.querySelector('[data-field="task"]').textContent,
+        "task-b",
+      );
+      const before = { ...counts };
+      releaseA();
+      await setImmediate();
+      navigator.update();
+      assert.equal(stream.state().status, "ready");
+      assert.equal(
+        stream.state().record.revision,
+        consoleScenarios.observation.revision,
+      );
+      assert.equal(
+        root.querySelector('[data-field="task"]').textContent,
+        "task-b",
+      );
+      assert.deepEqual(counts, before);
+    } finally {
+      navigator.dispose();
+    }
+    assert.equal(counts.closes, 2);
+  },
+);

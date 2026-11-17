@@ -5,46 +5,79 @@ import { readFile } from "node:fs/promises";
 import { createTaskNavigator } from "../src/navigation.js";
 import { createStreamProjection } from "../src/stream.js";
 import { ElementDouble } from "./dom-double.js";
-import { consoleScenarios, consoleTaskCatalog } from "../fixtures/console-ui/scenarios.js";
+import {
+  consoleScenarios,
+  consoleTaskCatalog,
+} from "../fixtures/console-ui/scenarios.js";
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 /** @param {typeof createTaskNavigator} [factory] @param {boolean} [failClose] */
 function setup(factory = createTaskNavigator, failClose = false) {
   /** @type {any} */ const document = { activeElement: null };
-  document.createElement = /** @param {string} tag */ (tag) => new ElementDouble(tag, document);
+  document.createElement = /** @param {string} tag */ (tag) =>
+    new ElementDouble(tag, document);
   const root = document.createElement("main");
   /** @type {any[]} */ const subscriptions = [];
-  /** @type {Array<{identity:any, resolve:(value:any)=>void}>} */ const reads = [];
+  /** @type {Array<{identity:any, resolve:(value:any)=>void}>} */ const reads =
+    [];
   /** @type {string[]} */ const history = [];
-  let closes = 0, views = 0, controls = 0;
-  const adapters = { control: () => { controls++; } };
+  let closes = 0,
+    views = 0,
+    controls = 0;
+  const adapters = {
+    control: () => {
+      controls++;
+    },
+  };
   const stream = createStreamProjection({
     clock: () => 1000,
     subscribe: (identity, callbacks) => {
       subscriptions.push({ identity, ...callbacks });
-      return { close() {
-        closes++;
-        if (failClose) throw new Error("SECRET_CANARY");
-      } };
+      return {
+        close() {
+          closes++;
+          if (failClose) throw new Error("SECRET_CANARY");
+        },
+      };
     },
-    readSnapshot: (identity) => new Promise((resolve) => reads.push({ identity, resolve })),
-    openPassive: () => { views++; },
+    readSnapshot: (identity) =>
+      new Promise((resolve) => reads.push({ identity, resolve })),
+    openPassive: () => {
+      views++;
+    },
     ...adapters,
   });
   const navigator = factory(root, {
-    catalog: [...consoleTaskCatalog], stream,
-    history: { current: () => null, push: (key) => history.push(key), subscribe: () => () => {} },
+    catalog: [...consoleTaskCatalog],
+    stream,
+    history: {
+      current: () => null,
+      push: (key) => history.push(key),
+      subscribe: () => () => {},
+    },
   });
   const button = root.querySelector("[data-retry-observation]");
   return {
-    root, document, subscriptions, reads, history, stream, navigator, button,
+    root,
+    document,
+    subscriptions,
+    reads,
+    history,
+    stream,
+    navigator,
+    button,
     counts: () => ({ closes, views, controls }),
     /** @param {number} index @param {string} [label] */
     settle(index, label = "Observation") {
-      reads[index].resolve({ ...consoleScenarios.observation, identity: reads[index].identity, label });
+      reads[index].resolve({
+        ...consoleScenarios.observation,
+        identity: reads[index].identity,
+        label,
+      });
     },
-    field: /** @param {string} key */ (key) => root.querySelector('[data-field="' + key + '"]').textContent,
+    field: /** @param {string} key */ (key) =>
+      root.querySelector('[data-field="' + key + '"]').textContent,
     status: () => root.querySelector('[aria-live="polite"]').textContent,
   };
 }
@@ -64,10 +97,17 @@ async function recovered(factory, event = "onDisconnect") {
     await connected(f);
     f.subscriptions[0][event]();
     f.navigator.update();
-    assert.equal(f.status(), event === "onDisconnect" ? "Status: offline" : "Status: error");
+    assert.equal(
+      f.status(),
+      event === "onDisconnect" ? "Status: offline" : "Status: error",
+    );
     const pending = f.navigator.retryObservation();
     await tick();
-    assert.equal(f.subscriptions.length, 2, "retry must acquire a fresh subscription");
+    assert.equal(
+      f.subscriptions.length,
+      2,
+      "retry must acquire a fresh subscription",
+    );
     assert.equal(f.status(), "Status: loading");
     assert.equal(f.field("task"), "task-a");
     assert.equal(f.field("label"), "Unknown");
@@ -131,7 +171,12 @@ test("task switching during retry fences old snapshot and late subscription even
     f.settle(1, "Late task A");
     assert.equal(await retry, false);
     for (const subscription of f.subscriptions.slice(0, 2)) {
-      subscription.onEvent({ ...consoleScenarios.observation, identity: subscription.identity, revision: 99, label: "Old A" });
+      subscription.onEvent({
+        ...consoleScenarios.observation,
+        identity: subscription.identity,
+        revision: 99,
+        label: "Old A",
+      });
       subscription.onDisconnect();
       subscription.onError();
     }
@@ -183,13 +228,25 @@ test("disposal during retry prevents new work and late rendering", async () => {
 });
 
 test("mutation removing forced retry is caught by independent subscription count", async () => {
-  const source = await readFile(new URL("../src/navigation.js", import.meta.url), "utf8");
+  const source = await readFile(
+    new URL("../src/navigation.js", import.meta.url),
+    "utf8",
+  );
   const before = "return select(selected, false, true);";
   assert.equal(source.split(before).length, 2);
-  const mutated = source.replace(before, "return select(selected, false, false);")
-    .replace('"./view.js"', JSON.stringify(new URL("../src/view.js", import.meta.url).href));
-  const { createTaskNavigator: mutant } = await import("data:text/javascript;base64," + Buffer.from(mutated).toString("base64"));
-  await assert.rejects(recovered(mutant), /retry must acquire a fresh subscription/);
+  const mutated = source
+    .replace(before, "return select(selected, false, false);")
+    .replace(
+      '"./view.js"',
+      JSON.stringify(new URL("../src/view.js", import.meta.url).href),
+    );
+  const { createTaskNavigator: mutant } = await import(
+    "data:text/javascript;base64," + Buffer.from(mutated).toString("base64")
+  );
+  await assert.rejects(
+    recovered(mutant),
+    /retry must acquire a fresh subscription/,
+  );
 });
 
 test("disconnect or error during a pending snapshot permits explicit retry without waiting for old read", async () => {
@@ -202,7 +259,10 @@ test("disconnect or error during a pending snapshot permits explicit retry witho
       f.subscriptions[0][event]();
       f.navigator.update();
       assert.equal(f.button.disabled, false);
-      assert.equal(f.status(), event === "onDisconnect" ? "Status: offline" : "Status: error");
+      assert.equal(
+        f.status(),
+        event === "onDisconnect" ? "Status: offline" : "Status: error",
+      );
       const retry = f.navigator.retryObservation();
       await tick();
       assert.equal(f.subscriptions.length, 2);

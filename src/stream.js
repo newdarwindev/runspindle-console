@@ -115,6 +115,39 @@ export function createStreamProjection(
     }
   }
 
+  /** @param {Session} session @param {any} value */
+  function mergeEvent(session, value) {
+    let retained;
+    try {
+      retained = session.projection.state().record;
+    } catch {
+      stop(session, "unknown");
+      return false;
+    }
+    // Reading state invokes the injected clock, which may reenter navigation.
+    if (current !== session || session.closed || disposed) return false;
+    if (retained && value.revision >= retained.revision) {
+      // Equal revisions may be retransmitted, but not rebound to different
+      // validated content. Gap is locally derived, not a source field.
+      const conflict =
+        value.revision === retained.revision &&
+        Object.keys(retained).some(
+          (key) => key !== "gap" && retained[key] !== value[key],
+        );
+      const regressedClock =
+        value.revision > retained.revision &&
+        value.observedAt !== null &&
+        retained.observedAt !== null &&
+        value.observedAt < retained.observedAt;
+      if (conflict || regressedClock) {
+        stop(session, "unknown");
+        return false;
+      }
+    }
+    session.projection.merge(value);
+    return true;
+  }
+
   /** @param {unknown} identity @returns {Promise<boolean>} */
   function connect(identity) {
     if (disposed || cleanupUnknown || tearingDown)
@@ -161,6 +194,7 @@ export function createStreamProjection(
     function onEvent(update) {
       if (!active()) return;
       const value = normalized(session, update);
+      if (!active()) return;
       if (!value) {
         stop(session, "unknown");
         return;
@@ -172,7 +206,7 @@ export function createStreamProjection(
         }
         session.buffer.push(value);
       } else {
-        session.projection.merge(value);
+        mergeEvent(session, value);
       }
     }
     session.promise = (async () => {
@@ -211,10 +245,12 @@ export function createStreamProjection(
           stop(session, projection.state().status);
           return false;
         }
-        for (const update of session.buffer) projection.merge(update);
+        for (const update of session.buffer) {
+          if (!mergeEvent(session, update)) return false;
+        }
         session.buffer.length = 0;
         session.synchronizing = false;
-        return true;
+        return active();
       } catch {
         // A subscription rejection supplies no cleanup receipt. It may have
         // allocated before failing, so do not silently create another stream.

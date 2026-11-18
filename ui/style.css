@@ -1,0 +1,125 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  color: #142b3b;
+  background: #f2f5f6;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 70rem;
+  margin: auto;
+  padding: 2rem;
+}
+h1 {
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  max-width: 24ch;
+  line-height: 1.15;
+}
+h2 {
+  font-size: 1.4rem;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: #375768;
+}
+label {
+  display: block;
+  font-weight: 650;
+  margin: 1.5rem 0 0.5rem;
+}
+select,
+button {
+  font: inherit;
+  min-height: 44px;
+  border: 1px solid #486779;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background: white;
+  color: #142b3b;
+  max-width: 100%;
+}
+button {
+  cursor: pointer;
+}
+select {
+  width: 100%;
+}
+:focus-visible {
+  outline: 3px solid #005dcb;
+  outline-offset: 3px;
+}
+.observation-shell {
+  margin-top: 1.5rem;
+  background: white;
+  border: 1px solid #c6d3da;
+  border-radius: 0.8rem;
+  padding: 1.5rem;
+}
+.notice {
+  background: #e8f0f6;
+  border-left: 4px solid #24617f;
+  padding: 0.8rem;
+  font-weight: 650;
+}
+dl {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr);
+  gap: 0.6rem 1rem;
+}
+dt {
+  font-weight: 650;
+  color: #375768;
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+footer {
+  color: #375768;
+  font-size: 0.85rem;
+  padding: 1.5rem 0;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #142b3bb8;
+}
+.dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(38rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 16px 60px #0005;
+  overflow-wrap: anywhere;
+}
+.dialog button {
+  margin: 0.5rem 0.5rem 0 0;
+}
+@media (max-width: 35rem) {
+  main {
+    padding: 1rem;
+  }
+  .observation-shell {
+    padding: 1rem;
+  }
+  dl {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  dd {
+    margin-bottom: 0.65rem;
+  }
+}

@@ -1,0 +1,352 @@
+:root {
+  font-family: "DejaVu Sans", sans-serif;
+  color: #172b42;
+  background: #edf2f6;
+  font-size: 16px;
+  font-synthesis: none;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+  animation: none !important;
+  transition: none !important;
+  caret-color: transparent !important;
+}
+body {
+  margin: 0;
+}
+button,
+select {
+  font: inherit;
+}
+button,
+select,
+summary,
+a {
+  outline-offset: 4px;
+}
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 3px solid #65359b;
+}
+button {
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #6b7b8e;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #172b42;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+button:disabled {
+  color: #34475e;
+  background: #e8edf2;
+  border-color: #8490a0;
+  cursor: not-allowed;
+}
+select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0.55rem;
+  background: #fff;
+  color: #172b42;
+  border: 1px solid #64748b;
+  border-radius: 0.4rem;
+}
+label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+h1,
+h2,
+h3,
+p,
+dl {
+  margin-top: 0;
+}
+h1 {
+  font-size: 1.65rem;
+  line-height: 1.25;
+}
+h2 {
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+h3 {
+  font-size: 1rem;
+}
+p {
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+code,
+dd {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+header.top {
+  background: #172b42;
+  color: white;
+  padding: 1.1rem max(1rem, calc((100vw - 1200px) / 2));
+}
+header.top p {
+  margin: 0;
+  color: #f5f7fa;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+.shell {
+  max-width: 1200px;
+  margin: auto;
+  padding: 1rem;
+}
+.selector {
+  background: #fff;
+  padding: 1rem;
+  border: 1px solid #ccd5df;
+  border-radius: 0.65rem;
+  margin-bottom: 1rem;
+}
+.selector p {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+}
+#reference {
+  min-width: 0;
+}
+.case-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.case-title > div {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+.badge {
+  display: inline-block;
+  border: 1px solid #744a16;
+  background: #fff3dc;
+  color: #573609;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.35rem;
+  font-weight: 700;
+  line-height: 1.35;
+  max-width: 100%;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.panel {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #c6d1dd;
+  border-radius: 0.65rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.panel section[data-console-projection] > h2 {
+  margin-bottom: 0.5rem;
+}
+.panel dl {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 0.4rem 0.8rem;
+  margin-bottom: 0;
+}
+.panel dt {
+  font-size: 0.8rem;
+  color: #42576e;
+  font-weight: 700;
+}
+.panel dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.panel [role="status"] {
+  background: #edf3f9;
+  border-left: 4px solid #315e8c;
+  padding: 0.6rem;
+  font-weight: 700;
+}
+.annotations dl {
+  display: block;
+}
+.annotations dt {
+  margin-top: 0.8rem;
+}
+.annotations dd {
+  margin-top: 0.25rem;
+}
+.simulated-frame {
+  border: 2px dashed #657b91;
+  border-radius: 0.4rem;
+  background: #f1f5f9;
+  padding: 0.8rem;
+  margin-bottom: 0.7rem;
+  min-width: 0;
+}
+.simulated-frame strong {
+  display: block;
+  background: #172b42;
+  color: #fff;
+  padding: 0.5rem;
+  margin: -0.1rem -0.1rem 0.7rem;
+  border-radius: 0.2rem;
+}
+.simulated-frame pre {
+  font-family: "DejaVu Sans Mono", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #243e59;
+  margin: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.actions button {
+  max-width: 100%;
+}
+.reason {
+  font-size: 0.85rem;
+  border-left: 3px solid #8b5e25;
+  padding-left: 0.7rem;
+  margin: 0.75rem 0 0;
+}
+.scope {
+  font-size: 0.85rem;
+  color: #42576e;
+}
+.annotation-label {
+  font-weight: 700;
+  color: #573609;
+  background: #fff3dc;
+  padding: 0.5rem;
+  line-height: 1.5;
+}
+.footer {
+  border-top: 1px solid #bac8d5;
+  padding: 1rem 0;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #42576e;
+}
+.nav-demo nav {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+.nav-demo button[aria-current="page"] {
+  border: 3px solid #315e8c;
+}
+.nav-demo [data-console-projection] {
+  margin-top: 1rem;
+}
+.nav-demo [data-retry-observation] {
+  margin-bottom: 0.7rem;
+}
+.nav-demo [data-console-projection] dl {
+  display: grid;
+}
+.nav-demo [data-console-projection] dt {
+  font-size: 0.8rem;
+}
+.nav-demo [data-console-projection] dd {
+  font-size: 0.85rem;
+}
+.nav-demo [data-console-projection] p {
+  font-size: 0.85rem;
+}
+.demo-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+dialog {
+  scroll-padding-block: 0.75rem;
+  border: 2px solid #315e8c;
+  border-radius: 0.65rem;
+  padding: 1rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: #fff;
+  color: #172b42;
+}
+dialog::backdrop {
+  background: #172b42cc;
+}
+dialog h2 {
+  font-size: 1.15rem;
+}
+dialog button {
+  scroll-margin-block: 0.75rem;
+  max-width: 100%;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .grid {
+    display: block;
+  }
+  .shell {
+    padding: 0.75rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+  }
+  .panel {
+    padding: 0.8rem;
+  }
+  .panel dl {
+    grid-template-columns: 1fr;
+  }
+  .panel dd {
+    margin-bottom: 0.35rem;
+  }
+  .case-title > div {
+    flex-basis: 100%;
+  }
+  .panel dt {
+    font-size: 0.82rem;
+  }
+  .nav-demo [data-console-projection] dl {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Leave room for the complete focus outline inside the modal scrollport. */
+dialog .actions {
+  padding-block: 0.5rem;
+}

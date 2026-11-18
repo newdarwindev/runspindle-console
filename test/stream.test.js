@@ -657,3 +657,79 @@ test("dispose from abort or cleanup callbacks prevents the outer replacement acq
     assert.equal(closes, 1);
   }
 });
+
+test("conflicting current revision and regressed source clock close a ready stream", async () => {
+  for (const changed of [
+    update(1, { label: "changed" }),
+    update(2, { observedAt: 999 }),
+  ]) {
+    let viewsClosed = 0;
+    const f = fixture({
+      openPassive: async () => ({
+        close() {
+          viewsClosed++;
+        },
+      }),
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    assert.equal(await f.stream.view(), true);
+    f.subscriptions[0].onEvent(changed);
+    assert.equal(f.stream.state().status, "unknown");
+    assert.equal(f.stream.state().record.label, "synthetic");
+    assert.equal(f.closes(), 1);
+    assert.equal(viewsClosed, 1);
+    assert.equal(await f.stream.view(), false);
+    f.subscriptions[0].onEvent(update(3));
+    assert.equal(f.stream.state().status, "unknown");
+    f.stream.dispose();
+  }
+});
+
+test("same-revision buffered conflicts reject snapshot synchronization", async () => {
+  const pending = deferred();
+  const f = fixture({ readSnapshot: () => pending.promise });
+  const result = f.stream.connect(identity);
+  f.subscriptions[0].onEvent(update(1, { authority: "human" }));
+  pending.resolve(update(1));
+  assert.equal(await result, false);
+  assert.equal(f.stream.state().status, "unknown");
+  assert.equal(f.stream.state().authority, "denied");
+  assert.equal(f.stream.state().buffered, 0);
+  assert.equal(f.closes(), 1);
+  f.stream.dispose();
+});
+
+test("identical duplicates and older observations remain harmless", async () => {
+  const f = fixture();
+  assert.equal(await f.stream.connect(identity), true);
+  f.subscriptions[0].onEvent(update(1));
+  f.subscriptions[0].onEvent(update(0, { label: "old" }));
+  assert.equal(f.stream.state().status, "ready");
+  assert.equal(f.stream.state().record.revision, 1);
+  assert.equal(f.closes(), 0);
+  f.stream.dispose();
+});
+
+test("conflict checking contains clock failures and navigation reentrancy", async () => {
+  for (const kind of ["throw", "disconnect"]) {
+    let calls = 0;
+    let armed = false;
+    const f = fixture({
+      clock() {
+        if (armed && ++calls === 2) {
+          if (kind === "throw") throw new Error("private-clock-diagnostic");
+          f.stream.disconnect();
+        }
+        return 1000;
+      },
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    armed = true;
+    assert.doesNotThrow(() => f.subscriptions[0].onEvent(update(2)));
+    armed = false;
+    assert.equal(f.stream.state().record.revision, 1);
+    assert.notEqual(f.stream.state().status, "ready");
+    assert.equal(f.closes(), 1);
+    f.stream.dispose();
+  }
+});

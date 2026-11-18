@@ -1,0 +1,38 @@
+---
+# Optional synthetic capture lane, not product acceptance. No hosted fallback.
+name: console-visual-candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: console-visual-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  synthetic-visuals:
+    runs-on: [self-hosted, linux, x64, runspindle-isolated, strix]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install exact cached UI inputs without install scripts or network
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm --prefix ui ci --offline --ignore-scripts --no-audit --no-fund
+      - name: Test and build read-only synthetic shell
+        run: |
+          node --test ui/shell.test.mjs
+          node ui/build.mjs "$RUNNER_TEMP/console-ui"
+      - name: Capture with existing sandboxed browser and video tools
+        run: |
+          test -x /opt/google/chrome/chrome
+          node ui/check-browser.cjs "$RUNNER_TEMP/console-ui" "$RUNNER_TEMP/console-visuals" "$GITHUB_WORKSPACE/ui/node_modules/playwright" /opt/google/chrome/chrome
+      - name: Preserve synthetic review candidates and video
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: console-synthetic-visual-candidates
+          path: ${{ runner.temp }}/console-visuals
+          if-no-files-found: error
+          retention-days: 7

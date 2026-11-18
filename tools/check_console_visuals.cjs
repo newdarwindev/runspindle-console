@@ -1203,6 +1203,7 @@ async function qualify(options) {
   return receipt;
 }
 module.exports = {
+  nativeBitmap,
   zoomPreferences,
   validateNativeZoom,
   validateFocusOutline,

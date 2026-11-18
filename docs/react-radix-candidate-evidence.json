@@ -1,0 +1,702 @@
+{
+  "schema": "console.react-radix.visual.v1",
+  "evidence": "synthetic-browser-only",
+  "baseline_review": "pending-independent-review",
+  "live_backend": false,
+  "cases": [
+    {
+      "id": "fresh",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "fresh-1440-100.png",
+      "sha256": "3ee908370c06fee2aabe3e9ffbc3348bb0c15f10be01688bdcd363c5f7dea775",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "loading",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "loading-1440-100.png",
+      "sha256": "ab3d1513bbae453e11d9f570b3ee4b23ec32c375bd9ca47e4db2f0b88c19ff9c",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "stale",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "stale-1440-100.png",
+      "sha256": "03c7e45e96a1356c17f5e62e25f886b8b4e7224e8e347dee3442efb607dd3f85",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "offline",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "offline-1440-100.png",
+      "sha256": "9e5bf4c6bb7f057dcf44cd9534df42fe39ad3029e24ca59ee3f38d1ccc818c50",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "effect-unknown",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "effect-unknown-1440-100.png",
+      "sha256": "b215e98a4ff21490bc0d7f537d237134dc63cc8fa173072f82126bb567353341",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "approval-required",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "approval-required-1440-100.png",
+      "sha256": "cbc137c093f7e0d5597a14cfdb366135fa7ddd22f6bd12280d7c068f65f34c22",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "takeover-pending",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "takeover-pending-1440-100.png",
+      "sha256": "f8f835ec06137183b5029b02127ebe05d055aa87c74c390f9f8f288bda77fee8",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "error",
+      "width": 1440,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 1,
+        "innerWidth": 1440
+      },
+      "file": "error-1440-100.png",
+      "sha256": "7e992280f2421a8b6a4994c89fd5ae2f86d9e157c39ee7fa5d401d102e33382b",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "fresh",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "fresh-1440-200.png",
+      "sha256": "fa33d50552127dac61fd8eb9b4a574a93da69f4a9670765a38f2df158d5c932c",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "loading",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "loading-1440-200.png",
+      "sha256": "af30121108660965f053d4aeb7618a2fda56cf31edc237c990d374f998e35b2b",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "stale",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "stale-1440-200.png",
+      "sha256": "bc703642263c59366f6329c602c89120e1a52db8ef12b12d0e4a8a941daba177",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "offline",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "offline-1440-200.png",
+      "sha256": "71800c3b8415ac276bb4bb411ddd0c07ca7151affaef2d9dcc14fdd427750535",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "effect-unknown",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "effect-unknown-1440-200.png",
+      "sha256": "b031a758eb9be026c74c2dffd53866f4a6a939fcd1572be4d28d1d1e4487a875",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "approval-required",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "approval-required-1440-200.png",
+      "sha256": "eea1a35d4572ce183516b5591a15323403ca0a205d8aacd3e56d3e2895c27c34",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "takeover-pending",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "takeover-pending-1440-200.png",
+      "sha256": "5408195dc4d054c363bda0c52a410b17f0d6aaf5cb6cccd2c521e9034f8ea9a0",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "error",
+      "width": 1440,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 1440,
+        "dpr": 2,
+        "innerWidth": 720
+      },
+      "file": "error-1440-200.png",
+      "sha256": "d6f58c3c5e61ce27ac60b9de3ad6dea350034ae3f306de41b9ec0fe226151a8e",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "fresh",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "fresh-500-100.png",
+      "sha256": "fd9d1ea03c7abd1b75f3ea62d3cca25905ed1511142fc67577f8393f759960af",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "loading",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "loading-500-100.png",
+      "sha256": "0c403b7aeffafaf19ac7add8303c6d092923627888773e7a24042d816f3656ae",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "stale",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "stale-500-100.png",
+      "sha256": "266633dacfe7ee9e9fd555cc1baad35e7c1061d212672073481ca71dfb014652",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "offline",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "offline-500-100.png",
+      "sha256": "f606a1fa6ac38ca6db446024f35e181f29fffbe9ba8f5e453daa3134424c4a98",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "effect-unknown",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "effect-unknown-500-100.png",
+      "sha256": "bd39953c8b61ad423ac5ff81f405369a5ceb4f1ad5b72e413300edfbe7f245ec",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "approval-required",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "approval-required-500-100.png",
+      "sha256": "48912461a676a534b6a192243392bf1a9c57d47b9fe8828ad51d03796cd72b84",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "takeover-pending",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "takeover-pending-500-100.png",
+      "sha256": "7889852d100840d680190392c7b656293928c817ec7b51650795a223f6dabb69",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "error",
+      "width": 500,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 1,
+        "innerWidth": 500
+      },
+      "file": "error-500-100.png",
+      "sha256": "2c6e062e2701ea5adda159a0010a4f5d26c6644bac9efded6c80b84d3c977dec",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "fresh",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "fresh-500-200.png",
+      "sha256": "0c033d64062656a83f96d127cdf0a134a137e8cc26c4600b31e290016cc49e3c",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "loading",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "loading-500-200.png",
+      "sha256": "47eea1773bab94dab4400598119004f87087b5b09844f85579d83bb768365e75",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "stale",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "stale-500-200.png",
+      "sha256": "28625ca706e5504b875ec59e8240b76a074e920a333de42e7f40829329184ba4",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "offline",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "offline-500-200.png",
+      "sha256": "61d19fcd675dbbb717f8ee9e6912e6b3a1770b7b368378c452a98498e4642c8f",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "effect-unknown",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "effect-unknown-500-200.png",
+      "sha256": "744422f85c07317988d7bc17010e041e422ab4819d10a49cc3b296970100ec26",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "approval-required",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "approval-required-500-200.png",
+      "sha256": "91abd1c66dca12de2665a4ab5f47cf0c6d236d9f97fe4786a1c27a3608e3d7c4",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "takeover-pending",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "takeover-pending-500-200.png",
+      "sha256": "696be03a787365053c197ab6f41ad5fc8ff6a9b1524d083fa89c0228a7790ab1",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "error",
+      "width": 500,
+      "zoom": 200,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 500,
+        "dpr": 2,
+        "innerWidth": 250
+      },
+      "file": "error-500-200.png",
+      "sha256": "1a1fce4d4993b54fe74ad1c737ad44f268cd8ef5f352859f785953f40dad49de",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "fresh",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "fresh-390-100.png",
+      "sha256": "12bb10aa60d4b78966b68cba7fe3f7dffa83d4965600c3105c403a7589c68a0e",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "loading",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "loading-390-100.png",
+      "sha256": "f86beb03fb2c30e66a191c236abb8ae6e2ea6665ddcf2bed2424ee3c764b4e79",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "stale",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "stale-390-100.png",
+      "sha256": "d00e0b978ed19f4c721992652be8019eff8d2c3459e7d06c273331d061f2ae10",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "offline",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "offline-390-100.png",
+      "sha256": "26c7a5995426c06f7756382376f109221139f7aeefef77b1a44accd3a4edca7f",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "effect-unknown",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "effect-unknown-390-100.png",
+      "sha256": "77a45fbd2b8ab42808de8bfb011f03d06e10253bbde95d091907a8b2eb89ebac",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "approval-required",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "approval-required-390-100.png",
+      "sha256": "3bbc39c57056a7a0351bb83ead03db88e2c3c6117d2820a1565ab437de1d91e4",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "takeover-pending",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "takeover-pending-390-100.png",
+      "sha256": "2a590bcaf7e21e4a43260326999a09c10470e88f56ea7a553b704cfc712ab806",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    },
+    {
+      "id": "error",
+      "width": 390,
+      "zoom": 100,
+      "actual": {
+        "cssZoom": "1",
+        "visualViewportScale": 1,
+        "outerWidth": 390,
+        "dpr": 1,
+        "innerWidth": 390
+      },
+      "file": "error-390-100.png",
+      "sha256": "430dd9dad1ffba0e36b90f7027f4d7188e2d935c4ff0a9362ae255f584114171",
+      "keyboard": "passed",
+      "repeat": "pixel-identical",
+      "overflow": false
+    }
+  ],
+  "browser_sha256": "da143614d917f346b02c1b29587cc13bf891d4b73faf2bea7b20cbd8fa61510f",
+  "package_lock_sha256": "f36b50ed68610fcf49f1363569acc468cd9d1f88d4d3c068dd6fdcc29914aa51",
+  "status": "passed",
+  "baseline_comparison": "not-run-no-approved-baseline",
+  "source_binding": {
+    "lock": "f36b50ed68610fcf49f1363569acc468cd9d1f88d4d3c068dd6fdcc29914aa51",
+    "bundle": "54df2da1ce161dc3a2442c98d9aaf952a909f56034a97941f13ff492a8db256e",
+    "html": "c66059485d9768b372ef8de9e2639a6ec483391362c0727e1277421e08ba99a8",
+    "css": "e92c6acf8b9b8cf91b2ba556928ce2bc7451bb47043acb65efb44f4112e51706",
+    "harness": "a40ca828e91f9b8eeceb3f663e454203a24e63dfdd7ba0165f4840ddb70f43e7",
+    "playwright": "1.58.2"
+  },
+  "github_ci": "not_run",
+  "independent_review": "pending"
+}

@@ -67,23 +67,26 @@ def main() -> None:
     if len(sys.argv) > 3:
         import json
 
-        revision = 2
-        event = json.loads(raw)
-        event.update(event_id="event-2", revision=2, kind=sys.argv[3])
-        if sys.argv[3] == "delete":
-            event["text"] = ""
-        changed = canonical(event)
-        a.ingest(changed, hashlib.sha256(changed).hexdigest())
-        if sys.argv[3] == "edit":
-            a.persist_projection(
-                "task",
-                2,
-                dict(
-                    version="runspindle.projection.v1",
-                    kind="input",
-                    message="Updated retained text",
-                ),
-            )
+        kind = (
+            "edit" if sys.argv[3] in ("edit-twice", "edit-unprojected") else sys.argv[3]
+        )
+        for revision in range(2, 4 if sys.argv[3] == "edit-twice" else 3):
+            event = json.loads(raw)
+            event.update(event_id=f"event-{revision}", revision=revision, kind=kind)
+            if kind == "delete":
+                event["text"] = ""
+            changed = canonical(event)
+            a.ingest(changed, hashlib.sha256(changed).hexdigest())
+            if kind == "edit" and sys.argv[3] != "edit-unprojected":
+                a.persist_projection(
+                    "task",
+                    revision,
+                    dict(
+                        version="runspindle.projection.v1",
+                        kind="input",
+                        message="Updated retained text",
+                    ),
+                )
     a.close()
 
 

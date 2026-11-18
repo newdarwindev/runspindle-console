@@ -27,6 +27,13 @@ export class ElementDouble {
       this.children.push(node);
     }
   }
+  /** @param {ElementDouble[]} nodes */
+  replaceChildren(...nodes) {
+    for (const child of this.children) child.parent = null;
+    this.children = [];
+    this.text = "";
+    this.append(...nodes);
+  }
   /** @param {string} key @param {string} value */
   setAttribute(key, value) {
     this.attrs[key] = value;

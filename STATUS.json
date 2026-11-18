@@ -4,6 +4,13 @@
   "desktop_integration": "not_implemented",
   "dev_deployment": "not_run",
   "durability": "not_implemented",
+  "functional_fixture_suite": {
+    "acceptance": "verified_pending_final_review",
+    "audit": "docs/CONSOLE_FIXTURE_ACCEPTANCE.md",
+    "evidence": "docs/functional-fixture-evidence.json",
+    "implementation": "synthetic_component",
+    "live_integration": "not_qualified"
+  },
   "github_ci": "not_run",
   "implementation": "partial_projection_model",
   "implementation_evidence": "docs/IMPLEMENTATION_EVIDENCE.md",
@@ -13,6 +20,12 @@
   "projection_dom": "partial_read_only_surface",
   "projection_dom_evidence": "docs/projection-dom-evidence.json",
   "rendered_accessibility": "not_run",
+  "retained_head_observation": {
+    "evidence": "docs/retained-head-evidence.json",
+    "implementation": "bounded_explicit_retained_store_adapter",
+    "issue_9": "partial_open",
+    "live_runtime": "not_qualified"
+  },
   "runner_capacity": "unverified",
   "selected_source_migration": "partial",
   "shared_fixture_evidence": "docs/local-shared-fixture-tests.json",

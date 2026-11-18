@@ -100,7 +100,8 @@ let context;
             ? r.continue()
             : (blocked.push(r.request().url()), r.abort()),
         );
-        const page = await context.newPage();
+        const page = context.pages()[0] ?? (await context.newPage());
+        const video = page.video();
         const session = await context.newCDPSession(page);
         const commandLine = await session.send("Browser.getBrowserCommandLine");
         assert(
@@ -237,6 +238,10 @@ let context;
         assert.deepEqual(blocked, []);
         assert.deepEqual(errors, []);
         await page.close();
+        if (video)
+          await video.saveAs(
+            path.join(output, `walkthrough-${width}-${zoom}.webm`),
+          );
         await context.close();
         context = null;
       } finally {

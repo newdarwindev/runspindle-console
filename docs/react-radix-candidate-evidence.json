@@ -691,12 +691,41 @@
   "baseline_comparison": "not-run-no-approved-baseline",
   "source_binding": {
     "lock": "f36b50ed68610fcf49f1363569acc468cd9d1f88d4d3c068dd6fdcc29914aa51",
-    "bundle": "54df2da1ce161dc3a2442c98d9aaf952a909f56034a97941f13ff492a8db256e",
+    "bundle": "384eb87ac451feefc79bf42dffb68098a06bc010755fc93cbb48375426bd28ee",
     "html": "c66059485d9768b372ef8de9e2639a6ec483391362c0727e1277421e08ba99a8",
     "css": "e92c6acf8b9b8cf91b2ba556928ce2bc7451bb47043acb65efb44f4112e51706",
-    "harness": "a40ca828e91f9b8eeceb3f663e454203a24e63dfdd7ba0165f4840ddb70f43e7",
+    "harness": "c0db41cf98a41f85a91bb9dccc435f6ef42d9c8396f40bef93a1f050ad3afb7b",
     "playwright": "1.58.2"
   },
+  "prior_candidate_pixels_unchanged": true,
   "github_ci": "not_run",
-  "independent_review": "pending"
+  "independent_review": "prior_source_and_sampled_images_reviewed; merge_and_video_lifecycle_delta_pending",
+  "video_lifecycle": "explicit_save_completed; harness_exit_zero",
+  "videos": [
+    {
+      "file": "walkthrough-1440-100.webm",
+      "sha256": "0f7a556626bc9cd335d1721832868cc3196bd96770347ef9e50650cfdc771e6a",
+      "bytes": 859184
+    },
+    {
+      "file": "walkthrough-1440-200.webm",
+      "sha256": "f25063a7cdf77ba359f501c5e217eddefbc233f463ce36e312cb82d572552cf5",
+      "bytes": 983777
+    },
+    {
+      "file": "walkthrough-390-100.webm",
+      "sha256": "9d25fe5a98f53a7b55e4939e0283dce4e9f69b80a425ef3dc34bafaabd4155c2",
+      "bytes": 798871
+    },
+    {
+      "file": "walkthrough-500-100.webm",
+      "sha256": "24bad44e50a5e9275e3d328b6aa4b46dc6d4c74e6dd6c153dcc629ddd1c30438",
+      "bytes": 776344
+    },
+    {
+      "file": "walkthrough-500-200.webm",
+      "sha256": "f1220e22646ca28578bd8d783af0737add78e0a6c7872048c8db614d1d17a738",
+      "bytes": 869117
+    }
+  ]
 }

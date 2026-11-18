@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "source": "ce4d1202a92df7a2eb414e9187430e00721e6b5f",
+  "tree": "ca621ca0d5340e37dca40a33a918a0bd3a6fb806",
+  "script_sha256": "b3fa49c480dccd3d333cb4097295786cb08b6aa560a394d874dcebaeb3605013",
+  "browser": "156.0.8078.47",
+  "browser_elf_sha256": "32a85cb0cf284adc64c04c4059a9416750b0143488f3d623f0efad81a4aee9e1",
+  "node": "v24.21.0",
+  "node_sha256": "6d2106bd43423cd5b13d414271ae57a4e422b63646fcbd1b008c3ab9ab0f9094",
+  "playwright": "1.58.2",
+  "playwright_package_sha256": "718c91812946dcfbb4b724cfa0084ee3be205c571df09094f218bc4571f43c2b",
+  "source_sha256": {
+    "test/fixture-console.assertions.js": "2ddd634cd98e452fa5f2b90b190736c05bc5ff7f6ecc5b4016df48cde7b8d800",
+    "fixtures/console-ui/fake-server.js": "ee3ac019cbb12c98201ad8fc26cc6966a40f885d8845da46f2180ee1dddf5c40",
+    "fixtures/console-ui/scenarios.js": "73c648a7b098acc65835fbd5348a9506127bff0b8047999f9e94729cbba8ee61",
+    "src/fixture-console.js": "ee956b4e22f04f3fc83099925e58aa2fb3ebf8e23418109691e434eb8462f745",
+    "src/stream.js": "61901f4534d55cf4b9b4a9a9375fb3f6d2987266d0435f9e702ee655a1a65aef",
+    "src/view.js": "ae07d27f771631a4d51fc11de76e51b88ed1e29a5d6047144f25ca101d7e2d2e",
+    "src/projection.js": "6a612226ad0934cbe2e35a3bc185be443dc9d7040794d05a6e4e8ef130476955"
+  },
+  "sandbox": true,
+  "offline": true,
+  "unexpected_requests": [],
+  "report": {
+    "result": {
+      "checks": 67,
+      "evidenceClass": "synthetic_component_actual_dom",
+      "canExecute": false,
+      "controlRequests": 2,
+      "passiveAdmissions": 1
+    },
+    "failure": null,
+    "remainingMain": 0,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+  },
+  "cleanup": {
+    "context_closed": true,
+    "owned_profile_processes": 0,
+    "profile_removed": true
+  },
+  "boundaries": [
+    "Actual DOM shared assertions, no screenshots, no visual baseline or live-provider qualification.",
+    "Only intercepted synthetic source responses; no real service. Browser-internal networking controlled by offline/options, not OS-wide packet proof."
+  ]
+}

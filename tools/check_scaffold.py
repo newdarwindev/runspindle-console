@@ -43,11 +43,13 @@ for path in (root / ".github/workflows").glob("*.yml"):
         "[self-hosted, macOS, ARM64, runspindle-isolated, macbook]",
     }
     direct_validation = (
-        path.name == 'validation.yml'
+        path.name == "validation.yml"
         and hashlib.sha256(path.read_bytes()).hexdigest()
-        == '58338ec953b7d4e7a9f1063c8cc5eda9e1491c77eceec7fff8270feed4914518'
+        == "58338ec953b7d4e7a9f1063c8cc5eda9e1491c77eceec7fff8270feed4914518"
     )
-    assert lanes and (direct_validation or all(lane in allowed_lanes for lane in lanes)), path
+    assert lanes and (
+        direct_validation or all(lane in allowed_lanes for lane in lanes)
+    ), path
     assert "pull_request_target:" not in text and "pull_request:" not in text, path
     assert "persist-credentials: false" in text, path
     assert "contents: read" in text, path

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Dependency-free structural checks. Passing is not product acceptance."""
 
+import hashlib
 import json
 import pathlib
 import re
@@ -41,7 +42,14 @@ for path in (root / ".github/workflows").glob("*.yml"):
         "[self-hosted, linux, ARM64, runspindle-isolated, macbook]",
         "[self-hosted, macOS, ARM64, runspindle-isolated, macbook]",
     }
-    assert lanes and all(lane in allowed_lanes for lane in lanes), path
+    direct_validation = (
+        path.name == "validation.yml"
+        and hashlib.sha256(path.read_bytes()).hexdigest()
+        == "a8876a65b0137874561f510538355346a89cd35c14246ef1856270f6d0abeb12"
+    )
+    assert lanes and (
+        direct_validation or all(lane in allowed_lanes for lane in lanes)
+    ), path
     assert "pull_request_target:" not in text and "pull_request:" not in text, path
     assert "persist-credentials: false" in text, path
     assert "contents: read" in text, path

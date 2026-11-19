@@ -27,6 +27,13 @@ jobs:
           ref: 670989839a0fccbcf2014d01609778ae6e4df424
           path: local/retained-tether
           persist-credentials: false
+      - name: Install locked Console UI dependencies offline
+        run: |
+          archive=/home/runner/preparation/console-ui-cache.tar.gz
+          printf '%s  %s\n' d208a9d34bebc3460dd9d18a2405d3a7a1b2e7dac4cadb5eb093db8c958e3494 "$archive" | sha256sum --check -
+          mkdir "$RUNNER_TEMP/console-npm"
+          tar -xzf "$archive" --no-same-owner --no-same-permissions -C "$RUNNER_TEMP/console-npm"
+          npm --prefix ui ci --cache "$RUNNER_TEMP/console-npm" --offline --ignore-scripts --no-audit --no-fund
       - id: partition
         name: Run quality partition
         env:

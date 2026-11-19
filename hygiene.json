@@ -136,7 +136,8 @@
   "lockfiles": [
     "requirements-quality.txt",
     "tools/quality-baseline.json",
-    "tools/quality-node/package-lock.json"
+    "tools/quality-node/package-lock.json",
+    "ui/package-lock.json"
   ],
   "artifact_paths": [],
   "profiling": {

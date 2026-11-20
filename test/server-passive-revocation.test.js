@@ -69,119 +69,143 @@ async function until(predicate) {
   assert.equal(predicate(), true, "expected revocation lifecycle transition");
 }
 
-test(
-  "authenticated loopback revocation fences views until the backend closes",
-  { timeout: 10000 },
-  async () => {
-    const started = gate();
-    const accept = gate();
-    /** @type {string[]} */
-    const requests = [];
-    let active = false;
-    const server = createServer(async (req, res) => {
-      const route = req.method + " " + req.url;
-      requests.push(route);
-      if (route === "POST /open") {
-        active = true;
-        res.end(JSON.stringify(binding));
-      } else if (route === "GET /passive") {
-        res.writeHead(active ? 200 : 403).end(active ? "synthetic frame" : "");
-      } else if (route === "POST /revoke") {
-        let data = "";
-        for await (const chunk of req) data += chunk;
-        const requested = JSON.parse(data);
-        if (
-          requested.viewId !== binding.viewId ||
-          requested.admissionId !== binding.admissionId
-        ) {
-          res.writeHead(403).end();
-          return;
-        }
-        started.resolve();
-        await accept.promise;
-        active = false;
-        res.end(
-          JSON.stringify({
-            ...binding,
-            status: "revoked",
-            proof: signature(binding),
-          }),
-        );
-      } else {
-        res.writeHead(404).end();
-      }
-    });
-    await new Promise((done) =>
-      server.listen(0, "127.0.0.1", () => done(undefined)),
-    );
-    const address = /** @type {import('node:net').AddressInfo} */ (
-      server.address()
-    );
-    const origin = "http://127.0.0.1:" + address.port;
-    const value = projection(async (_request, { signal }) => {
-      const opened = await fetch(origin + "/open", { method: "POST", signal });
-      return createServerRevocationHandle(await opened.json(), {
-        async revoke(target, { signal: closeSignal }) {
-          const response = await fetch(origin + "/revoke", {
-            method: "POST",
-            body: JSON.stringify(target),
-            signal: closeSignal,
-          });
-          if (!response.ok) throw Error("synthetic revocation denied");
-          return response.json();
-        },
-        verifyReceipt(target, receipt) {
-          const expected = Buffer.from(signature(target));
-          const actual = Buffer.from(receipt.proof);
-          return (
-            expected.length === actual.length &&
-            timingSafeEqual(expected, actual)
+for (const transition of ["authority change", "stale clock", "unknown clock"])
+  test(
+    `authenticated loopback revocation fences views after ${transition}`,
+    { timeout: 10000 },
+    async () => {
+      const started = gate();
+      const accept = gate();
+      /** @type {string[]} */
+      const requests = [];
+      let active = false;
+      const server = createServer(async (req, res) => {
+        const route = req.method + " " + req.url;
+        requests.push(route);
+        if (route === "POST /open") {
+          active = true;
+          res.end(JSON.stringify(binding));
+        } else if (route === "GET /passive") {
+          res
+            .writeHead(active ? 200 : 403)
+            .end(active ? "synthetic frame" : "");
+        } else if (route === "POST /revoke") {
+          let data = "";
+          for await (const chunk of req) data += chunk;
+          const requested = JSON.parse(data);
+          if (
+            requested.viewId !== binding.viewId ||
+            requested.admissionId !== binding.admissionId
+          ) {
+            res.writeHead(403).end();
+            return;
+          }
+          started.resolve();
+          await accept.promise;
+          active = false;
+          res.end(
+            JSON.stringify({
+              ...binding,
+              status: "revoked",
+              proof: signature(binding),
+            }),
           );
+        } else {
+          res.writeHead(404).end();
+        }
+      });
+      await new Promise((done) =>
+        server.listen(0, "127.0.0.1", () => done(undefined)),
+      );
+      const address = /** @type {import('node:net').AddressInfo} */ (
+        server.address()
+      );
+      const origin = "http://127.0.0.1:" + address.port;
+      let now = 1000;
+      const value = createProjection({
+        allowedViewOrigins: ["https://viewer.invalid"],
+        clock: () => now,
+        maxAgeMs: 100,
+        async openPassive(_request, { signal }) {
+          const opened = await fetch(origin + "/open", {
+            method: "POST",
+            signal,
+          });
+          return createServerRevocationHandle(await opened.json(), {
+            async revoke(target, { signal: closeSignal }) {
+              const response = await fetch(origin + "/revoke", {
+                method: "POST",
+                body: JSON.stringify(target),
+                signal: closeSignal,
+              });
+              if (!response.ok) throw Error("synthetic revocation denied");
+              return response.json();
+            },
+            verifyReceipt(target, receipt) {
+              const expected = Buffer.from(signature(target));
+              const actual = Buffer.from(receipt.proof);
+              return (
+                expected.length === actual.length &&
+                timingSafeEqual(expected, actual)
+              );
+            },
+          });
         },
       });
-    });
-    try {
-      select(value, "task-a");
-      assert.equal(await value.view(), true);
-      assert.equal(
-        await (await fetch(origin + "/passive")).text(),
-        "synthetic frame",
-      );
-      assert.equal(
-        value.merge({
-          ...observation("task-a"),
-          revision: 2,
-          authority: "denied",
-        }),
-        true,
-      );
-      await started.promise;
-      select(value, "task-b");
-      assert.equal(value.state().viewCleanup, "unknown");
-      assert.equal(
-        await value.view(),
-        false,
-        "a new view is blocked while the backend still serves",
-      );
-      assert.equal(active, true);
-      accept.resolve();
-      await until(() => value.state().viewCleanup === "no_unconfirmed_close");
-      assert.equal((await fetch(origin + "/passive")).status, 403);
-      assert.equal(value.state().canExecute, false);
-      assert.deepEqual(requests, [
-        "POST /open",
-        "GET /passive",
-        "POST /revoke",
-        "GET /passive",
-      ]);
-    } finally {
-      accept.resolve();
-      value.dispose();
-      server.closeAllConnections();
-      await new Promise((done) => server.close(() => done(undefined)));
-    }
-  },
-);
+      try {
+        select(value, "task-a");
+        assert.equal(await value.view(), true);
+        assert.equal(
+          await (await fetch(origin + "/passive")).text(),
+          "synthetic frame",
+        );
+        if (transition === "authority change") {
+          assert.equal(
+            value.merge({
+              ...observation("task-a"),
+              revision: 2,
+              authority: "denied",
+            }),
+            true,
+          );
+        } else {
+          now = 1100;
+          assert.equal(value.state().viewCleanup, "no_unconfirmed_close");
+          now = transition === "stale clock" ? 1101 : Number.NaN;
+          assert.equal(
+            value.state().status,
+            transition === "stale clock" ? "stale" : "unknown",
+          );
+        }
+        assert.equal(value.state().viewCleanup, "unknown");
+        await started.promise;
+        now = 1000;
+        select(value, "task-b");
+        assert.equal(value.state().viewCleanup, "unknown");
+        assert.equal(
+          await value.view(),
+          false,
+          "a new view is blocked while the backend still serves",
+        );
+        assert.equal(active, true);
+        accept.resolve();
+        await until(() => value.state().viewCleanup === "no_unconfirmed_close");
+        assert.equal((await fetch(origin + "/passive")).status, 403);
+        assert.equal(value.state().canExecute, false);
+        assert.deepEqual(requests, [
+          "POST /open",
+          "GET /passive",
+          "POST /revoke",
+          "GET /passive",
+        ]);
+      } finally {
+        accept.resolve();
+        value.dispose();
+        server.closeAllConnections();
+        await new Promise((done) => server.close(() => done(undefined)));
+      }
+    },
+  );
 
 test("late acquisition is revoked once after navigation", async () => {
   const acquired = gate();

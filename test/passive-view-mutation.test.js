@@ -34,7 +34,7 @@ const mutations = [
     "reset ownership on stream replacement",
     "src/stream.js",
     "const projection = projectionFactory();",
-    "const projection = createProjectionFactory(options)();",
+    "const projection = createProjectionFactory({ ...options, readSnapshot: checkedSnapshot })();",
     /stream replacement must preserve passive ownership/,
     "shared ownership is retained across stream",
   ],
@@ -46,6 +46,15 @@ const mutations = [
     /pending readback must retain the revocation fence/,
     "authenticated readback reconciles lost revocation",
     "test/server-passive-revocation.test.js",
+  ],
+  [
+    "stale snapshots on reconnect",
+    "src/stream.js",
+    "value.revision < checkpoint.record.revision ||",
+    "",
+    /replayed snapshot must not open a passive view/,
+    "reconnect rejects older, conflicting and empty snapshots",
+    "test/stream.test.js",
   ],
 ];
 for (const [

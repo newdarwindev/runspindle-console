@@ -4,13 +4,18 @@ import { createProjectionFactory } from "./projection.js";
 /** @typedef {{close: () => unknown}} Subscription */
 /** @typedef {{signal: AbortSignal, onEvent: (update: unknown) => void, onDisconnect: () => void, onError: (error?: unknown) => void}} Callbacks */
 /** @typedef {{clock: () => number, readSnapshot?: (...args: any[]) => any, openPassive?: (...args: any[]) => any, allowedViewOrigins?: string[], maxAgeMs?: number, subscribe?: (identity: Readonly<Record<string, unknown>>, callbacks: Callbacks) => Subscription | Promise<Subscription>, maxBuffered?: number}} StreamOptions */
-/** @typedef {{key: string, identity: Readonly<Record<string, unknown>>, projection: any, controller: AbortController, buffer: any[], synchronizing: boolean, closed: boolean, handle: Subscription | null, promise: Promise<boolean> | null}} Session */
+/** @typedef {{key: string, identity: Readonly<Record<string, unknown>>, projection: any, controller: AbortController, buffer: Observation[], synchronizing: boolean, closed: boolean, handle: Subscription | null, promise: Promise<boolean> | null}} Session */
+/** @typedef {Readonly<import('./projection.js').ProjectionRecord>} Observation */
+/** @typedef {{record:Observation, observedAt:number|null}} Checkpoint */
+
+const MAX_TRACKED_IDENTITIES = 128;
 
 /** @param {StreamOptions} options */
 
 export function createStreamProjection(
   {
     subscribe,
+    readSnapshot,
     maxBuffered = 64,
     ...options
   } = /** @type {StreamOptions} */ ({}),
@@ -25,7 +30,12 @@ export function createStreamProjection(
   // Pending/uncertain passive resources outlive an individual task projection.
   // Preserve the existing dynamically typed provisional projection boundary.
   /** @type {(() => any) & {viewCleanup: () => string, reconcileViewCleanup: () => Promise<boolean>}} */
-  const projectionFactory = createProjectionFactory(options);
+  const projectionFactory = createProjectionFactory({
+    ...options,
+    readSnapshot: checkedSnapshot,
+  });
+  /** @type {Map<string, Checkpoint>} */
+  const checkpoints = new Map();
   /** @type {Session | null} */
   let current = null;
   /** @type {Session | null} */
@@ -36,6 +46,58 @@ export function createStreamProjection(
   const empty = projectionFactory();
   let last = empty.state();
   empty.dispose();
+
+  /** @param {Checkpoint | undefined} checkpoint @param {Observation} next */
+  function conflicts(checkpoint, next) {
+    if (!checkpoint || next.revision < checkpoint.record.revision) return false;
+    const { record, observedAt } = checkpoint;
+    if (next.revision === record.revision) {
+      // Gap is derived locally, including when a full snapshot heals it.
+      const fields = /** @type {(keyof Observation)[]} */ (Object.keys(record));
+      return fields.some((key) => key !== "gap" && record[key] !== next[key]);
+    }
+    return (
+      next.observedAt !== null &&
+      observedAt !== null &&
+      next.observedAt < observedAt
+    );
+  }
+
+  /** @param {Session} session @param {Observation} record */
+  function retain(session, record) {
+    if (disposed) return;
+    const prior = checkpoints.get(session.key);
+    if (!prior || record.revision > prior.record.revision) {
+      checkpoints.set(session.key, {
+        record,
+        observedAt: record.observedAt ?? prior?.observedAt ?? null,
+      });
+    }
+  }
+
+  /** @param {Readonly<Record<string, unknown>>} target @param {{signal: AbortSignal}} request */
+  async function checkedSnapshot(target, request) {
+    const session = current;
+    if (!session || !readSnapshot) return null;
+    const update = await readSnapshot(target, request);
+    if (current !== session || session.closed || request.signal.aborted)
+      return null;
+    const checkpoint = checkpoints.get(session.key);
+    const value = update === null ? null : normalized(session, update);
+    if (current !== session || session.closed || request.signal.aborted)
+      return null;
+    if (
+      (update !== null && !value) ||
+      (checkpoint &&
+        (!value ||
+          value.revision < checkpoint.record.revision ||
+          conflicts(checkpoint, value)))
+    ) {
+      stop(session, "unknown");
+      return null;
+    }
+    return value && { version: 1, identity: session.identity, ...value };
+  }
 
   function markCleanupUnknown() {
     cleanupUnknown = true;
@@ -95,7 +157,7 @@ export function createStreamProjection(
     }
   }
 
-  /** @param {Session} session @param {unknown} update */
+  /** @param {Session} session @param {unknown} update @returns {Observation|null} */
   function normalized(session, update) {
     // Store only the projection's bounded validated fields, never arbitrary
     // adapter object graphs or raw transport errors.
@@ -103,11 +165,7 @@ export function createStreamProjection(
     try {
       probe.select(session.identity);
       if (!probe.merge(update, { snapshot: true })) return null;
-      return Object.freeze({
-        version: 1,
-        identity: session.identity,
-        ...probe.state().record,
-      });
+      return probe.state().record;
     } catch {
       return null;
     } finally {
@@ -115,37 +173,29 @@ export function createStreamProjection(
     }
   }
 
-  /** @param {Session} session @param {any} value */
+  /** @param {Session} session @param {Observation} value */
   function mergeEvent(session, value) {
-    let retained;
     try {
-      retained = session.projection.state().record;
+      session.projection.state();
     } catch {
       stop(session, "unknown");
       return false;
     }
     // Reading state invokes the injected clock, which may reenter navigation.
     if (current !== session || session.closed || disposed) return false;
-    if (retained && value.revision >= retained.revision) {
-      // Equal revisions may be retransmitted, but not rebound to different
-      // validated content. Gap is locally derived, not a source field.
-      const conflict =
-        value.revision === retained.revision &&
-        Object.keys(retained).some(
-          (key) => key !== "gap" && retained[key] !== value[key],
-        );
-      const regressedClock =
-        value.revision > retained.revision &&
-        value.observedAt !== null &&
-        retained.observedAt !== null &&
-        value.observedAt < retained.observedAt;
-      if (conflict || regressedClock) {
-        stop(session, "unknown");
-        return false;
-      }
+    if (conflicts(checkpoints.get(session.key), value)) {
+      stop(session, "unknown");
+      return false;
     }
-    session.projection.merge(value);
-    return true;
+    if (
+      session.projection.merge({
+        version: 1,
+        identity: session.identity,
+        ...value,
+      })
+    )
+      retain(session, value);
+    return current === session && !session.closed && !disposed;
   }
 
   /** @param {unknown} identity @returns {Promise<boolean>} */
@@ -163,7 +213,9 @@ export function createStreamProjection(
       return Promise.resolve(false);
     }
     const key = JSON.stringify(
-      Object.entries(selected).sort(([a], [b]) => a.localeCompare(b)),
+      Object.entries(selected)
+        .filter(([, value]) => value !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b)),
     );
     if (current && !current.closed && current.key === key) {
       projection.dispose();
@@ -172,7 +224,12 @@ export function createStreamProjection(
     if (current) stop(current, "offline");
     // Abort fences callbacks but cannot confirm that a pending acquisition did
     // not allocate. Keep its slot until a valid handle is owned or closed.
-    if (disposed || cleanupUnknown || pendingAcquisition !== null) {
+    if (
+      disposed ||
+      cleanupUnknown ||
+      pendingAcquisition !== null ||
+      (!checkpoints.has(key) && checkpoints.size >= MAX_TRACKED_IDENTITIES)
+    ) {
       projection.dispose();
       return Promise.resolve(false);
     }
@@ -212,7 +269,7 @@ export function createStreamProjection(
     session.promise = (async () => {
       if (
         typeof subscribe !== "function" ||
-        typeof options.readSnapshot !== "function"
+        typeof readSnapshot !== "function"
       ) {
         stop(session, "unsupported");
         return false;
@@ -245,6 +302,8 @@ export function createStreamProjection(
           stop(session, projection.state().status);
           return false;
         }
+        const snapshot = projection.observation();
+        if (snapshot) retain(session, snapshot);
         for (const update of session.buffer) {
           if (!mergeEvent(session, update)) return false;
         }
@@ -298,6 +357,7 @@ export function createStreamProjection(
   }
   function dispose() {
     disposed = true;
+    checkpoints.clear();
     disconnect();
   }
   function view() {

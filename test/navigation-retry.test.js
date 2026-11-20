@@ -73,6 +73,7 @@ function setup(factory = createTaskNavigator, failClose = false) {
       reads[index].resolve({
         ...consoleScenarios.observation,
         identity: reads[index].identity,
+        revision: consoleScenarios.observation.revision + index,
         label,
       });
     },

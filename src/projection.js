@@ -128,6 +128,7 @@ export function escapeText(value) {
 // Branded server-revocation handles are separate from local void-close handles.
 /** @typedef {{viewId:string, admissionId:string}} ViewBinding */
 /** @typedef {{viewId:string, admissionId:string, status:string, proof:string}} ClosureReceipt */
+/** @typedef {(binding:Readonly<ViewBinding>, receipt:Readonly<ClosureReceipt>, options:{signal:AbortSignal})=>unknown} ReceiptVerifier */
 /** @type {WeakMap<object, () => Promise<void>>} */
 const closes = new WeakMap();
 
@@ -151,7 +152,7 @@ function takeServerClose(handle) {
  * @param {ViewBinding} binding
  * @param {{
  *   revoke:(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown,
- *   verifyReceipt:(binding:Readonly<ViewBinding>,receipt:Readonly<ClosureReceipt>)=>unknown,
+ *   verifyReceipt:ReceiptVerifier,
  *   timeoutMs?:number,
  * }} ports
  */
@@ -183,7 +184,7 @@ export function createServerRevocationHandle(binding, ports) {
 /**
  * @param {Readonly<ViewBinding>} binding
  * @param {(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown} revoke
- * @param {(binding:Readonly<ViewBinding>,receipt:Readonly<ClosureReceipt>)=>unknown} verifyReceipt
+ * @param {ReceiptVerifier} verifyReceipt
  * @param {number} timeoutMs
  */
 async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
@@ -216,10 +217,9 @@ async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
       typeof receipt.proof !== "string" ||
       receipt.proof.length === 0 ||
       receipt.proof.length > 4096 ||
-      (await verifyReceipt(
-        binding,
-        /** @type {ClosureReceipt} */ (receipt),
-      )) !== true ||
+      (await verifyReceipt(binding, /** @type {ClosureReceipt} */ (receipt), {
+        signal: controller.signal,
+      })) !== true ||
       expired()
     ) {
       throw new Error("passive revocation unconfirmed");

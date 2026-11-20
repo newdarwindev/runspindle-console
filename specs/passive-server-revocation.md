@@ -15,8 +15,11 @@ reserved and reports `viewCleanup: "unknown"` during the close. A reply clears
 that fence only if the adapter independently verifies a `revoked` receipt for
 both exact IDs before the deadline. A request acknowledgment, receipt for a
 different admission, rejected authenticator, error or timeout leaves the
-fence in place. Expiry aborts the close request and late responses cannot clear
-the expired attempt. There is no unattended retry or subsequent view admission.
+fence in place. `verifyReceipt(binding, receipt, {signal})` receives the same
+deadline signal as `revoke`. Asynchronous verifiers should pass it to their
+transport so expiry cancels pending verification I/O. Late responses cannot
+clear the expired attempt. There is no unattended retry or subsequent view
+admission.
 A fresh authoritative readback path for reconciling a timed-out attempt remains
 open.
 
@@ -41,6 +44,12 @@ exercises changed authority and stale or unknown freshness.
 The backend has no input route. Additional tests exercise a late acquisition, exact
 receipt binding, a forged receipt, failed close, and timeout. A deliberate
 early-fence-release mutation fails the loopback lifecycle test.
+
+The hung-verifier regression leaves a loopback proof request pending and waits
+for the server to observe the connection close. It confirms that cleanup stays
+unknown and that a second passive admission is blocked. The regression fails on
+base `487a16b2e1bf4d5305bcee551a0aec995d1b3159`, where the socket stays open
+until teardown. Reproduce it with the component command above.
 
 See [local evidence](../docs/server-passive-revocation-evidence.json).
 This qualifies the component contract with an ephemeral synthetic server.

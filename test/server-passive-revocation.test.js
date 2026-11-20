@@ -306,3 +306,58 @@ test("a hung revocation is cancelled and a late acknowledgment cannot release th
   assert.equal(await value.view(), false);
   value.dispose();
 });
+
+test(
+  "a hung receipt verifier disconnects at the revocation deadline",
+  { timeout: 6000 },
+  async () => {
+    /** @type {string[]} */
+    const requests = [];
+    let disconnected = false;
+    let opens = 0;
+    const server = createServer((request, response) => {
+      requests.push(`${request.method} ${request.url}`);
+      // Keep the proof response pending until the client disconnects.
+      response.on("close", () => {
+        disconnected = true;
+      });
+    });
+    await new Promise((done) =>
+      server.listen(0, "127.0.0.1", () => done(undefined)),
+    );
+    const address = /** @type {import('node:net').AddressInfo} */ (
+      server.address()
+    );
+    const endpoint = `http://127.0.0.1:${address.port}/verify`;
+    const value = projection(() => {
+      opens++;
+      return createServerRevocationHandle(binding, {
+        timeoutMs: 500,
+        revoke: () => ({
+          ...binding,
+          status: "revoked",
+          proof: signature(binding),
+        }),
+        async verifyReceipt(_target, _receipt, options) {
+          const response = await fetch(endpoint, { signal: options?.signal });
+          return response.ok;
+        },
+      });
+    });
+    try {
+      select(value, "task-a");
+      assert.equal(await value.view(), true);
+      select(value, "task-b");
+      await until(() => requests.length === 1);
+      assert.deepEqual(requests, ["GET /verify"]);
+      await until(() => disconnected);
+      assert.equal(value.state().viewCleanup, "unknown");
+      assert.equal(await value.view(), false);
+      assert.equal(opens, 1);
+    } finally {
+      value.dispose();
+      server.closeAllConnections();
+      await new Promise((done) => server.close(() => done(undefined)));
+    }
+  },
+);

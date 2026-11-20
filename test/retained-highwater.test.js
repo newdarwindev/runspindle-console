@@ -241,3 +241,33 @@ test("non-bootstrap zero revision and dangling sidecars are rejected", (t) => {
   );
   assert.throws(() => f.guard({ revision: 1 }));
 });
+
+test("removing the terminal check admits a prohibited higher revision", (t) => {
+  const f = setup(t);
+  const binding = "a".repeat(64);
+  const tombstone = { revision: 2, label: "", deleted: true };
+  const later = { revision: 3, label: "fixture" };
+  /** @param {string} helper @param {{revision:number,label:string,deleted?:boolean}} record */
+  const invoke = (helper, record) =>
+    spawnSync("python3", ["-I", "-B", helper, f.highwater], {
+      input: JSON.stringify({ binding, record }),
+      encoding: "utf8",
+      timeout: 5000,
+    });
+  const helper = "tools/retained_highwater.py";
+  assert.equal(invoke(helper, tombstone).status, 0);
+  assert.equal(invoke(helper, tombstone).status, 0);
+  assert.notEqual(invoke(helper, later).status, 0);
+  const original = readFileSync(helper, "utf8");
+  const guard = "require(not terminal or revision == previous)";
+  assert.equal(original.split(guard).length, 2);
+  const mutant = f.highwater + ".py";
+  writeFileSync(mutant, original.replace(guard, "require(True)"));
+  assert.equal(invoke(mutant, later).status, 0);
+  const observed = run([
+    "-c",
+    "import sqlite3,sys;c=sqlite3.connect(sys.argv[1]);print(c.execute('SELECT revision,deleted FROM fence').fetchone());c.close()",
+    f.highwater,
+  ]);
+  assert.equal(observed.stdout.trim(), "(3, 0)");
+});

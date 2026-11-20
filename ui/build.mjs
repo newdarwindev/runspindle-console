@@ -9,9 +9,12 @@ const output = path.resolve(
 if (fs.existsSync(output)) throw Error("new output directory required");
 fs.mkdirSync(output, { recursive: true });
 await build({
-  entryPoints: [path.join(root, "main.mjs")],
+  entryPoints: {
+    app: path.join(root, "main.mjs"),
+    tasks: path.join(root, "tasks.mjs"),
+  },
   bundle: true,
-  outfile: path.join(output, "app.js"),
+  outdir: output,
   platform: "browser",
   format: "iife",
   define: { "process.env.NODE_ENV": '"production"' },
@@ -24,10 +27,20 @@ await build({
   ),
 );
 fs.copyFileSync(path.join(root, "style.css"), path.join(output, "style.css"));
-fs.writeFileSync(
-  path.join(output, "index.html"),
-  `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"><title>Runspindle observation workspace · SIMULATED</title><link rel="stylesheet" href="style.css"></head><body><div id="app"></div><script src="app.js"></script></body></html>`,
-);
+for (const [page, script, title, body] of [
+  ["index", "app", "Observation workspace", '<div id="app"></div>'],
+  [
+    "tasks",
+    "tasks",
+    "Task workspace",
+    '<main><header><a href="index.html">Observation scenarios</a><h1>Task workspace</h1></header><div id="tasks"></div></main>',
+  ],
+]) {
+  fs.writeFileSync(
+    path.join(output, page + ".html"),
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"><title>Runspindle ${title} · SIMULATED</title><link rel="stylesheet" href="style.css"></head><body>${body}<script src="${script}.js"></script></body></html>`,
+  );
+}
 
 // Ship exact upstream notices with every generated application distribution.
 const lock = JSON.parse(

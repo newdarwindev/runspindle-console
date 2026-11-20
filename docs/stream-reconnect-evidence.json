@@ -1,0 +1,46 @@
+{
+  "base_revision": "535149999717dd774c4cf7e79ac06566806e89fd",
+  "boundaries": [
+    "synthetic stream callbacks and passive owner",
+    "real pinned Tether fixture and retained SQLite readback",
+    "checkpoints process local through coordinator disposal",
+    "native viewer revocation and authenticated upstream transport pending"
+  ],
+  "environment": {
+    "node": "26.13.0",
+    "platform": "darwin/arm64",
+    "python": "3.13.18"
+  },
+  "inputs_sha256": {
+    "dependencies/tether-snapshot.json": "257260454260680ace6786c6369a41febc6f8bc311d350b9ba36209d804fd654",
+    "src/projection.js": "a8a5e71af658494a95ce7597c23090c5f505a972ce2443440d781809fd97702b",
+    "src/stream.js": "7c98183f849794d5c1dca9f638e04c5152f60c6244c9f3e1c5dddb7620173755",
+    "test/navigation-mutation.test.js": "f879c1f28e17f6c9bb9e7c893e5cc2ac9d818f4a97c1063ef0ce83a79c55665f",
+    "test/navigation-retry.test.js": "fd475bdd83d3ba14ac3d307314109e1cb1f2e6a8306fcfbe9f6915702b3e6911",
+    "test/passive-view-mutation.test.js": "0e024210d85a41bf9a2b839faebdf1dad5654c54d9cbf77e5f1e22af987324ca",
+    "test/retained-stream.test.js": "c7cf2b1d7036e0b26aa97897873cd39932894e0edbb6172a3411c3c4327aebe0",
+    "test/stream.test.js": "86304b4f9c1f771fec7798f82deba58cdd752162dace7ebcd965bff70fb34c9f",
+    "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db"
+  },
+  "issue": "https://github.com/newdarwindev/runspindle-console/issues/9",
+  "parent": "https://github.com/newdarwindev/runspindle-console/issues/3",
+  "producer_revision": "670989839a0fccbcf2014d01609778ae6e4df424",
+  "results": {
+    "changed_javascript_format_and_strict_types": "passed",
+    "focused_node": {
+      "passed": 50,
+      "skipped": 0
+    },
+    "node": {
+      "passed": 145,
+      "skipped": 0
+    },
+    "python_each_normal_and_optimized": {
+      "passed": 121,
+      "skip_reason": "optional Pillow visual comparator",
+      "skipped": 6
+    },
+    "reconnect_rollback_mutation": "detected_by_passive_view_call_oracle",
+    "scaffold": "passed"
+  }
+}

@@ -734,6 +734,61 @@ test("conflict checking contains clock failures and navigation reentrancy", asyn
   }
 });
 
+for (const outcome of ["return", "throw"]) {
+  test(`state read preserves replacement after the old clock callback can ${outcome}`, async () => {
+    const next = { ...identity, task: "task-2" };
+    const snapshot = deferred();
+    let armed = false;
+    let replacement = Promise.resolve(false);
+    let viewCalls = 0;
+    const f = fixture({
+      clock() {
+        if (armed) {
+          armed = false;
+          replacement = f.stream.connect(next);
+          if (outcome === "throw") throw new Error("private-clock-diagnostic");
+        }
+        return 1000;
+      },
+      readSnapshot: (target) =>
+        target.task === next.task
+          ? snapshot.promise
+          : Promise.resolve(update()),
+      openPassive() {
+        viewCalls++;
+        return { close() {} };
+      },
+    });
+    try {
+      assert.equal(await f.stream.connect(identity), true);
+      armed = true;
+      const loading = f.stream.state();
+      assert.equal(loading.status, "loading");
+      assert.deepEqual(loading.identity, next);
+      assert.equal(loading.record, null);
+      assert.equal(loading.freshness, "unknown");
+      assert.equal(loading.canExecute, false);
+      assert.equal(f.subscriptions.length, 2);
+      assert.equal(f.subscriptions[0].signal.aborted, true);
+      assert.equal(f.subscriptions[1].signal.aborted, false);
+      assert.equal(f.closes(), 1);
+      assert.equal(await f.stream.view(), false);
+      assert.equal(viewCalls, 0);
+
+      snapshot.resolve(update(4, { identity: next }));
+      assert.equal(await replacement, true);
+      const ready = f.stream.state();
+      assert.equal(ready.status, "ready");
+      assert.deepEqual(ready.identity, next);
+      assert.equal(ready.record.revision, 4);
+      assert.equal(f.closes(), 1);
+    } finally {
+      f.stream.dispose();
+    }
+    assert.equal(f.closes(), 2);
+  });
+}
+
 test("reconnect rejects older, conflicting and empty snapshots without exposing a passive view", async () => {
   /** @type {ReturnType<typeof update> | null} */
   let snapshot = update(4);

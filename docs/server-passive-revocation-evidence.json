@@ -1,0 +1,38 @@
+{
+  "architecture": "arm64",
+  "base_revision": "535149999717dd774c4cf7e79ac06566806e89fd",
+  "evidence_class": "local_component_with_ephemeral_authenticated_loopback",
+  "node": "v26.13.0",
+  "not_run": [
+    "KasmVNC runtime",
+    "production viewer authority",
+    "live desktop input and handback",
+    "remote CI"
+  ],
+  "observations": [
+    "loopback frame available before revocation",
+    "replacement view blocked before authenticated acknowledgment",
+    "loopback frame denied after revocation",
+    "exact view/admission receipt required",
+    "late open closed once",
+    "expired attempt cannot clear the fence"
+  ],
+  "os": "Darwin",
+  "python": "3.13.18",
+  "results": {
+    "changed_js_eslint_typescript_prettier": "passed",
+    "early_fence_release_mutation": "detected",
+    "node_passed": 148,
+    "python_optional_skips": 6,
+    "python_passed": 121,
+    "scaffold": "passed"
+  },
+  "retained_tether_test_pin": "670989839a0fccbcf2014d01609778ae6e4df424",
+  "schema_version": 1,
+  "source_sha256": {
+    "specs/passive-server-revocation.md": "701266102290a080d8b05086953be2ef2a808f804b7292bb4519f2248d343543",
+    "src/projection.js": "3296f371c824e23bb15339874a702bf396b0313b6bc1aa96f168256b41ac82db",
+    "test/server-passive-revocation.test.js": "c296889c328ec506efc3b1675b23aabc6618555246e6e802abadcda08ad13260",
+    "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db"
+  }
+}

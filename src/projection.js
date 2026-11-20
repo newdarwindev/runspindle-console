@@ -1,4 +1,5 @@
-/* global AbortController */
+/* global AbortController, clearTimeout, performance, setTimeout */
+
 // Provisional, process-local console API. This is not a shared wire protocol.
 /** @typedef {Record<string, unknown>} ProjectionIdentity */
 /** @typedef {{revision:number, observedAt:number|null, connection:string, authority:string, evidenceClass:string, label:string, simulated:boolean, gap:boolean, viewUrl:string|null}} ProjectionRecord */
@@ -124,7 +125,114 @@ export function escapeText(value) {
   );
 }
 
-/** @typedef {{controller:AbortController, invalidated:boolean, close:(()=>unknown)|null}} PassiveSlot */
+// Branded server-revocation handles are separate from local void-close handles.
+/** @typedef {{viewId:string, admissionId:string}} ViewBinding */
+/** @typedef {{viewId:string, admissionId:string, status:string, proof:string}} ClosureReceipt */
+/** @type {WeakMap<object, () => Promise<void>>} */
+const closes = new WeakMap();
+
+/** @param {unknown} value */
+function opaque(value) {
+  return typeof value === "string" && /^[A-Za-z0-9_.:-]{1,128}$/.test(value);
+}
+
+/** @param {unknown} handle */
+function takeServerClose(handle) {
+  if (typeof handle !== "object" || handle === null) return undefined;
+  const close = closes.get(handle);
+  closes.delete(handle);
+  return close;
+}
+
+/**
+ * Build a handle for an already authorized passive view. The trusted adapter
+ * owns network routing and verifies the exact remote receipt. No input transport
+ * is exposed by this handle.
+ * @param {ViewBinding} binding
+ * @param {{
+ *   revoke:(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown,
+ *   verifyReceipt:(binding:Readonly<ViewBinding>,receipt:Readonly<ClosureReceipt>)=>unknown,
+ *   timeoutMs?:number,
+ * }} ports
+ */
+export function createServerRevocationHandle(binding, ports) {
+  const { viewId, admissionId } = binding;
+  const { revoke, verifyReceipt, timeoutMs = 5000 } = ports;
+  if (
+    !opaque(viewId) ||
+    !opaque(admissionId) ||
+    typeof revoke !== "function" ||
+    typeof verifyReceipt !== "function" ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 30_000
+  ) {
+    throw new TypeError("invalid passive revocation configuration");
+  }
+  const bound = Object.freeze({ viewId, admissionId });
+  const handle = Object.freeze({});
+  /** @type {Promise<void>|undefined} */
+  let pending;
+  closes.set(handle, () => {
+    pending ??= revokeWithDeadline(bound, revoke, verifyReceipt, timeoutMs);
+    return pending;
+  });
+  return handle;
+}
+
+/**
+ * @param {Readonly<ViewBinding>} binding
+ * @param {(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown} revoke
+ * @param {(binding:Readonly<ViewBinding>,receipt:Readonly<ClosureReceipt>)=>unknown} verifyReceipt
+ * @param {number} timeoutMs
+ */
+async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
+  const controller = new AbortController();
+  const expires = performance.now() + timeoutMs;
+  const expired = () =>
+    controller.signal.aborted || performance.now() >= expires;
+  /** @type {ReturnType<typeof setTimeout>|undefined} */
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error("passive revocation unconfirmed"));
+      controller.abort();
+    }, timeoutMs);
+  });
+  const verify = Promise.resolve().then(async () => {
+    const result = await revoke(binding, { signal: controller.signal });
+    if (expired()) throw new Error("passive revocation unconfirmed");
+    const response = /** @type {Partial<ClosureReceipt>|null} */ (result);
+    const receipt = Object.freeze({
+      viewId: response?.viewId,
+      admissionId: response?.admissionId,
+      status: response?.status,
+      proof: response?.proof,
+    });
+    if (
+      receipt.viewId !== binding.viewId ||
+      receipt.admissionId !== binding.admissionId ||
+      receipt.status !== "revoked" ||
+      typeof receipt.proof !== "string" ||
+      receipt.proof.length === 0 ||
+      receipt.proof.length > 4096 ||
+      (await verifyReceipt(
+        binding,
+        /** @type {ClosureReceipt} */ (receipt),
+      )) !== true ||
+      expired()
+    ) {
+      throw new Error("passive revocation unconfirmed");
+    }
+  });
+  try {
+    await Promise.race([verify, deadline]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/** @typedef {{controller:AbortController, invalidated:boolean, close:(()=>unknown)|null, server:boolean}} PassiveSlot */
 
 // One resource owner survives task changes and stream projection replacement.
 // Abort is a cancellation request, not a receipt that acquisition did not occur.
@@ -138,8 +246,23 @@ function createPassiveOwner() {
   /** @param {AbortController} controller */
   function reserve(controller) {
     if (blocked()) return null;
-    slot = { controller, invalidated: false, close: null };
+    slot = { controller, invalidated: false, close: null, server: false };
     return slot;
+  }
+  /** @param {PassiveSlot} token @param {()=>unknown} close */
+  function awaitRevocation(token, close) {
+    // The slot remains reserved until the trusted adapter confirms closure.
+    void Promise.resolve()
+      .then(close)
+      .then(
+        () => {
+          if (slot === token) slot = null;
+        },
+        () => {
+          unknown = true;
+          if (slot === token) slot = null;
+        },
+      );
   }
   /** @param {PassiveSlot} token */
   function release(token) {
@@ -152,10 +275,12 @@ function createPassiveOwner() {
     } finally {
       const close = token.close;
       token.close = null;
-      if (close) {
+      if (close && token.server) {
+        awaitRevocation(token, close);
+      } else if (close) {
         try {
-          // Only the existing synchronous void-close contract confirms local
-          // cleanup. A promise/other receipt needs a separately reviewed adapter.
+          // The synchronous void-close contract confirms local cleanup only.
+          // A plain promise cannot confirm server-side revocation.
           const result = close();
           if (result !== undefined) {
             unknown = true;
@@ -178,6 +303,12 @@ function createPassiveOwner() {
   }
   /** @param {PassiveSlot} token @param {any} handle */
   function acquired(token, handle) {
+    const confirmed = takeServerClose(handle);
+    if (confirmed) {
+      token.server = true;
+      token.close = confirmed;
+      return true;
+    }
     const close = handle?.close;
     if (typeof close !== "function") {
       fail(token);
@@ -204,7 +335,7 @@ function createPassiveOwner() {
 /**
  * A private ownership scope for projections sharing one passive adapter.
  * Stream task replacement must use this factory, not reset unresolved ownership.
- * The returned projections cannot grant control or confirm server-side closure.
+ * Server-side closure requires a verified receipt from the trusted passive adapter.
  * @param {ProjectionOptions} options
  */
 export function createProjectionFactory(options = {}) {
@@ -346,6 +477,7 @@ function createScopedProjection(
       (previous.viewUrl !== record.viewUrl ||
         previous.simulated !== record.simulated ||
         previous.evidenceClass !== record.evidenceClass ||
+        previous.authority !== record.authority ||
         record.connection !== "online" ||
         record.observedAt === null ||
         record.gap)

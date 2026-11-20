@@ -48,6 +48,16 @@ button {
 button {
   cursor: pointer;
 }
+#tasks nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+#tasks [aria-current="page"] {
+  border-color: #005dcb;
+  background: #e8f0f6;
+  font-weight: 650;
+}
 select {
   width: 100%;
 }

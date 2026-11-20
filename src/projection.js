@@ -479,7 +479,8 @@ function createScopedProjection(
         previous.evidenceClass !== record.evidenceClass ||
         previous.authority !== record.authority ||
         record.connection !== "online" ||
-        record.observedAt === null)
+        record.observedAt === null ||
+        record.gap)
     )
       releaseView();
     return true;
@@ -665,5 +666,13 @@ function createScopedProjection(
     releaseView();
     previousRead?.abort();
   }
-  return Object.freeze({ select, merge, state, refresh, view, dispose });
+  return Object.freeze({
+    select,
+    merge,
+    state,
+    observation: () => record,
+    refresh,
+    view,
+    dispose,
+  });
 }

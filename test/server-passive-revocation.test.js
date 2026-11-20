@@ -8,6 +8,7 @@ import {
   createProjection,
   createServerRevocationHandle,
 } from "../src/projection.js";
+import { createStreamProjection } from "../src/stream.js";
 
 const issuerKey = "synthetic-loopback-close-issuer";
 const binding = Object.freeze({ viewId: "view-1", admissionId: "admission-1" });
@@ -279,9 +280,184 @@ test("a hung revocation is cancelled and a late acknowledgment cannot release th
   acknowledgement.resolve();
   await setImmediate();
   assert.equal(value.state().viewCleanup, "unknown");
+  assert.equal(await value.reconcileViewCleanup(), false);
   assert.equal(await value.view(), false);
   value.dispose();
 });
+
+test(
+  "authenticated readback reconciles lost revocation across stream disconnect",
+  { timeout: 10000 },
+  async () => {
+    const readStarted = gate();
+    const allowRead = gate();
+    const closeReturned = gate();
+    const path = "/revocation/view-1/admission-1";
+    /** @type {string[]} */
+    const requests = [];
+    let active = true;
+    const server = createServer(async (req, res) => {
+      const route = req.method + " " + req.url;
+      requests.push(route);
+      if (route === "POST " + path) {
+        active = false;
+        res.destroy(); // Close committed, but the client never gets a receipt.
+      } else if (route === "GET " + path) {
+        readStarted.resolve();
+        await allowRead.promise;
+        res.end(
+          JSON.stringify({
+            ...binding,
+            status: active ? "active" : "revoked",
+            proof: signature(binding),
+          }),
+        );
+      } else if (route === "GET /passive") {
+        res.writeHead(active ? 200 : 403).end();
+      } else {
+        res.writeHead(404).end();
+      }
+    });
+    await new Promise((done) =>
+      server.listen(0, "127.0.0.1", () => done(undefined)),
+    );
+    const address = /** @type {import('node:net').AddressInfo} */ (
+      server.address()
+    );
+    const origin = "http://127.0.0.1:" + address.port;
+    let opens = 0;
+    const value = createStreamProjection({
+      clock: () => 1000,
+      allowedViewOrigins: ["https://viewer.invalid"],
+      subscribe: () => ({ close() {} }),
+      readSnapshot: (/** @type {{task:string}} */ identity) =>
+        observation(identity.task),
+      openPassive() {
+        opens++;
+        return createServerRevocationHandle(binding, {
+          async revoke(target, { signal }) {
+            try {
+              await fetch(
+                origin +
+                  "/revocation/" +
+                  target.viewId +
+                  "/" +
+                  target.admissionId,
+                { method: "POST", signal },
+              );
+              throw Error("unexpected revocation response");
+            } finally {
+              closeReturned.resolve();
+            }
+          },
+          async readRevocation(target, { signal }) {
+            const response = await fetch(
+              origin +
+                "/revocation/" +
+                target.viewId +
+                "/" +
+                target.admissionId,
+              { signal },
+            );
+            if (!response.ok) throw Error("synthetic readback denied");
+            return response.json();
+          },
+          verifyReceipt: (target, receipt) =>
+            signature(target) === receipt.proof,
+        });
+      },
+    });
+    try {
+      assert.equal(await value.connect(observation("task-a").identity), true);
+      assert.equal(await value.view(), true);
+      assert.equal((await fetch(origin + "/passive")).status, 200);
+      value.disconnect();
+      assert.equal(await value.reconcileViewCleanup(), false);
+      await closeReturned.promise;
+      await setImmediate();
+      assert.equal((await fetch(origin + "/passive")).status, 403);
+      const readback = value.reconcileViewCleanup();
+      await readStarted.promise;
+      assert.equal(
+        value.state().viewCleanup,
+        "unknown",
+        "pending readback must retain the revocation fence",
+      );
+      assert.equal(await value.reconcileViewCleanup(), false);
+      assert.equal(await value.view(), false);
+      allowRead.resolve();
+      assert.equal(await readback, true);
+      assert.equal(value.state().viewCleanup, "no_unconfirmed_close");
+      assert.equal(await value.reconcileViewCleanup(), false);
+      assert.deepEqual(requests, [
+        "GET /passive",
+        "POST " + path,
+        "GET /passive",
+        "GET " + path,
+      ]);
+      assert.equal(opens, 1);
+      assert.equal(value.state().canExecute, false);
+    } finally {
+      allowRead.resolve();
+      value.dispose();
+      server.closeAllConnections();
+      await new Promise((done) => server.close(() => done(undefined)));
+    }
+  },
+);
+
+test("wrong, unverified and expired readbacks cannot clear a revocation fence", async () => {
+  const expired = gate();
+  const late = gate();
+  const closed = { ...binding, status: "revoked", proof: signature(binding) };
+  let reads = 0;
+  let revocations = 0;
+  let opens = 0;
+  const value = projection(() => {
+    opens++;
+    if (opens > 1) return { close() {} };
+    return createServerRevocationHandle(binding, {
+      timeoutMs: 100,
+      revoke() {
+        revocations++;
+        throw Error("fixture revocation response lost");
+      },
+      async readRevocation(_target, { signal }) {
+        reads++;
+        if (reads === 1) return { ...closed, admissionId: "wrong-admission" };
+        if (reads === 2) return { ...closed, status: "accepted" };
+        if (reads === 3) return { ...closed, proof: "untrusted" };
+        if (reads === 4) {
+          signal.addEventListener("abort", expired.resolve, { once: true });
+          await late.promise;
+        }
+        return closed;
+      },
+      verifyReceipt: (target, receipt) => signature(target) === receipt.proof,
+    });
+  });
+  select(value, "task-a");
+  assert.equal(await value.view(), true);
+  select(value, "task-b");
+  await setImmediate();
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    assert.equal(await value.reconcileViewCleanup(), false);
+    assert.equal(reads, attempt);
+    assert.equal(value.state().viewCleanup, "unknown");
+    assert.equal(await value.view(), false);
+  }
+  await expired.promise;
+  late.resolve();
+  await setImmediate();
+  assert.equal(value.state().viewCleanup, "unknown");
+  assert.equal(await value.reconcileViewCleanup(), true);
+  assert.equal(value.state().viewCleanup, "no_unconfirmed_close");
+  assert.equal(await value.view(), true);
+  assert.equal(opens, 2);
+  assert.equal(revocations, 1);
+  value.dispose();
+});
+
 
 test(
   "a hung receipt verifier disconnects at the revocation deadline",

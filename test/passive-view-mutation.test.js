@@ -47,6 +47,15 @@ const mutations = [
     "reconnect rejects older, conflicting and empty snapshots",
     "test/stream.test.js",
   ],
+  [
+    "release before authenticated server readback",
+    "src/projection.js",
+    "await read();",
+    "void read().catch(() => {});",
+    /pending readback must retain the revocation fence/,
+    "authenticated readback reconciles lost revocation",
+    "test/server-passive-revocation.test.js",
+  ],
 ];
 for (const [
   name,

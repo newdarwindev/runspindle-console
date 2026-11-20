@@ -29,7 +29,7 @@ export function createStreamProjection(
   }
   // Pending/uncertain passive resources outlive an individual task projection.
   // Preserve the existing dynamically typed provisional projection boundary.
-  /** @type {(() => any) & {viewCleanup: () => string}} */
+  /** @type {(() => any) & {viewCleanup: () => string, reconcileViewCleanup: () => Promise<boolean>}} */
   const projectionFactory = createProjectionFactory({
     ...options,
     readSnapshot: checkedSnapshot,
@@ -379,5 +379,12 @@ export function createStreamProjection(
       ? current.projection.view()
       : Promise.resolve(false);
   }
-  return Object.freeze({ connect, disconnect, dispose, state, view });
+  return Object.freeze({
+    connect,
+    disconnect,
+    dispose,
+    state,
+    view,
+    reconcileViewCleanup: projectionFactory.reconcileViewCleanup,
+  });
 }

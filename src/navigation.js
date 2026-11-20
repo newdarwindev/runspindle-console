@@ -241,17 +241,18 @@ export function createTaskNavigator(root, { catalog, stream, history }) {
 
 /**
  * Browser History adapter: namespaced state only, never rewrites/navigates a URL.
- * Browser integration remains unqualified until exercised in a real browser.
+ * The initial task applies only to entries without a stored task key.
  * @param {Pick<Window, 'history' | 'addEventListener' | 'removeEventListener'>} browser
+ * @param {string | null} [initialTask]
  * @returns {TaskHistory}
  */
-export function createBrowserTaskHistory(browser) {
+export function createBrowserTaskHistory(browser, initialTask = null) {
   const property = "runspindleConsoleTask";
   function current() {
     const state = browser.history.state;
     return state && typeof state === "object" && Object.hasOwn(state, property)
       ? state[property]
-      : null;
+      : initialTask;
   }
   /** @param {string} key */
   function push(key) {

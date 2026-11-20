@@ -18,6 +18,10 @@ different admission, rejected authenticator, error or timeout leaves the
 fence in place. Expiry aborts the close request and late responses cannot clear
 the expired attempt. Failed closure keeps the replacement view blocked.
 
+Both the request and `verifyReceipt(binding, receipt, {signal})` receive the
+same deadline signal. Asynchronous verifiers should pass it to their transport
+so expiry cancels pending verification I/O.
+
 An adapter can supply the optional read-only `readRevocation` port. After a
 failed close, a caller can invoke `reconcileViewCleanup()` on the projection
 or stream, including after disconnect. The owner queries the original view
@@ -54,6 +58,9 @@ Concurrent calls produce one read and the ledger shows one server revoke.
 Other tests cover mismatched admissions, acknowledgment-only or unverified
 receipts, and expired readbacks. A deliberate mutation that releases the slot
 before verification fails the pending-readback assertion.
+
+A loopback regression verifies that a hung proof request disconnects at
+the deadline and the fence still blocks a second passive admission.
 
 See [close evidence](../docs/server-passive-revocation-evidence.json) and
 [readback evidence](../docs/server-passive-readback-evidence.json).

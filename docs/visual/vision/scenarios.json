@@ -1,0 +1,143 @@
+{
+  "source": "SRC-010",
+  "parent": "newdarwindev/runspindle-console#2",
+  "visual_issue": "newdarwindev/runspindle-console#7",
+  "media": {
+    "reference": "editable design candidate",
+    "canonical": "render of reviewed static Console page",
+    "approved_pixel_baseline": false,
+    "runtime_acceptance": "not_run"
+  },
+  "cases": [
+    { "id": "mobile-320", "width": 320, "height": 720, "zoom": 100 },
+    { "id": "mobile-390", "width": 390, "height": 844, "zoom": 100 },
+    { "id": "tablet-768", "width": 768, "height": 900, "zoom": 100 },
+    { "id": "desktop-1440", "width": 1440, "height": 900, "zoom": 100 },
+    { "id": "reflow-640", "width": 640, "height": 900, "zoom": 200 },
+    { "id": "reflow-1440", "width": 1440, "height": 900, "zoom": 200 }
+  ],
+  "sections": [
+    { "id": "hero", "reference": "#hero", "canonical": "header h1" },
+    { "id": "premise", "reference": "#premise", "canonical": "#premise" },
+    { "id": "limits", "reference": "#limits", "canonical": "header .badge" },
+    {
+      "id": "domains-internal",
+      "reference": "#domains-internal",
+      "canonical": "#domains article:nth-child(1)"
+    },
+    {
+      "id": "domains-orchestration",
+      "reference": "#domains-orchestration",
+      "canonical": "#domains article:nth-child(2)"
+    },
+    {
+      "id": "domains-external",
+      "reference": "#domains-external",
+      "canonical": "#domains article:nth-child(3)"
+    },
+    {
+      "id": "human-constraints",
+      "reference": "#human-constraints",
+      "canonical": "#domains > p"
+    },
+    { "id": "loop-select", "reference": "#select", "canonical": "#select" },
+    { "id": "loop-review", "reference": "#review", "canonical": "#review" },
+    { "id": "loop-gold", "reference": "#gold", "canonical": "#gold" },
+    {
+      "id": "loop-candidates",
+      "reference": "#candidates",
+      "canonical": "#candidates"
+    },
+    {
+      "id": "loop-evaluate",
+      "reference": "#evaluate",
+      "canonical": "#evaluate"
+    },
+    { "id": "loop-approve", "reference": "#approve", "canonical": "#approve" },
+    {
+      "id": "loop-rollback",
+      "reference": "#rollback",
+      "canonical": "#rollback"
+    },
+    {
+      "id": "hypothesis-1",
+      "reference": "#hypothesis-1",
+      "canonical": "#hypotheses li:nth-child(1)"
+    },
+    {
+      "id": "hypothesis-2",
+      "reference": "#hypothesis-2",
+      "canonical": "#hypotheses li:nth-child(2)"
+    },
+    {
+      "id": "hypothesis-3",
+      "reference": "#hypothesis-3",
+      "canonical": "#hypotheses li:nth-child(3)"
+    },
+    {
+      "id": "simulation-warning",
+      "reference": "#simulation-warning",
+      "canonical": "#hypotheses > p"
+    },
+    { "id": "materials", "reference": "#materials", "canonical": "#materials" },
+    {
+      "id": "evidence",
+      "reference": "#evidence",
+      "canonical": "#evidence",
+      "source": "supplemental"
+    },
+    {
+      "id": "economics",
+      "reference": "#economics",
+      "canonical": "#economics",
+      "source": "supplemental"
+    },
+    {
+      "id": "attribution",
+      "reference": "footer",
+      "canonical": "footer",
+      "source": "supplemental"
+    }
+  ],
+  "assets": {
+    "inline-css": "Original editable inline stylesheet per page.",
+    "diagrams": "Source has no figure. Reference uses a native ordered workflow list and a visible caption for the seven reviewed stages.",
+    "scripts": "None in either document.",
+    "external-rendering-assets": "None. Use installed local fonts only."
+  },
+  "expected": {
+    "reference": [
+      "Design reference",
+      "Immutable output feedback",
+      "Gold eligibility",
+      "Serving approval",
+      "Proposed workflow",
+      "Measured evidence unavailable",
+      "Historical white paper unavailable",
+      "Historical presentation unavailable and unselected"
+    ],
+    "canonical": [
+      "Design narrative, not a live service",
+      "immutable output ID",
+      "Gold eligibility is separate from serving approval",
+      "Evaluation passed, approved, promoted and serving",
+      "historical demo numbers were simulated",
+      "Historical white paper: unavailable",
+      "Historical presentation: unavailable and unselected"
+    ]
+  },
+  "navigation": {
+    "skip": "#main",
+    "local": [
+      "index.html",
+      "browser.html",
+      "SRC-010-lift.json",
+      "SRC-010-validation.md",
+      "THIRD_PARTY_NOTICES.md",
+      "LICENSE-SRC-010.txt"
+    ],
+    "external": ["STATUS.json", "docs/IMPLEMENTATION_EVIDENCE.md"],
+    "unavailable": ["historical-white-paper", "historical-presentation"],
+    "expanded": "not_applicable_static_source_has_no_disclosure"
+  }
+}

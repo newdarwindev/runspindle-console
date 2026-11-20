@@ -85,6 +85,9 @@ subscription and show unknown. Snapshot completion precedes buffered event repla
 duplicates and older observations never replace newer ones. Sequence gaps remain
 unknown until explicit resubscription and a complete snapshot. Freshness still
 uses observation time and the injected clock, not arrival time.
+Reconnects share [revision and timestamp checkpoints](stream-conflicts.md) for
+the same full identity. A gap closes any current passive view through the local
+adapter cleanup contract.
 
 Disconnect/error closes passive view handles through the existing projection and
 retains the old observation with explicit offline/error status. No viewing or

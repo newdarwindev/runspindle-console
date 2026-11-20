@@ -265,13 +265,14 @@ test("revision rollback guard mutation is detected against independently read SQ
   assert.equal(await bad.connect(), true);
   f.sql("UPDATE heads SET revision='1' WHERE task='task'");
   assert.equal(await bad.poll(), true);
-  bad.disconnect();
-  assert.equal(await bad.connect(), true);
   assert.equal(
-    bad.state().record.revision,
     Number(JSON.parse(f.sql("SELECT revision FROM heads"))[0][0]),
+    1,
   );
-  assert.equal(bad.state().record.revision, 1); // Independently observed forbidden regression.
+  assert.equal(bad.state().record.revision, 2);
+  bad.disconnect();
+  assert.equal(await bad.connect(), false);
+  assert.equal(bad.state().record, null); // The generic reconnect fence still rejects it.
 });
 
 test("fresh Node consumer reconnects to actual retained revision without promoting observation time", (t) => {

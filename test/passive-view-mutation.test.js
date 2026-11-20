@@ -12,7 +12,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-/** @type {Array<[string,string,string,string,RegExp,string]>} */
+/** @type {Array<[string,string,string,string,RegExp,string,string?]>} */
 const mutations = [
   [
     "unbounded passive acquisition",
@@ -38,6 +38,15 @@ const mutations = [
     /stream replacement must preserve passive ownership/,
     "shared ownership is retained across stream",
   ],
+  [
+    "release before authenticated server readback",
+    "src/projection.js",
+    "await read();",
+    "void read().catch(() => {});",
+    /pending readback must retain the revocation fence/,
+    "authenticated readback reconciles lost revocation",
+    "test/server-passive-revocation.test.js",
+  ],
 ];
 for (const [
   name,
@@ -46,6 +55,7 @@ for (const [
   replacement,
   expected,
   testName,
+  testFile = "test/passive-view-lifecycle.test.js",
 ] of mutations) {
   test(`Passive lifecycle assertions detect ${name} mutation`, () => {
     const root = fileURLToPath(new URL("../", import.meta.url));
@@ -55,7 +65,7 @@ for (const [
         "package.json",
         "src/projection.js",
         "src/stream.js",
-        "test/passive-view-lifecycle.test.js",
+        testFile,
       ]) {
         let source = readFileSync(join(root, file), "utf8");
         if (file === target) {
@@ -67,11 +77,7 @@ for (const [
       }
       const child = spawnSync(
         process.execPath,
-        [
-          "--test",
-          `--test-name-pattern=${testName}`,
-          "test/passive-view-lifecycle.test.js",
-        ],
+        ["--test", `--test-name-pattern=${testName}`, testFile],
         {
           cwd: temporary,
           env: Object.fromEntries(

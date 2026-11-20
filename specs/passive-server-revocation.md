@@ -4,7 +4,7 @@ For [Console #11](https://github.com/newdarwindev/runspindle-console/issues/11)
 and its parent [#3](https://github.com/newdarwindev/runspindle-console/issues/3).
 
 A trusted passive adapter can return a one-use
-`createServerRevocationHandle(binding, {revoke, verifyReceipt, timeoutMs})`
+`createServerRevocationHandle(binding, {revoke, readRevocation, verifyReceipt, timeoutMs})`
 from `openPassive`. The binding names the exact server view and its admission
 ID. The adapter still owns admission, target authorization, and transport
 configuration. The handle exposes no keyboard, mouse, or takeover method.
@@ -16,9 +16,21 @@ that fence only if the adapter independently verifies a `revoked` receipt for
 both exact IDs before the deadline. A request acknowledgment, receipt for a
 different admission, rejected authenticator, error or timeout leaves the
 fence in place. Expiry aborts the close request and late responses cannot clear
-the expired attempt. There is no unattended retry or subsequent view admission.
-A fresh authoritative readback path for reconciling a timed-out attempt remains
-open.
+the expired attempt. Failed closure keeps the replacement view blocked.
+
+An adapter can supply the optional read-only `readRevocation` port. After a
+failed close, a caller can invoke `reconcileViewCleanup()` on the projection
+or stream, including after disconnect. The owner queries the original view
+and admission IDs through the retained adapter. It clears the fence only
+after independently verifying an exact `revoked` receipt within the same
+configured deadline used for close. An active view, wrong binding,
+unverified receipt, timeout or late reply leaves cleanup unknown.
+
+The owner accepts one readback attempt at a time and aborts a timed-out read.
+Adapters receive the abort signal for I/O cleanup. An attempt returns false
+if unavailable or unconfirmed. Additional attempts require an explicit
+caller and never reissue the revoke request. When the adapter lacks a readback
+port, or Console lacks a branded handle, the uncertainty remains fenced.
 
 The existing void-returning close remains a local cleanup contract. An
 unbranded Promise cannot confirm a server-side close. A late successful open
@@ -35,7 +47,16 @@ has no input route. Additional tests exercise a late acquisition, exact
 receipt binding, a forged receipt, failed close, and timeout. A deliberate
 early-fence-release mutation fails the loopback lifecycle test.
 
-See [local evidence](../docs/server-passive-revocation-evidence.json).
+Readback also has an independent loopback route and request ledger. The server
+revokes the view, drops the close response and denies frame retrieval. The
+client still reports unknown while the exact signed readback is pending.
+Concurrent calls produce one read and the ledger shows one server revoke.
+Other tests cover mismatched admissions, acknowledgment-only or unverified
+receipts, and expired readbacks. A deliberate mutation that releases the slot
+before verification fails the pending-readback assertion.
+
+See [close evidence](../docs/server-passive-revocation-evidence.json) and
+[readback evidence](../docs/server-passive-readback-evidence.json).
 This qualifies the component contract with an ephemeral synthetic server.
 KasmVNC-specific authentication and routing, live server revocation,
 interactive handoff, and end-to-end desktop acceptance remain open.

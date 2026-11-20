@@ -733,3 +733,119 @@ test("conflict checking contains clock failures and navigation reentrancy", asyn
     f.stream.dispose();
   }
 });
+
+test("reconnect rejects older, conflicting and empty snapshots without exposing a passive view", async () => {
+  /** @type {ReturnType<typeof update> | null} */
+  let snapshot = update(4);
+  let viewCalls = 0;
+  const f = fixture({
+    readSnapshot: async () => snapshot,
+    openPassive() {
+      viewCalls++;
+      return { close() {} };
+    },
+  });
+  assert.equal(await f.stream.connect(identity), true);
+  f.subscriptions[0].onEvent(update(5));
+  for (const rejected of [update(4), update(5, { label: "changed" }), null]) {
+    f.stream.disconnect();
+    snapshot = rejected;
+    // Optional fields with undefined represent the same complete identity.
+    const connected = await f.stream.connect({ ...identity, trace: undefined });
+    assert.equal(
+      await f.stream.view(),
+      false,
+      "replayed snapshot must not open a passive view",
+    );
+    assert.equal(connected, false);
+    assert.equal(f.stream.state().status, "unknown");
+    assert.equal(f.stream.state().record, null);
+  }
+  assert.equal(viewCalls, 0);
+  assert.equal(f.closes(), 4);
+  snapshot = update(6);
+  assert.equal(await f.stream.connect(identity), true);
+  assert.equal(f.stream.state().record.revision, 6);
+  assert.equal(await f.stream.view(), true);
+  assert.equal(viewCalls, 1);
+  f.stream.dispose();
+});
+
+test("navigation retains each identity checkpoint and a missing clock cannot erase its timestamp", async () => {
+  const other = { ...identity, nativeSession: "other-session" };
+  let snapshot = 4;
+  let timestamp = 1000;
+  const f = fixture({
+    readSnapshot: async (target) =>
+      update(snapshot, { identity: target, observedAt: timestamp }),
+  });
+  assert.equal(await f.stream.connect(identity), true);
+  f.subscriptions[0].onEvent(update(5, { observedAt: null }));
+  assert.equal(f.stream.state().freshness, "unknown");
+  snapshot = 1;
+  assert.equal(await f.stream.connect(other), true);
+  assert.deepEqual(f.stream.state().identity, other);
+  snapshot = 6;
+  timestamp = 999;
+  assert.equal(await f.stream.connect(identity), false);
+  assert.equal(f.stream.state().status, "unknown");
+  assert.deepEqual(f.stream.state().identity, identity);
+  timestamp = 1000;
+  assert.equal(await f.stream.connect(identity), true);
+  assert.equal(f.stream.state().record.revision, 6);
+  f.stream.dispose();
+});
+
+test("a sequence gap releases the current passive viewer until a complete snapshot", async () => {
+  let snapshot = 1;
+  let viewCalls = 0;
+  let viewCloses = 0;
+  const f = fixture({
+    readSnapshot: async () => update(snapshot),
+    openPassive() {
+      viewCalls++;
+      return {
+        close: () => {
+          viewCloses++;
+        },
+      };
+    },
+  });
+  assert.equal(await f.stream.connect(identity), true);
+  assert.equal(await f.stream.view(), true);
+  f.subscriptions[0].onEvent(update(3));
+  assert.equal(viewCloses, 1);
+  assert.equal(f.stream.state().record.gap, true);
+  assert.equal(await f.stream.view(), false);
+  assert.equal(viewCalls, 1);
+  f.stream.disconnect();
+  snapshot = 3;
+  assert.equal(await f.stream.connect(identity), true);
+  assert.equal(f.stream.state().record.gap, false);
+  assert.equal(await f.stream.view(), true);
+  f.stream.dispose();
+  assert.equal(viewCloses, 2);
+});
+
+test("identity capacity refuses new subscriptions without evicting prior checkpoints", async () => {
+  let revision = 2;
+  const f = fixture({
+    readSnapshot: async (target) => update(revision, { identity: target }),
+  });
+  for (let index = 0; index < 128; index++) {
+    assert.equal(
+      await f.stream.connect({ ...identity, task: `task-${index}` }),
+      true,
+    );
+  }
+  assert.equal(
+    await f.stream.connect({ ...identity, task: "overflow" }),
+    false,
+  );
+  assert.equal(f.subscriptions.length, 128);
+  revision = 1;
+  assert.equal(await f.stream.connect(identity), false);
+  assert.equal(f.stream.state().status, "unknown");
+  assert.equal(f.subscriptions.length, 129);
+  f.stream.dispose();
+});

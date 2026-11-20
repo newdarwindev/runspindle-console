@@ -75,6 +75,7 @@ export function createRetainedStream(options) {
       if (
         last &&
         (value.revision < last.revision ||
+          (last.deleted && value.revision > last.revision) ||
           (value.revision === last.revision &&
             JSON.stringify(value) !== JSON.stringify(last)))
       )

@@ -15,15 +15,23 @@ interpreter are trusted application configuration, never wire input.
 After the existing decoder validates the source result, an actual SQLite
 `BEGIN IMMEDIATE` transaction compares the observation with the last accepted
 revision and decoded-record digest. Older revisions and changed decoded fields
-at the same revision fail closed across fresh consumers. Commit precedes display;
+at the same revision fail closed across fresh consumers. A recorded deletion
+also blocks every higher revision for that binding. An exact deletion replay is
+allowed. A replacement SQLite source can therefore present a valid higher head
+without resurrecting the locally deleted task. Commit precedes display;
 a timeout/cancellation after commit can conservatively advance the fence without
 showing the result. It never authorizes execution or makes retained data live.
-The source database is not modified. The fence stores hashes and revision, not
-labels. Empty labels include the deletion flag in the digest. Nonempty labels
+The source database is not modified. The fence stores hashes, revision and a
+deletion bit. Empty labels include the deletion flag in the digest. Nonempty labels
 already imply an edit or creation and retain the prior digest format. Older
 receipts with an empty label lack the deletion flag. An observation at that
 same revision fails closed, and a higher revision can advance the fence.
-Comparisons cover fields decoded by the retained-head reader.
+Comparisons cover fields decoded by the retained-head reader. Schema version 2
+stores the explicit deletion bit. Version 1 upgrades in the same transaction as
+an accepted observation and preserves existing digests. A v1 digest that binds an
+explicit deletion already blocks higher revisions before migration. A v1
+receipt predating deletion-bit evidence can only enforce its revision and digest.
+Older clients reject v2 files.
 
 A missing, incompatible, malformed or busy fence fails closed. There is no reset,
 repair, automatic initialization, background polling or retry. Each transaction

@@ -89,12 +89,9 @@ Reconnects share [revision and timestamp checkpoints](stream-conflicts.md) for
 the same full identity. A gap closes any current passive view through the local
 adapter cleanup contract.
 
-Disconnect, error and invalidation close passive view handles through the
-existing projection. The coordinator keeps the last observation and its source
-timestamp with the terminal status. It reports freshness as unknown after the
-subscription stops. A subsequent connection establishes freshness from its own
-validated snapshot. No viewing or control is possible while
-disconnected/loading/unknown. `canExecute` is always
+Disconnect/error closes passive view handles through the existing projection and
+retains the old observation with explicit offline/error status. No viewing or
+control is possible while disconnected/loading/unknown. `canExecute` is always
 false. `subscriptionCleanup` describes only the injected subscription handle,
 not a server-side viewer revocation acknowledgment. The projection's existing
 passive-view close limitation remains: actual KasmVNC revocation, asynchronous
@@ -108,6 +105,11 @@ acquisition. The coordinator retains at most one unresolved acquisition; this is
 not a bound on resources allocated internally by the injected adapter. No claim
 of live backend compatibility or production unsubscribe follows from synthetic
 close acknowledgments.
+
+When a subscription disconnects, errors or is invalidated, the coordinator
+keeps the last observation and its timestamp with the terminal status. It
+reports freshness as unknown. A subsequent connection establishes freshness
+from its own validated snapshot.
 
 ## BDD verification
 

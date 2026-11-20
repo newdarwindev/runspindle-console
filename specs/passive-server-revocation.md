@@ -28,13 +28,20 @@ unbranded Promise cannot confirm a server-side close. A late successful open
 after navigation is revoked once. Task replacement and disconnected
 projections share the same unresolved ownership fence.
 
+An explicit state evaluation also requests revocation if the observation has
+become stale or its clock can no longer
+establish freshness. The request targets the view already owned when the clock
+was called, so reentrant navigation cannot revoke a replacement view. State
+evaluation remains application-driven, with no background freshness polling.
+
 ## Verification
 
 Run `node --test test/server-passive-revocation.test.js` with Node 20 or later.
 The loopback test independently observes that the synthetic frame endpoint
 still serves before revocation, that the client blocks a second open, and
-that the endpoint denies reads after a signed closure receipt. The backend
-has no input route. Additional tests exercise a late acquisition, exact
+that the endpoint denies reads after a signed closure receipt. The test
+exercises changed authority and stale or unknown freshness.
+The backend has no input route. Additional tests exercise a late acquisition, exact
 receipt binding, a forged receipt, failed close, and timeout. A deliberate
 early-fence-release mutation fails the loopback lifecycle test.
 

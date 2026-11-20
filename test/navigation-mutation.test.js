@@ -38,8 +38,8 @@ const mutations = [
   [
     "unbounded pending acquisition",
     "src/stream.js",
-    "cleanupUnknown || pendingAcquisition !== null",
-    "cleanupUnknown",
+    "pendingAcquisition !== null ||",
+    "false ||",
     /only one unresolved acquisition is allowed/,
   ],
 ];

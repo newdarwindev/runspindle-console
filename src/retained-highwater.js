@@ -38,6 +38,11 @@ export function createRetainedHighwater(options) {
   /** @param {{revision:number,label?:string,deleted?:boolean}} record */
   return (record) => {
     const { deleted, ...legacyRecord } = record;
+    if (
+      (deleted !== undefined && typeof deleted !== "boolean") ||
+      (deleted === true && record.label !== "")
+    )
+      throw new TypeError("invalid retained deletion");
     // Nonempty labels already prove the snapshot is not a deletion. Preserve
     // those receipts and require the deletion flag for new ambiguous labels.
     const evidence =

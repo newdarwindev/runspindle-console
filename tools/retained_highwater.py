@@ -9,13 +9,74 @@ import re
 import sqlite3
 import sys
 from pathlib import Path
+from typing import Any
 
-SCHEMA = "CREATE TABLE fence (id INTEGER PRIMARY KEY CHECK(id=1), binding TEXT NOT NULL, revision INTEGER NOT NULL, digest TEXT NOT NULL)"
+SCHEMA_V1 = "CREATE TABLE fence (id INTEGER PRIMARY KEY CHECK(id=1), binding TEXT NOT NULL, revision INTEGER NOT NULL, digest TEXT NOT NULL)"
+DELETION_COLUMN = "deleted INTEGER NOT NULL DEFAULT 0 CHECK(deleted IN (0,1))"
+SCHEMA_V2 = SCHEMA_V1[:-1] + ", " + DELETION_COLUMN + ")"
 
 
 def require(value: bool) -> None:
     if not value:
         raise ValueError("retained fence rejected")
+
+
+def record_digest(record: dict[str, Any]) -> str:
+    return hashlib.sha256(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def advance(db: sqlite3.Connection, source: str, record: dict[str, Any]) -> None:
+    revision = record.get("revision")
+    require(type(revision) is int and 0 < revision <= 9007199254740991)
+    deleted = record.get("deleted", False)
+    require(type(deleted) is bool and (not deleted or record.get("label") == ""))
+    digest = record_digest(record)
+    db.execute("BEGIN IMMEDIATE")
+    (version,) = db.execute("PRAGMA user_version").fetchone()
+    require(version in (1, 2))
+    schema = SCHEMA_V1 if version == 1 else SCHEMA_V2
+    require(
+        db.execute(
+            "SELECT sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+        ).fetchall()
+        == [(schema,)]
+    )
+    rows = db.execute("SELECT * FROM fence").fetchall()
+    require(len(rows) == 1)
+    ident, binding, previous, accepted = rows[0][:4]
+    require(ident == 1)
+    require(
+        (binding, previous, accepted) == ("", 0, "")
+        or (
+            binding == source
+            and type(previous) is int
+            and 0 < previous <= 9007199254740991
+            and type(accepted) is str
+            and re.fullmatch(r"[0-9a-f]{64}", accepted) is not None
+        )
+    )
+    if version == 1:
+        # The exact reader fixes all other decoded fields for this identity.
+        # Recognize an old digest that explicitly included a deletion bit.
+        tombstone = dict(record, revision=previous, label="", deleted=True)
+        terminal = accepted == record_digest(tombstone)
+    else:
+        saved = rows[0][4]
+        require(type(saved) is int and saved in (0, 1) and (not saved or previous > 0))
+        terminal = saved == 1
+    require(revision >= previous)
+    require(not terminal or revision == previous)
+    require(revision != previous or digest == accepted)
+    if version == 1:
+        db.execute("ALTER TABLE fence ADD COLUMN " + DELETION_COLUMN)
+        db.execute("PRAGMA user_version=2")
+    db.execute(
+        "INSERT OR REPLACE INTO fence VALUES (1,?,?,?,?)",
+        (source, revision, digest, int(deleted)),
+    )
+    db.commit()
 
 
 def main() -> int:
@@ -49,9 +110,10 @@ def main() -> int:
         try:
             db.execute("PRAGMA synchronous=FULL")
             if args.initialize:
-                db.execute(SCHEMA)
-                db.execute("PRAGMA user_version=1")
-                db.execute("INSERT INTO fence VALUES (1,'',0,'')")
+                db.execute("BEGIN IMMEDIATE")
+                db.execute(SCHEMA_V2)
+                db.execute("PRAGMA user_version=2")
+                db.execute("INSERT INTO fence VALUES (1,'',0,'',0)")
                 db.commit()
                 return 0
             raw = sys.stdin.buffer.read(16385)
@@ -64,41 +126,7 @@ def main() -> int:
             )
             record = value["record"]
             require(type(record) is dict)
-            revision = record.get("revision")
-            require(type(revision) is int and 0 < revision <= 9007199254740991)
-            digest = hashlib.sha256(
-                json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
-            ).hexdigest()
-            db.execute("BEGIN IMMEDIATE")
-            require(db.execute("PRAGMA user_version").fetchone() == (1,))
-            require(
-                db.execute(
-                    "SELECT sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
-                ).fetchall()
-                == [(SCHEMA,)]
-            )
-            rows = db.execute("SELECT id,binding,revision,digest FROM fence").fetchall()
-            require(len(rows) == 1)
-            if rows:
-                ident, binding, previous, accepted = rows[0]
-                require(ident == 1)
-                require(
-                    (binding, previous, accepted) == ("", 0, "")
-                    or (
-                        binding == value["binding"]
-                        and type(previous) is int
-                        and 0 < previous <= 9007199254740991
-                        and type(accepted) is str
-                        and re.fullmatch(r"[0-9a-f]{64}", accepted) is not None
-                    )
-                )
-                require(revision >= previous)
-                require(revision != previous or digest == accepted)
-            db.execute(
-                "INSERT OR REPLACE INTO fence VALUES (1,?,?,?)",
-                (value["binding"], revision, digest),
-            )
-            db.commit()
+            advance(db, value["binding"], record)
             return 0
         finally:
             db.close()

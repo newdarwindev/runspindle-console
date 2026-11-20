@@ -114,6 +114,55 @@ test("disconnect during snapshot cannot restore readiness; reconnect gets a new 
   f.stream.dispose();
 });
 
+test("stopped streams retain historical evidence without reporting current freshness", async () => {
+  for (const [reason, status] of [
+    ["disconnect", "offline"],
+    ["error", "error"],
+    ["conflict", "unknown"],
+  ]) {
+    let now = 1000;
+    let snapshot = update();
+    let opens = 0;
+    const f = fixture({
+      clock: () => now,
+      readSnapshot: async () => snapshot,
+      openPassive: async () => {
+        opens++;
+        return { close() {} };
+      },
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    const original = f.stream.state();
+    assert.equal(original.freshness, "fresh");
+    const subscription = f.subscriptions[0];
+    if (reason === "disconnect") subscription.onDisconnect();
+    else if (reason === "error") subscription.onError();
+    else subscription.onEvent(update(1, { label: "contradiction" }));
+
+    for (const time of [1000, 100000]) {
+      now = time;
+      const stopped = f.stream.state();
+      assert.equal(stopped.status, status);
+      assert.equal(stopped.freshness, "unknown", reason);
+      assert.deepEqual(stopped.identity, identity);
+      assert.deepEqual(stopped.record, original.record);
+      assert.equal(stopped.canExecute, false);
+    }
+    assert.equal(subscription.signal.aborted, true);
+    assert.equal(f.closes(), 1);
+    subscription.onEvent(update(2, { observedAt: now }));
+    assert.deepEqual(f.stream.state().record, original.record);
+    assert.equal(await f.stream.view(), false);
+    assert.equal(opens, 0);
+
+    snapshot = update(2, { observedAt: now });
+    assert.equal(await f.stream.connect(identity), true);
+    assert.equal(f.stream.state().freshness, "fresh");
+    assert.equal(f.stream.state().record.observedAt, now);
+    f.stream.dispose();
+  }
+});
+
 test("overflow fails closed, discards buffered object graphs and closes late handles", async () => {
   const pending = deferred();
   let closes = 0;

@@ -147,7 +147,8 @@ export function createStreamProjection(
       } catch {
         markCleanupUnknown();
       }
-      if (current === session) last = Object.freeze({ ...observed, status });
+      if (current === session)
+        last = Object.freeze({ ...observed, status, freshness: "unknown" });
       if (session.handle) {
         const handle = session.handle;
         session.handle = null;

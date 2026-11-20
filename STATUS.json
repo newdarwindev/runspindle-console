@@ -35,5 +35,10 @@
   "stream_coordination": "partial_process_local_synthetic_component",
   "stream_evidence": "docs/stream-coordination-evidence.json",
   "task_navigation": "partial_synthetic_dom_history_shell",
-  "task_navigation_evidence": "docs/task-navigation-evidence.json"
+  "task_navigation_evidence": "docs/task-navigation-evidence.json",
+  "passive_server_revocation": {
+    "evidence": "docs/server-passive-revocation-evidence.json",
+    "status": "locally_tested_authenticated_loopback_component",
+    "KasmVNC_and_live": "not_run"
+  }
 }

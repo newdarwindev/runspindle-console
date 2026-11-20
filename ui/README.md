@@ -27,8 +27,16 @@ React/Radix are MIT-licensed; packages retain their own LICENSE files. See
 npm --prefix ui ci --ignore-scripts --no-audit --no-fund
 node --test ui/shell.test.mjs
 node ui/build.mjs /absolute/new/output
+node ui/check-task-browser.cjs /absolute/new/output /absolute/chrome/binary
 node ui/check-browser.cjs /absolute/new/output /absolute/new/evidence /absolute/playwright/package /absolute/chrome/binary
 ```
+
+Open `index.html` and follow **Browse synthetic tasks** to use the Task
+workspace. It uses the canonical Console catalog, stream projection and
+browser History adapter. The task check measures native zoom, identity and
+focus through Back and Forward, literal text rendering, and reflow across
+desktop, tablet and mobile widths. It also requires a deliberate clipping
+mutation to fail. See [task workspace evidence](../docs/browser-task-workspace-evidence.md).
 
 Browser execution requires an already-qualified sandbox-capable Chrome, Pillow,
 Playwright 1.58.2 and its video encoder. No browser download, sandbox disable,

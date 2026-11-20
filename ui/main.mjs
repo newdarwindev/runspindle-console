@@ -51,11 +51,7 @@ function App() {
       state: referenceState(scenario),
       annotation: scenario.note,
     }),
-    h(
-      "footer",
-      null,
-      "Synthetic component demonstration. No live fleet, desktop or provider qualification.",
-    ),
+    h("footer", null, h("a", { href: "tasks.html" }, "Browse synthetic tasks")),
   );
 }
 const app = document.getElementById("app");

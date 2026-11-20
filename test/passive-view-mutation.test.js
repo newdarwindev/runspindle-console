@@ -12,7 +12,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-/** @type {Array<[string,string,string,string,RegExp,string]>} */
+/** @type {Array<[string,string,string,string,RegExp,string,string?]>} */
 const mutations = [
   [
     "unbounded passive acquisition",
@@ -34,9 +34,18 @@ const mutations = [
     "reset ownership on stream replacement",
     "src/stream.js",
     "const projection = projectionFactory();",
-    "const projection = createProjectionFactory(options)();",
+    "const projection = createProjectionFactory({ ...options, readSnapshot: checkedSnapshot })();",
     /stream replacement must preserve passive ownership/,
     "shared ownership is retained across stream",
+  ],
+  [
+    "stale snapshots on reconnect",
+    "src/stream.js",
+    "value.revision < checkpoint.record.revision ||",
+    "",
+    /replayed snapshot must not open a passive view/,
+    "reconnect rejects older, conflicting and empty snapshots",
+    "test/stream.test.js",
   ],
 ];
 for (const [
@@ -46,6 +55,7 @@ for (const [
   replacement,
   expected,
   testName,
+  testFile = "test/passive-view-lifecycle.test.js",
 ] of mutations) {
   test(`Passive lifecycle assertions detect ${name} mutation`, () => {
     const root = fileURLToPath(new URL("../", import.meta.url));
@@ -55,7 +65,7 @@ for (const [
         "package.json",
         "src/projection.js",
         "src/stream.js",
-        "test/passive-view-lifecycle.test.js",
+        testFile,
       ]) {
         let source = readFileSync(join(root, file), "utf8");
         if (file === target) {
@@ -67,11 +77,7 @@ for (const [
       }
       const child = spawnSync(
         process.execPath,
-        [
-          "--test",
-          `--test-name-pattern=${testName}`,
-          "test/passive-view-lifecycle.test.js",
-        ],
+        ["--test", `--test-name-pattern=${testName}`, testFile],
         {
           cwd: temporary,
           env: Object.fromEntries(

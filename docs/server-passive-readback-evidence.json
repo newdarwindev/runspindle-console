@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "evidence_class": "local_component_with_ephemeral_authenticated_loopback",
+  "base_revision": "83190fae47f9b4dd3be904f67f8290534581fed3",
+  "retained_tether_test_pin": "670989839a0fccbcf2014d01609778ae6e4df424",
+  "os": "Darwin",
+  "architecture": "arm64",
+  "node": "v26.13.0",
+  "python": "3.13.18",
+  "entrypoints": [
+    "node --test test/server-passive-revocation.test.js test/passive-view-mutation.test.js",
+    "node --test --test-concurrency=1 test/*.test.js",
+    "python3 -B -m unittest discover -s tests -v",
+    "python3 -B tools/check_scaffold.py",
+    "python3 -B tools/static_quality.py"
+  ],
+  "observations": [
+    "loopback revocation committed and independently denied frames after losing the close response",
+    "one exact GET readback and one POST revocation across stream disconnect",
+    "fence retained while the read was pending and after wrong, unverified or expired receipts",
+    "new view admitted only after confirmation in the synthetic projection test",
+    "mutation that clears the fence before readback fails the pending-readback assertion"
+  ],
+  "results": {
+    "node_serial_passed": 151,
+    "node_parallel_base_and_candidate": "inherited-pipe fixture failed to create its launch marker on this host",
+    "python_passed": 121,
+    "python_optional_skips": 6,
+    "scaffold": "passed",
+    "static_quality_new_diagnostics": 0
+  },
+  "not_run": [
+    "KasmVNC-specific authentication and routing",
+    "live desktop viewing, takeover and handback",
+    "isolated CI at preparation time"
+  ],
+  "source_sha256": {
+    "dependencies/tether-snapshot.json": "257260454260680ace6786c6369a41febc6f8bc311d350b9ba36209d804fd654",
+    "specs/passive-server-revocation.md": "0eadc829b6b42f1f74ba25388d6e6306721f8941fd3d48837137e18a4ed49cc1",
+    "src/projection.js": "09318b27db9a471ad65bbf64f7483bdb497d8cffe8e370c8b13e0d162e46629d",
+    "src/stream.js": "56073292cc88b52cbb3859783a09e0d923eb2548841eb44379d1466062259f9d",
+    "test/passive-view-mutation.test.js": "dc3d3233a4ab7fc4121798dcede04d6c7acf6c50437198bfc0adb9d9b1551581",
+    "test/server-passive-revocation.test.js": "30ecbe281fa4f45bb23774605fdb15c1146cef88c2c1a94ef87afc8980417440",
+    "tools/quality-node/package-lock.json": "8f74da4ed2179fc535f4d8a261d1a46683f3e244ad02362e53336e39b30f48db"
+  }
+}

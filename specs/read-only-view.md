@@ -17,3 +17,6 @@ The stable section has an accessible name, headings, definition lists and a poli
 - The current cloud execution environment prevents Chromium from creating its local IPC socket. Actual DOM and browser mutation evidence remain **blocked**, not passed. No screenshot or visual/accessibility acceptance is claimed.
 
 `fixtures/console-ui/scenarios.js` is the canonical original synthetic state family for this slice, reusable by #6. No second mock desktop/control implementation is introduced. Keyboard navigation application behavior, Back/Forward, real transport integration, responsive/200%-zoom layout, clipping detection, rendered accessibility, server revocation, native/live acceptance and durability remain unimplemented/not run. The browser harness measures DOM behavior only, even if it later passes.
+
+The [server revocation contract](passive-server-revocation.md) is available
+to trusted passive adapters. This read-only DOM renderer still mounts no viewer.

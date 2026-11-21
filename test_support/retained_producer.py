@@ -67,8 +67,9 @@ def main() -> None:
     if len(sys.argv) > 3:
         import json
 
+        mode = sys.argv[3]
         kind = (
-            "edit" if sys.argv[3] in ("edit-twice", "edit-unprojected") else sys.argv[3]
+            "edit" if mode in ("edit-empty", "edit-twice", "edit-unprojected") else mode
         )
         for revision in range(2, 4 if sys.argv[3] == "edit-twice" else 3):
             event = json.loads(raw)
@@ -84,7 +85,7 @@ def main() -> None:
                     dict(
                         version="runspindle.projection.v1",
                         kind="input",
-                        message="Updated retained text",
+                        message="" if mode == "edit-empty" else "Updated retained text",
                     ),
                 )
     a.close()

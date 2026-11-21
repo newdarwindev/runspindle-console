@@ -166,6 +166,56 @@ test("disconnect from an abort listener cancels the replacing connect", async ()
   f.stream.dispose();
 });
 
+test("passive view origins stay fixed across events and task navigation", async () => {
+  const allowedViewOrigins = ["https://viewer.invalid"];
+  const otherUrl = "https://other.invalid/frame";
+  /** @type {unknown[]} */
+  const opens = [];
+  let closed = 0;
+  const f = fixture({
+    allowedViewOrigins,
+    readSnapshot: (target) =>
+      update(1, {
+        identity: target,
+        viewUrl:
+          target.task === identity.task
+            ? "https://viewer.invalid/frame"
+            : otherUrl,
+      }),
+    openPassive: (request) => {
+      opens.push(request);
+      return {
+        close: () => {
+          closed++;
+        },
+      };
+    },
+  });
+  try {
+    assert.equal(await f.stream.connect(identity), true);
+    assert.equal(await f.stream.view(), true);
+    assert.equal(opens.length, 1);
+
+    allowedViewOrigins.push("https://other.invalid");
+    f.subscriptions[0].onEvent(update(2, { viewUrl: otherUrl }));
+    const eventUrl = f.stream.state().record.viewUrl;
+    const eventView = await f.stream.view();
+
+    const next = { ...identity, task: "task-2" };
+    assert.equal(await f.stream.connect(next), true);
+    assert.deepEqual(f.stream.state().identity, next);
+    const navigationUrl = f.stream.state().record.viewUrl;
+    const navigationView = await f.stream.view();
+
+    assert.equal(opens.length, 1, "must never open an added viewer origin");
+    assert.equal(closed, 1);
+    assert.deepEqual([eventUrl, navigationUrl], [null, null]);
+    assert.deepEqual([eventView, navigationView], [false, false]);
+  } finally {
+    f.stream.dispose();
+  }
+});
+
 test("disconnect during snapshot cannot restore readiness; reconnect gets a new snapshot", async () => {
   const pending = deferred();
   let reads = 0;

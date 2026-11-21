@@ -75,6 +75,11 @@ one. A real adapter remains responsible for bounded acquisition, cancellation an
 server-side revocation. No real desktop or asynchronous cleanup compatibility is
 established by synchronous synthetic handles.
 
+The factory snapshots the configured HTTPS viewer origins at creation. Each task
+projection validates that same list for snapshots and events. Mutating a
+caller's configuration array cannot authorize another origin. To apply a different
+list, the caller must create a new scope after resolving the existing view's cleanup.
+
 ## Observation bounds and transitions
 
 Subscribe precedes snapshot acquisition. Events received meanwhile are validated

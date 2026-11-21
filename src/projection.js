@@ -91,7 +91,7 @@ function sameIdentity(left, right) {
   return ID_KEYS.every((key) => left[key] === right[key]);
 }
 
-/** @param {unknown} value @param {string[]} allowedOrigins */
+/** @param {unknown} value @param {readonly string[]} allowedOrigins */
 export function safeViewUrl(value, allowedOrigins) {
   try {
     if (typeof value !== "string" || value.length > 2048) return null;
@@ -339,11 +339,21 @@ function createPassiveOwner() {
  * @param {ProjectionOptions} options
  */
 export function createProjectionFactory(options = {}) {
+  const { allowedViewOrigins = [] } = options;
+  if (!Array.isArray(allowedViewOrigins))
+    throw new TypeError("invalid allowed origins");
+  const viewOrigins = [...allowedViewOrigins];
+  Object.freeze(viewOrigins);
   const views = createPassiveOwner();
   return Object.freeze(
-    Object.assign(() => createScopedProjection(options, views), {
-      viewCleanup: views.cleanup,
-    }),
+    Object.assign(
+      () =>
+        createScopedProjection(
+          { ...options, allowedViewOrigins: viewOrigins },
+          views,
+        ),
+      { viewCleanup: views.cleanup },
+    ),
   );
 }
 

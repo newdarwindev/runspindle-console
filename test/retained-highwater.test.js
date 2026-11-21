@@ -168,6 +168,36 @@ test("busy fence times out without resetting committed high-water", async (t) =>
   f.guard({ revision: 2 });
 });
 
+test("a fence helper that ignores SIGTERM cannot outlive its deadline", (t) => {
+  const f = setup(t);
+  f.guard({ revision: 2 });
+  const before = readFileSync(f.highwater);
+  const interpreter = f.highwater + ".helper";
+  const started = f.highwater + ".started";
+  const finished = f.highwater + ".finished";
+  writeFileSync(
+    interpreter,
+    `#!/usr/bin/env python3
+import pathlib, signal, time
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+pathlib.Path(${JSON.stringify(started)}).write_text("ready")
+time.sleep(3)
+pathlib.Path(${JSON.stringify(finished)}).touch()
+`,
+    { mode: 0o700 },
+  );
+  const persist = createRetainedHighwater({ ...f, python: interpreter });
+  const start = globalThis.performance.now();
+  assert.throws(() => persist({ revision: 3 }), /retained fence unavailable/);
+  const elapsed = globalThis.performance.now() - start;
+  assert.equal(readFileSync(started, "utf8"), "ready");
+  assert.ok(elapsed < 2200, "must not wait for the ignored SIGTERM");
+  assert.throws(() => readFileSync(finished), { code: "ENOENT" });
+  assert.deepEqual(readFileSync(f.highwater), before);
+  assert.throws(() => f.guard({ revision: 1 }));
+  f.guard({ revision: 2 });
+});
+
 test("deliberately removed rollback guard permits independently observable forbidden persistence", (t) => {
   const f = setup(t);
   const binding = "a".repeat(64);

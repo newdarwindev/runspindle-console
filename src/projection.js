@@ -396,20 +396,18 @@ export function createProjectionFactory(options = {}) {
   const { allowedViewOrigins = [] } = options;
   if (!Array.isArray(allowedViewOrigins))
     throw new TypeError("invalid allowed origins");
-  const viewOrigins = Object.freeze([...allowedViewOrigins]);
-  if (
-    viewOrigins.some(
-      (origin) =>
-        typeof origin !== "string" ||
-        safeViewUrl(origin, [origin]) !== `${origin}/`,
-    )
-  )
-    throw new TypeError("invalid allowed origins");
+  const viewOrigins = [...allowedViewOrigins];
+  Object.freeze(viewOrigins);
   const views = createPassiveOwner();
   return Object.freeze(
-    Object.assign(() => createScopedProjection(options, views, viewOrigins), {
-      viewCleanup: views.cleanup,
-    }),
+    Object.assign(
+      () =>
+        createScopedProjection(
+          { ...options, allowedViewOrigins: viewOrigins },
+          views,
+        ),
+      { viewCleanup: views.cleanup },
+    ),
   );
 }
 
@@ -418,11 +416,16 @@ export function createProjection(options = {}) {
   return createProjectionFactory(options)();
 }
 
-/** @param {ProjectionOptions} options @param {ReturnType<typeof createPassiveOwner>} views @param {readonly string[]} viewOrigins */
+/** @param {ProjectionOptions} options @param {ReturnType<typeof createPassiveOwner>} views */
 function createScopedProjection(
-  { clock, readSnapshot, openPassive, maxAgeMs = 30_000 } = {},
+  {
+    clock,
+    readSnapshot,
+    openPassive,
+    allowedViewOrigins = [],
+    maxAgeMs = 30_000,
+  } = {},
   views,
-  viewOrigins,
 ) {
   if (
     typeof clock !== "function" ||
@@ -430,6 +433,13 @@ function createScopedProjection(
     maxAgeMs <= 0
   )
     throw new TypeError("invalid clock or age");
+  if (
+    !Array.isArray(allowedViewOrigins) ||
+    allowedViewOrigins.some(
+      (origin) => safeViewUrl(origin, [origin]) !== `${origin}/`,
+    )
+  )
+    throw new TypeError("invalid allowed origins");
   let target = /** @type {Readonly<ProjectionIdentity>|null} */ (null),
     generation = 0,
     latestRequest = 0,
@@ -525,7 +535,7 @@ function createScopedProjection(
       label: update.label,
       simulated: update.simulated,
       gap,
-      viewUrl: safeViewUrl(update.viewUrl, viewOrigins),
+      viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
       ...artifact,
     });
     phase = "ready";

@@ -106,6 +106,11 @@ not a bound on resources allocated internally by the injected adapter. No claim
 of live backend compatibility or production unsubscribe follows from synthetic
 close acknowledgments.
 
+When a subscription disconnects, errors or is invalidated, the coordinator
+keeps the last observation and its timestamp with the terminal status. It
+reports freshness as unknown. A subsequent connection establishes freshness
+from its own validated snapshot.
+
 ## BDD verification
 
 - Given subscription events racing a snapshot, when it resolves, then only
@@ -125,6 +130,9 @@ close acknowledgments.
   subscriptions never overlap.
 - Given a passive view, when the stream disconnects, then close is requested and
   no control call occurs; server-side revocation remains unverified.
+- Given a fresh observation, when the subscription disconnects, errors or
+  rejects a conflicting revision, then its historical record and timestamp
+  remain available with unknown freshness. Late events cannot restore freshness.
 
 Run `npm test` and `python3 tools/validate.py`. The new tests use synthetic callback
 spies and no network. A subprocess mutation disables the buffer bound and must

@@ -91,7 +91,7 @@ function sameIdentity(left, right) {
   return ID_KEYS.every((key) => left[key] === right[key]);
 }
 
-/** @param {unknown} value @param {string[]} allowedOrigins */
+/** @param {unknown} value @param {readonly string[]} allowedOrigins */
 export function safeViewUrl(value, allowedOrigins) {
   try {
     if (typeof value !== "string" || value.length > 2048) return null;
@@ -339,9 +339,21 @@ function createPassiveOwner() {
  * @param {ProjectionOptions} options
  */
 export function createProjectionFactory(options = {}) {
+  const { allowedViewOrigins = [] } = options;
+  if (!Array.isArray(allowedViewOrigins))
+    throw new TypeError("invalid allowed origins");
+  const viewOrigins = Object.freeze([...allowedViewOrigins]);
+  if (
+    viewOrigins.some(
+      (origin) =>
+        typeof origin !== "string" ||
+        safeViewUrl(origin, [origin]) !== `${origin}/`,
+    )
+  )
+    throw new TypeError("invalid allowed origins");
   const views = createPassiveOwner();
   return Object.freeze(
-    Object.assign(() => createScopedProjection(options, views), {
+    Object.assign(() => createScopedProjection(options, views, viewOrigins), {
       viewCleanup: views.cleanup,
     }),
   );
@@ -352,16 +364,11 @@ export function createProjection(options = {}) {
   return createProjectionFactory(options)();
 }
 
-/** @param {ProjectionOptions} options @param {ReturnType<typeof createPassiveOwner>} views */
+/** @param {ProjectionOptions} options @param {ReturnType<typeof createPassiveOwner>} views @param {readonly string[]} viewOrigins */
 function createScopedProjection(
-  {
-    clock,
-    readSnapshot,
-    openPassive,
-    allowedViewOrigins = [],
-    maxAgeMs = 30_000,
-  } = {},
+  { clock, readSnapshot, openPassive, maxAgeMs = 30_000 } = {},
   views,
+  viewOrigins,
 ) {
   if (
     typeof clock !== "function" ||
@@ -369,13 +376,6 @@ function createScopedProjection(
     maxAgeMs <= 0
   )
     throw new TypeError("invalid clock or age");
-  if (
-    !Array.isArray(allowedViewOrigins) ||
-    allowedViewOrigins.some(
-      (origin) => safeViewUrl(origin, [origin]) !== `${origin}/`,
-    )
-  )
-    throw new TypeError("invalid allowed origins");
   let target = /** @type {Readonly<ProjectionIdentity>|null} */ (null),
     generation = 0,
     latestRequest = 0,
@@ -469,7 +469,7 @@ function createScopedProjection(
       label: update.label,
       simulated: update.simulated,
       gap,
-      viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
+      viewUrl: safeViewUrl(update.viewUrl, viewOrigins),
     });
     phase = "ready";
     if (

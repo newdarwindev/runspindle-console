@@ -42,9 +42,10 @@ export function createRetainedHighwater(options) {
       ["-I", "-B", helper, path],
       {
         input: JSON.stringify({ binding, record }),
-        encoding: "utf8",
+        stdio: ["pipe", "ignore", "ignore"],
         timeout: 1000,
-        maxBuffer: 1024,
+        // spawnSync waits for exit even if a helper ignores the default SIGTERM.
+        killSignal: "SIGKILL",
       },
     );
     if (result.status !== 0 || result.error)

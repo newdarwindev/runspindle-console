@@ -89,6 +89,12 @@ Reconnects share [revision and timestamp checkpoints](stream-conflicts.md) for
 the same full identity. A gap closes any current passive view through the local
 adapter cleanup contract.
 
+If the injected clock changes the selected task during a state read, the caller
+receives the replacement identity with loading status and no observation until
+its snapshot arrives. A clock error from the replaced subscription cannot close
+the replacement. The regression checks both clock outcomes, subscription
+ownership, and the lack of a passive open until the replacement has a snapshot.
+
 Disconnect/error closes passive view handles through the existing projection and
 retains the old observation with explicit offline/error status. No viewing or
 control is possible while disconnected/loading/unknown. `canExecute` is always

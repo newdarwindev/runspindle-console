@@ -204,14 +204,15 @@ export function createStreamProjection(
       return Promise.resolve(false);
     const projection = projectionFactory();
     projection.select(identity);
-    let selected;
+    let initial;
     try {
-      selected = projection.state().identity;
+      initial = projection.state();
     } catch {
       projection.dispose();
       if (current) stop(current, "unknown");
       return Promise.resolve(false);
     }
+    const selected = initial.identity;
     const key = JSON.stringify(
       Object.entries(selected)
         .filter(([, value]) => value !== undefined)
@@ -246,6 +247,7 @@ export function createStreamProjection(
       promise: null,
     };
     current = session;
+    last = initial;
     const active = () => current === session && !session.closed && !disposed;
     /** @param {unknown} update */
     function onEvent(update) {
@@ -326,15 +328,17 @@ export function createStreamProjection(
   }
 
   function state() {
-    let observed = last;
-    if (current && !current.closed) {
+    const session = current;
+    let observed;
+    if (session && !session.closed) {
       try {
-        observed = current.projection.state();
+        observed = session.projection.state();
       } catch {
-        stop(current, "unknown");
-        observed = last;
+        if (current === session) stop(session, "unknown");
       }
     }
+    // The clock may have replaced the session during this read.
+    if (current !== session || session?.closed || !observed) observed = last;
     const unconfirmed =
       cleanupUnknown || tearingDown || !!pendingAcquisition?.closed;
     return Object.freeze({

@@ -27,8 +27,10 @@ Comparisons cover fields decoded by the retained-head reader.
 
 A missing, incompatible, malformed or busy fence fails closed. There is no reset,
 repair, automatic initialization, background polling or retry. Each transaction
-has a 100ms lock wait and its trusted helper is limited to one second. This is a
-synchronous local operation and can stall the caller for that bounded interval.
+has a 100ms lock wait. The synchronous caller requests forced termination of its
+Python helper after one second and waits for it to exit. Helper stdout and stderr
+are discarded. A timeout withholds the observation even if the transaction
+already committed. This deadline governs the owned helper process.
 The parent stream lifetime is checked again after persistence. Existing
 unconfirmed child cleanup fences remain unchanged.
 
@@ -42,7 +44,9 @@ Lost/corrupt state requires operator investigation, not automatic reset.
 
 Verification uses synthetic data with real source/fence SQLite stores, actual
 fresh Python/Node processes, competing writers, held locks, missing/corrupt files,
-symlinks and extra schema objects. An independently read receipt demonstrates
+symlinks and extra schema objects. A disposable helper that ignores SIGTERM
+exercises the subprocess deadline and preserves the prior fence bytes. An
+independently read receipt demonstrates
 that deliberately removing the rollback guard permits a forbidden regression.
 No live runtime, current upstream permissions, native session, desktop adapter,
 provider call or production deployment is qualified. Console #9 remains open.

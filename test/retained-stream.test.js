@@ -1,12 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdtempSync,
+  rmSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRetainedStream } from "../src/retained-stream.js";
+import { createRetainedHighwater } from "../src/retained-highwater.js";
 import {
   createRetainedHeadReader,
   createRetainedHeadDecoder,
@@ -31,11 +38,11 @@ function setup(t) {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const database = join(dir, "admission.sqlite");
   /** @param {string} [mode] */
-  const produce = (mode) =>
+  const produce = (mode, destination = database) =>
     python([
       "test_support/retained_producer.py",
       source,
-      database,
+      destination,
       ...(mode ? [mode] : []),
     ]);
   produce();
@@ -379,4 +386,89 @@ test("durable fence survives fresh consumers and rejects actual SQLite rollback"
   t.after(() => unguarded.dispose());
   assert.equal(await unguarded.connect(), true);
   assert.equal(unguarded.state().record.revision, 1);
+});
+
+test("blank edits and deletions at the same revision conflict before publication", async (t) => {
+  const f = setup(t);
+  const edited = f.database + ".edited";
+  const deleted = f.database + ".deleted";
+  const highwater = f.database + ".highwater";
+  f.produce("edit-empty", edited);
+  f.produce("delete", deleted);
+  python(["tools/retained_highwater.py", highwater, "--initialize"]);
+  copyFileSync(edited, f.database);
+  assert.deepEqual(JSON.parse(f.sql("SELECT revision,deleted FROM heads")), [
+    ["2", 0],
+  ]);
+  const stream = createRetainedStream({ ...f, highwater });
+  t.after(() => stream.dispose());
+  assert.equal(await stream.connect(), true);
+  assert.equal(stream.state().record.label, "");
+  copyFileSync(deleted, f.database);
+  assert.deepEqual(JSON.parse(f.sql("SELECT revision,deleted FROM heads")), [
+    ["2", 1],
+  ]);
+  const sourceHash = f.hash();
+  const fenceBytes = readFileSync(highwater);
+  const code = `import {createRetainedStream} from './src/retained-stream.js';
+const stream=createRetainedStream(JSON.parse(process.argv[1]));
+try { console.log(JSON.stringify({accepted:await stream.connect(),state:stream.state()})); }
+finally {stream.dispose();}`;
+  const child = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      code,
+      JSON.stringify({ source, database: f.database, identity, highwater }),
+    ],
+    { encoding: "utf8", timeout: 10000 },
+  );
+  assert.equal(child.status, 0, child.stderr);
+  const fresh = JSON.parse(child.stdout);
+  assert.equal(fresh.accepted, false);
+  assert.equal(fresh.state.record, null);
+  assert.equal(fresh.state.canExecute, false);
+  assert.equal(await stream.poll(), false);
+  assert.equal(stream.state().status, "error");
+  assert.equal(f.hash(), sourceHash);
+  assert.deepEqual(readFileSync(highwater), fenceBytes);
+
+  const deletion = createRetainedStream(f);
+  t.after(() => deletion.dispose());
+  assert.equal(await deletion.connect(), true);
+  assert.equal(deletion.state().record.label, "");
+  copyFileSync(edited, f.database);
+  assert.equal(await deletion.poll(), false);
+});
+
+test("prior fence digests preserve nonempty reads and block ambiguous empty revisions", async (t) => {
+  const f = setup(t);
+  const highwater = f.database + ".highwater";
+  python(["tools/retained_highwater.py", highwater, "--initialize"]);
+  const guard = createRetainedHighwater({ ...f, highwater });
+  const reader = createRetainedHeadReader(f);
+  const { deleted: initialDeletion, ...legacyNonempty } =
+    await reader(identity);
+  assert.equal(initialDeletion, false);
+  guard(legacyNonempty);
+  const initial = createRetainedStream({ ...f, highwater });
+  t.after(() => initial.dispose());
+  assert.equal(await initial.connect(), true);
+  initial.dispose();
+
+  f.produce("edit-empty");
+  const { deleted: emptyDeletion, ...legacyEmpty } = await reader(identity);
+  assert.equal(emptyDeletion, false);
+  assert.equal(legacyEmpty.label, "");
+  guard(legacyEmpty);
+  const next = createRetainedStream({ ...f, highwater });
+  t.after(() => next.dispose());
+  assert.equal(await next.connect(), false);
+  assert.equal(next.state().record, null);
+  const advanced = f.database + ".advanced";
+  f.produce("edit-twice", advanced);
+  copyFileSync(advanced, f.database);
+  assert.equal(await next.connect(), true);
+  assert.equal(next.state().record.revision, 3);
 });

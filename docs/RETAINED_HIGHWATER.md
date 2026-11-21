@@ -19,7 +19,11 @@ at the same revision fail closed across fresh consumers. Commit precedes display
 a timeout/cancellation after commit can conservatively advance the fence without
 showing the result. It never authorizes execution or makes retained data live.
 The source database is not modified. The fence stores hashes and revision, not
-labels. Already-erased/omitted fields are outside this decoded-record guarantee.
+labels. Empty labels include the deletion flag in the digest. Nonempty labels
+already imply an edit or creation and retain the prior digest format. Older
+receipts with an empty label lack the deletion flag. An observation at that
+same revision fails closed, and a higher revision can advance the fence.
+Comparisons cover fields decoded by the retained-head reader.
 
 A missing, incompatible, malformed or busy fence fails closed. There is no reset,
 repair, automatic initialization, background polling or retry. Each transaction

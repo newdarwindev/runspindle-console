@@ -35,13 +35,18 @@ export function createRetainedHighwater(options) {
   const path = resolve(options.highwater);
   if (path === resolve(options.database))
     throw new TypeError("fence must be separate");
-  /** @param {{revision:number,label?:string}} record */
+  /** @param {{revision:number,label?:string,deleted?:boolean}} record */
   return (record) => {
+    const { deleted, ...legacyRecord } = record;
+    // Nonempty labels already prove the snapshot is not a deletion. Preserve
+    // those receipts and require the deletion flag for new ambiguous labels.
+    const evidence =
+      record.label === "" && deleted !== undefined ? record : legacyRecord;
     const result = spawnSync(
       options.python ?? "python3",
       ["-I", "-B", helper, path],
       {
-        input: JSON.stringify({ binding, record }),
+        input: JSON.stringify({ binding, record: evidence }),
         encoding: "utf8",
         timeout: 1000,
         maxBuffer: 1024,

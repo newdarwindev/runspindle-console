@@ -163,14 +163,12 @@ The pinned producer schema and source are unchanged.
 
 This is latest-head observation, **not event-log replay**. Intermediate revisions
 may be skipped. The coordinator and adapter expose a gap when an observed
-revision jumps; adapter gap diagnostics survive explicit reconnect. Same-revision
-changes to decoded projection fields or revision regressions reject instead of replacing the retained
-high-water mark. That mark exists only for this adapter's lifetime, not in durable
-storage; a new process does not inherit an authenticated checkpoint. Omitted or
-erased wire/store fields are not covered by this content comparison. In particular,
-the existing decoder reduces deletion to an empty label, so an already-empty edit
-and a delete with otherwise identical decoded fields cannot be distinguished by
-this check. This does not add a deletion-state or history UI. Retained
+revision jumps; adapter gap diagnostics survive explicit reconnect. Revision
+regressions and same-revision substitutions reject before publication. The
+comparison includes the wire deletion flag, so a blank edit and a deletion at
+the same revision conflict. The comparison covers decoded fields. The
+application can also configure a [local durable fence](../docs/RETAINED_HIGHWATER.md)
+for comparisons across consumer processes. Retained
 content remains `retained_local`, with null observation time and unknown authority,
 connection and freshness. No passive URL, execution or takeover control is added.
 A deletion empties the label; this does not implement a deletion-history UI.

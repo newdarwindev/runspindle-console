@@ -88,7 +88,7 @@ function createDecoder(expectedIdentity, revision) {
     sequence = 0,
     failed = false,
     complete = false;
-  /** @type {null | {version:number, identity:Readonly<{task:string,host:string,workspace:string}>,revision:number,observedAt:null,authority:string,connection:string,label:string,simulated:boolean,evidenceClass:string,viewUrl:null}} */
+  /** @type {null | {version:number, identity:Readonly<{task:string,host:string,workspace:string}>,revision:number,observedAt:null,authority:string,connection:string,label:string,simulated:boolean,evidenceClass:string,viewUrl:null,deleted?:boolean}} */
   let result = null;
   /** @param {Uint8Array} chunk */
   function push(chunk) {
@@ -163,6 +163,7 @@ function createDecoder(expectedIdentity, revision) {
             simulated: false,
             evidenceClass: "retained_local",
             viewUrl: null,
+            ...(latest ? { deleted: frame.deleted } : {}),
           });
         } else {
           keys(frame, ["version", "type", "sequence"]);

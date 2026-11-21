@@ -4,7 +4,7 @@
 /** @typedef {Record<string, unknown>} ProjectionIdentity */
 /** @typedef {{artifactId?:string, artifactRevision?:number, artifactAcceptance?:string, artifactDelivery?:string, deliveryOperation?:string}} ArtifactObservation */
 /** @typedef {{revision:number, observedAt:number|null, connection:string, authority:string, evidenceClass:string, label:string, simulated:boolean, gap:boolean, viewUrl:string|null} & ArtifactObservation} ProjectionRecord */
-/** @typedef {{clock?:()=>number, readSnapshot?:(target:ProjectionIdentity, options:{signal:AbortSignal})=>any, openPassive?:(request:unknown, options:{signal:AbortSignal})=>any, allowedViewOrigins?:string[], maxAgeMs?:number}} ProjectionOptions */
+/** @typedef {{clock?:()=>number, readSnapshot?:(target:ProjectionIdentity, options:{signal:AbortSignal})=>any, openPassive?:(request:unknown, options:{signal:AbortSignal})=>any, allowedViewOrigins?:string[], maxAgeMs?:number, viewOpenTimeoutMs?:number}} ProjectionOptions */
 const ID_KEYS = [
   "task",
   "host",
@@ -424,6 +424,7 @@ function createScopedProjection(
     openPassive,
     allowedViewOrigins = [],
     maxAgeMs = 30_000,
+    viewOpenTimeoutMs = 5000,
   } = {},
   views,
 ) {
@@ -433,6 +434,12 @@ function createScopedProjection(
     maxAgeMs <= 0
   )
     throw new TypeError("invalid clock or age");
+  if (
+    !Number.isSafeInteger(viewOpenTimeoutMs) ||
+    viewOpenTimeoutMs < 1 ||
+    viewOpenTimeoutMs > 30_000
+  )
+    throw new TypeError("invalid passive open timeout");
   if (
     !Array.isArray(allowedViewOrigins) ||
     allowedViewOrigins.some(
@@ -660,14 +667,38 @@ function createScopedProjection(
       typeof openPassive !== "function"
     )
       return false;
-    const controller = new AbortController(),
-      expectedGeneration = generation,
-      admittedRecord = record;
-    const token = views.reserve(controller);
+    const token = views.reserve(new AbortController());
     if (!token) return false;
     ownedView = token;
+    const expires = performance.now() + viewOpenTimeoutMs;
+    /** @type {ReturnType<typeof setTimeout>|undefined} */
+    let timer;
+    /** @type {Promise<boolean>} */
+    const deadline = new Promise((resolve) => {
+      timer = setTimeout(() => {
+        views.release(token);
+        resolve(false);
+      }, viewOpenTimeoutMs);
+    });
     try {
-      const opened = await openPassive(
+      // Acquisition continues after expiry so a late handle can still be closed.
+      return await Promise.race([
+        acquireView(token, expires, openPassive),
+        deadline,
+      ]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+  }
+  /** @param {PassiveSlot} token @param {number} expires
+   * @param {NonNullable<ProjectionOptions["openPassive"]>} open
+   */
+  async function acquireView(token, expires, open) {
+    const { controller } = token;
+    const expectedGeneration = generation;
+    const admittedRecord = record;
+    try {
+      const opened = await open(
         Object.freeze({
           identity: target,
           url: /** @type {Readonly<ProjectionRecord>} */ (record).viewUrl,
@@ -688,7 +719,8 @@ function createScopedProjection(
         expectedGeneration !== generation ||
         record !== admittedRecord ||
         !views.owns(token) ||
-        !ready
+        !ready ||
+        performance.now() >= expires
       ) {
         views.release(token);
         return false;

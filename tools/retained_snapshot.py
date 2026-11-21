@@ -63,6 +63,26 @@ def counter(value: object) -> None:
     require(type(value) is int and 0 < value <= 9007199254740991)
 
 
+def require_history(
+    db: sqlite3.Connection, task: str, revision: int, scope: str, deleted: bool
+) -> None:
+    # With canonical decimal revisions and the (task, revision) primary key,
+    # exactly N valid rows in [1, N] imply a complete, contiguous history.
+    counts = db.execute(
+        """SELECT count(*), count(CASE WHEN
+            typeof(revision) = 'text'
+            AND revision = CAST(CAST(revision AS INTEGER) AS TEXT)
+            AND CAST(revision AS INTEGER) BETWEEN 1 AND ?
+            AND scope = ?
+            AND kind = CASE WHEN revision = '1' THEN 'create'
+                            WHEN revision = ? THEN ? ELSE 'edit' END
+            THEN 1 END)
+        FROM revisions WHERE task = ?""",
+        (revision, scope, str(revision), "delete" if deleted else "edit", task),
+    ).fetchone()
+    require(counts == (revision, revision))
+
+
 def load_source(source: Path) -> dict[str, Any]:
     pin = json.loads((ROOT / "dependencies/tether-snapshot.json").read_bytes())
     require(source.is_dir() and not source.is_symlink())
@@ -229,6 +249,7 @@ def snapshot(
             and (row[1] == "delete") == bool(head[2])
         )
         require((revision == 1) == (row[1] == "create"))
+        require_history(db, task, revision, row[0], bool(head[2]))
         delivery = db.execute(
             "SELECT digest FROM deliveries WHERE namespace=? AND event=?",
             (payload["delivery_namespace"], payload["delivery_id"]),

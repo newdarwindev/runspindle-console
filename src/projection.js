@@ -486,8 +486,18 @@ function createScopedProjection(
     return true;
   }
   function state() {
+    const view = ownedView;
+    // The clock can reenter selection and admit a different view. Only the
+    // view owned before that callback belongs to this readiness check.
+    const sameView = () => view !== null && ownedView === view;
+    let now;
+    try {
+      now = /** @type {()=>number} */ (clock)();
+    } catch (error) {
+      if (sameView()) releaseView();
+      throw error;
+    }
     let freshness = "unknown";
-    const now = /** @type {()=>number} */ (clock)();
     if (
       record &&
       record.observedAt !== null &&
@@ -495,6 +505,13 @@ function createScopedProjection(
       now >= record.observedAt
     ) {
       freshness = now - record.observedAt > maxAgeMs ? "stale" : "fresh";
+    }
+    if (sameView() && freshness !== "fresh") {
+      const observed = record;
+      const selectedGeneration = generation;
+      releaseView();
+      if (record !== observed || generation !== selectedGeneration)
+        freshness = "unknown";
     }
     const status =
       phase !== "ready"

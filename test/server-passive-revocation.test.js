@@ -44,11 +44,12 @@ function observation(task) {
   };
 }
 
-/** @param {import('../src/projection.js').ProjectionOptions['openPassive']} openPassive */
-function projection(openPassive) {
+/** @param {import('../src/projection.js').ProjectionOptions['openPassive']} openPassive @param {number} [viewOpenTimeoutMs] */
+function projection(openPassive, viewOpenTimeoutMs) {
   return createProjection({
     clock: () => 1000,
     openPassive,
+    viewOpenTimeoutMs,
     allowedViewOrigins: ["https://viewer.invalid"],
   });
 }
@@ -337,3 +338,94 @@ test(
     }
   },
 );
+
+test("a timed-out passive open keeps ownership until its late handle is revoked", async () => {
+  const opened = gate();
+  const confirm = gate();
+  let calls = 0,
+    revocations = 0,
+    verified = 0,
+    aborted = false;
+  const value = projection(async (_request, { signal }) => {
+    calls++;
+    signal.addEventListener(
+      "abort",
+      () => {
+        aborted = true;
+      },
+      { once: true },
+    );
+    await opened.promise;
+    return createServerRevocationHandle(binding, {
+      async revoke(target) {
+        assert.deepEqual(target, binding);
+        revocations++;
+        await confirm.promise;
+        return { ...binding, status: "revoked", proof: signature(binding) };
+      },
+      verifyReceipt(target, receipt) {
+        verified++;
+        return receipt.proof === signature(target);
+      },
+    });
+  }, 25);
+  let watchdog;
+  try {
+    select(value, "task-a");
+    const result = await Promise.race([
+      value.view(),
+      new Promise((resolve) => {
+        watchdog = setTimeout(() => resolve("still waiting"), 1000);
+      }),
+    ]);
+    assert.equal(result, false, "passive open must settle at its deadline");
+    assert.equal(aborted, true);
+    assert.equal(value.state().viewCleanup, "unknown");
+    select(value, "task-b");
+    assert.equal(await value.view(), false);
+    assert.equal(calls, 1);
+
+    opened.resolve();
+    await until(() => revocations === 1);
+    assert.equal(value.state().viewCleanup, "unknown");
+    assert.equal(await value.view(), false);
+    confirm.resolve();
+    await until(() => value.state().viewCleanup === "no_unconfirmed_close");
+    assert.equal(calls, 1, "cleanup must not trigger another open");
+    assert.equal(revocations, 1);
+    assert.equal(verified, 1);
+    assert.equal(value.state().canExecute, false);
+  } finally {
+    clearTimeout(watchdog);
+    opened.resolve();
+    confirm.resolve();
+    value.dispose();
+  }
+});
+
+test("elapsed passive admission deadlines reject handles before the timer callback", async () => {
+  let calls = 0,
+    closed = 0;
+  const value = projection(() => {
+    calls++;
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30);
+    return {
+      close() {
+        closed++;
+      },
+    };
+  }, 10);
+  try {
+    select(value, "task-a");
+    assert.equal(
+      await value.view(),
+      false,
+      "an elapsed deadline must reject a late handle",
+    );
+    assert.equal(calls, 1);
+    assert.equal(closed, 1);
+    assert.equal(value.state().viewCleanup, "no_unconfirmed_close");
+  } finally {
+    value.dispose();
+  }
+});

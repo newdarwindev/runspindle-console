@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runspindle Refinery · Vision reference</title>
+<style>
+:root{color-scheme:light;--paper:#f7f3e9;--ink:#182c29;--muted:#425951;--rule:#b2bfb1;--accent:#185544;--cream:#fffdf7;--warn:#fff0c8;--warn-ink:#604000;font:16px/1.6 Arial,sans-serif;background:var(--paper);color:var(--ink)}
+*{box-sizing:border-box}body{margin:0}header,main,footer{width:min(100% - 2.5rem,74rem);margin:auto}a{color:var(--accent);text-underline-offset:.19em;overflow-wrap:anywhere}
+a:hover{text-decoration-thickness:2px}a:focus-visible,[tabindex]:focus-visible{outline:3px solid #904000;outline-offset:4px}nav{display:flex;align-items:baseline;flex-wrap:wrap;gap:.2rem 1.3rem;padding:.7rem 0;border-bottom:1px solid var(--rule)}nav a{display:inline-block;padding:.25rem 0}nav [aria-current]{font-weight:700}
+h1,h2{font-family:Georgia,serif;font-weight:400;line-height:1.08;margin:0 0 1rem}h1{font-size:clamp(2.4rem,6.3vw,5.5rem);letter-spacing:-.045em;max-width:16ch;overflow-wrap:anywhere}h2{font-size:clamp(1.75rem,3vw,2.85rem);letter-spacing:-.025em}h3{font-size:1.05rem;line-height:1.3;margin:0 0 .55rem}
+p{margin:.65rem 0;max-width:72ch}.hero{padding:clamp(2rem,7vw,5.25rem) 0 2.2rem}.eyebrow,.stage-label{font-size:.74rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--accent)}
+.lead{font-size:clamp(1.05rem,2vw,1.35rem);color:var(--muted);max-width:46ch}
+.status{background:var(--warn);color:var(--warn-ink);padding:1rem 1.15rem;border-left:.32rem solid #82600f;margin:1.5rem 0 0}
+section{border-top:1px solid var(--rule);padding:2.1rem 0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1rem 0}.cards article{background:var(--cream);border:1px solid var(--rule);padding:1rem}.cards p{margin-bottom:0}
+figure{margin:1.25rem 0 0}figcaption{color:var(--muted);margin-bottom:1rem}.steps{list-style:none;counter-reset:stage;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.steps li{counter-increment:stage;display:grid;grid-template-columns:2.15rem 1fr;align-items:start;gap:.4rem;background:var(--cream);border:1px solid var(--rule);padding:.9rem;text-wrap:pretty}
+.steps li::before{content:counter(stage,decimal-leading-zero);font-weight:bold;color:var(--accent);font-variant-numeric:tabular-nums}.steps p{margin:.25rem 0 0}
+ul{padding-left:1.2rem}.quiet{color:var(--muted)}footer{border-top:1px solid var(--rule);padding:1rem 0 2rem;font-size:.875rem;color:var(--muted)}
+@media(max-width:48rem){.cards,.steps{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header>
+<nav aria-label="Product documents">
+<a href="#main">Skip to content</a>
+<a href="../../product/index.html">Overview</a>
+<a href="../../product/browser.html">Browser</a>
+<a href="reference.html" aria-current="page">Refinery vision</a>
+</nav>
+<div class="hero" id="hero">
+<p class="eyebrow">SRC-010 · Visual reference</p>
+<h1>Human-guided workflow evaluation</h1>
+<p class="lead">Turn an explicitly authorized workflow into a testable candidate. Preserve the owner, evidence and permission boundary from selection through rollback.</p>
+<p id="limits" class="status"><strong>Design reference.</strong> This page shows proposed workflows. Measured results and serving approval are unavailable.</p>
+</div>
+</header>
+<main id="main" tabindex="-1">
+<section id="premise" aria-labelledby="premise-title">
+<h2 id="premise-title">Refinement starts with permission</h2>
+<p>Choose a repeatable pattern after its owner opts in. Keep source permission, quality evidence and serving approval visible throughout the review.</p>
+<div class="cards">
+<article><h3>Immutable output feedback</h3><p>Bind feedback to the exact output ID, revision and digest. Edits create a new version.</p></article>
+<article><h3>Gold eligibility</h3><p>Use reviewed examples under explicit data-use permission and versioned eligibility rules.</p></article>
+<article><h3>Serving approval</h3><p>Approve the exact candidate and rollback reference under a separate release decision.</p></article>
+</div>
+</section>
+<section id="domains" aria-labelledby="domains-title">
+<h2 id="domains-title">Where the idea might apply</h2>
+<div class="cards">
+<article id="domains-internal"><h3>Repeatable assistance</h3><p>Compare opted-in support triage or document tagging after checking source permission and acceptance criteria.</p></article>
+<article id="domains-orchestration"><h3>Agent coordination</h3><p>Study bounded task routing under explicit review. Scheduling, credential grants and session control require their own permission.</p></article>
+<article id="domains-external"><h3>Opportunity research</h3><p>Study how to evaluate job or contract opportunities. Contact, submissions and commitments require separate authorization.</p></article>
+</div>
+<p id="human-constraints" class="quiet">Human judgment, relationships, legal duties and physical work shape where these proposals apply.</p>
+</section>
+<section id="refinement-loop" aria-labelledby="loop-title">
+<p class="stage-label">Proposed workflow</p>
+<h2 id="loop-title">The refinement loop</h2>
+<figure aria-labelledby="loop-title" aria-describedby="loop-description">
+<figcaption id="loop-description">Read the seven stages in order. Selection establishes scope, evaluation provides evidence, and a separate approval can authorize a release.</figcaption>
+<ol class="steps" role="list">
+<li id="select"><div><h3>Select and authorize</h3><p>Define the owner, permitted effects, target, budget and stop conditions.</p></div></li>
+<li id="review"><div><h3>Review and redact</h3><p>Preserve exact output identity. Quarantine conflicting feedback or uncertain consent.</p></div></li>
+<li id="gold"><div><h3>Curate a golden dataset</h3><p>Version reviewed examples and keep related examples in the same split.</p></div></li>
+<li id="candidates"><div><h3>Choose candidates</h3><p>Pin the task, baseline, evaluation set, model and metric revisions.</p></div></li>
+<li id="evaluate"><div><h3>Evaluate</h3><p>Record held-out quality, safety, latency, repair and total cost with uncertainty.</p></div></li>
+<li id="approve"><div><h3>Obtain approval</h3><p>Bind the authorized release and rollback scope to exact candidate and artifact digests.</p></div></li>
+<li id="rollback"><div><h3>Monitor and roll back</h3><p>Observe the approved scope and reconcile uncertain effects before retrying.</p></div></li>
+</ol>
+</figure>
+</section>
+<section id="hypotheses" aria-labelledby="hypotheses-title">
+<h2 id="hypotheses-title">Hypotheses to test</h2>
+<ul>
+<li id="hypothesis-1">Smaller models may preserve acceptable quality for bounded workflows.</li>
+<li id="hypothesis-2">Reviewed golden datasets may make results more repeatable.</li>
+<li id="hypothesis-3">Versioned evidence and tested rollback may make releases easier to govern.</li>
+</ul>
+<p class="status" id="simulation-warning"><strong>Measured evidence unavailable.</strong> The historical demo figures were simulated. This reference contains no benchmark results.</p>
+</section>
+<section id="evidence" aria-labelledby="evidence-title">
+<h2 id="evidence-title">Evidence and freshness</h2>
+<p>Distinguish planned, stub, synthetic, component, isolated integration and live evidence. A stale or unavailable source remains <strong>unknown</strong>. Show source, revision and observation time when available.</p>
+<p>See the public <a href="https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json">implementation status</a> and <a href="https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md">component evidence</a>.</p>
+</section>
+<section id="economics" aria-labelledby="economics-title">
+<h2 id="economics-title">Cost of accepted work</h2>
+<p>Count model, tool, review, maintenance and recovery cost against verified completions. With zero verified completions, report cost and the count of zero. Cost per completion is unavailable.</p>
+</section>
+<section id="materials" aria-labelledby="materials-title">
+<h2 id="materials-title">Source and materials</h2>
+<ul>
+<li>The <a href="../../product/index.html">Runspindle overview</a> is the supported design-document destination.</li>
+<li><strong>Historical white paper unavailable.</strong> A separate artifact lift owns the paper.</li>
+<li><strong>Historical presentation unavailable and unselected.</strong></li>
+</ul>
+<p><a href="../../product/SRC-010-lift.json">Section and asset disposition</a> · <a href="../../product/SRC-010-validation.md">Validation record</a> · <a href="../../product/THIRD_PARTY_NOTICES.md">Source notices</a> · <a href="../../product/LICENSE-SRC-010.txt">SRC-010 MIT notice</a></p>
+</section>
+</main>
+<footer>SRC-010 design adaptation · Copyright (c) 2026 newdarwindev · MIT notice linked above. Supplemental concepts: SRC-005 and SRC-013.</footer>
+</body>
+</html>

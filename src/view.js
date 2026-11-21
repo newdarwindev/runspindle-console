@@ -34,6 +34,11 @@ const VIEW_EVIDENCE = new Set([
   "live_acceptance",
   "retained_local",
 ]);
+const DELIVERY_LABELS = new Map([
+  ["reserved", "Reported reserved"],
+  ["delivered", "Reported delivered"],
+  ["unknown", "Unknown"],
+]);
 
 /** @param {unknown} value @param {number} [limit] @returns {string} */
 function displayText(value, limit = 4096) {
@@ -73,6 +78,8 @@ export function createProjectionView(root, { readState }) {
   const list = document.createElement("dl");
   /** @type {Map<string, HTMLElement>} */
   const fields = new Map();
+  /** @type {HTMLElement[]} */
+  const artifactDetails = [];
   const descriptions = [
     ...IDENTITY_FIELDS.map((key) => [key, key]),
     ["label", "Observation"],
@@ -84,6 +91,8 @@ export function createProjectionView(root, { readState }) {
     ["gap", "Event continuity"],
     ["simulation", "View provenance"],
     ["view", "Desktop view"],
+    ["artifactId", "Artifact ID"],
+    ["artifactRevision", "Artifact revision"],
     ["acceptance", "Artifact acceptance"],
     ["delivery", "Delivery"],
   ];
@@ -94,6 +103,8 @@ export function createProjectionView(root, { readState }) {
     value.setAttribute("data-field", key);
     value.textContent = "Unknown";
     fields.set(key, value);
+    if (key === "artifactId" || key === "artifactRevision")
+      artifactDetails.push(term, value);
     list.append(term, value);
   }
   panel.append(heading, notice, status, list);
@@ -143,15 +154,30 @@ export function createProjectionView(root, { readState }) {
         record?.simulated === true
           ? "SIMULATED — synthetic component observation"
           : "Source unverified — no qualified desktop integration";
+      values.artifactId = record?.artifactId;
+      values.artifactRevision = record?.artifactRevision;
+      if (record?.artifactAcceptance === "accepted")
+        values.acceptance = "Reported accepted";
+      const delivery = DELIVERY_LABELS.get(record?.artifactDelivery);
+      if (delivery && record?.deliveryOperation)
+        values.delivery = `${delivery} · ${record.deliveryOperation}`;
     } catch {
       values = {};
       visibleStatus = "unknown";
     }
     status.textContent = `Status: ${visibleStatus}`;
     for (const key of fields.keys()) put(key, values[key]);
+    for (const item of artifactDetails)
+      item.hidden = values.artifactId === undefined;
     put("view", "Unavailable in this read-only surface. No viewer opened.");
-    put("acceptance", "Unknown — not supplied by this projection");
-    put("delivery", "Unknown — not supplied by this projection");
+    put(
+      "acceptance",
+      values.acceptance ?? "Unknown — not supplied by this projection",
+    );
+    put(
+      "delivery",
+      values.delivery ?? "Unknown — not supplied by this projection",
+    );
     return true;
   }
   function dispose() {

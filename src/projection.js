@@ -129,7 +129,9 @@ export function escapeText(value) {
 /** @typedef {{viewId:string, admissionId:string}} ViewBinding */
 /** @typedef {{viewId:string, admissionId:string, status:string, proof:string}} ClosureReceipt */
 /** @typedef {(binding:Readonly<ViewBinding>, receipt:Readonly<ClosureReceipt>, options:{signal:AbortSignal})=>unknown} ReceiptVerifier */
-/** @type {WeakMap<object, () => Promise<void>>} */
+/** @typedef {(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown} RevocationRequest */
+/** @typedef {{close:()=>Promise<void>, read:(()=>Promise<void>)|null}} ServerClose */
+/** @type {WeakMap<object, ServerClose>} */
 const closes = new WeakMap();
 
 /** @param {unknown} value */
@@ -151,18 +153,20 @@ function takeServerClose(handle) {
  * is exposed by this handle.
  * @param {ViewBinding} binding
  * @param {{
- *   revoke:(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown,
+ *   revoke:RevocationRequest,
+ *   readRevocation?:RevocationRequest,
  *   verifyReceipt:ReceiptVerifier,
  *   timeoutMs?:number,
  * }} ports
  */
 export function createServerRevocationHandle(binding, ports) {
   const { viewId, admissionId } = binding;
-  const { revoke, verifyReceipt, timeoutMs = 5000 } = ports;
+  const { revoke, readRevocation, verifyReceipt, timeoutMs = 5000 } = ports;
   if (
     !opaque(viewId) ||
     !opaque(admissionId) ||
     typeof revoke !== "function" ||
+    (readRevocation !== undefined && typeof readRevocation !== "function") ||
     typeof verifyReceipt !== "function" ||
     !Number.isSafeInteger(timeoutMs) ||
     timeoutMs < 1 ||
@@ -174,20 +178,25 @@ export function createServerRevocationHandle(binding, ports) {
   const handle = Object.freeze({});
   /** @type {Promise<void>|undefined} */
   let pending;
-  closes.set(handle, () => {
-    pending ??= revokeWithDeadline(bound, revoke, verifyReceipt, timeoutMs);
-    return pending;
+  closes.set(handle, {
+    close() {
+      pending ??= confirmRevocation(bound, revoke, verifyReceipt, timeoutMs);
+      return pending;
+    },
+    read: readRevocation
+      ? () => confirmRevocation(bound, readRevocation, verifyReceipt, timeoutMs)
+      : null,
   });
   return handle;
 }
 
 /**
  * @param {Readonly<ViewBinding>} binding
- * @param {(binding:Readonly<ViewBinding>, options:{signal:AbortSignal})=>unknown} revoke
+ * @param {RevocationRequest} request
  * @param {ReceiptVerifier} verifyReceipt
  * @param {number} timeoutMs
  */
-async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
+async function confirmRevocation(binding, request, verifyReceipt, timeoutMs) {
   const controller = new AbortController();
   const expires = performance.now() + timeoutMs;
   const expired = () =>
@@ -201,7 +210,7 @@ async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
     }, timeoutMs);
   });
   const verify = Promise.resolve().then(async () => {
-    const result = await revoke(binding, { signal: controller.signal });
+    const result = await request(binding, { signal: controller.signal });
     if (expired()) throw new Error("passive revocation unconfirmed");
     const response = /** @type {Partial<ClosureReceipt>|null} */ (result);
     const receipt = Object.freeze({
@@ -232,12 +241,14 @@ async function revokeWithDeadline(binding, revoke, verifyReceipt, timeoutMs) {
   }
 }
 
-/** @typedef {{controller:AbortController, invalidated:boolean, close:(()=>unknown)|null, server:boolean}} PassiveSlot */
+/** @typedef {{controller:AbortController, invalidated:boolean, close:(()=>unknown)|null, server:ServerClose|null}} PassiveSlot */
 
 // One resource owner survives task changes and stream projection replacement.
 // Abort is a cancellation request, not a receipt that acquisition did not occur.
 function createPassiveOwner() {
   let slot = /** @type {PassiveSlot|null} */ (null);
+  let unconfirmed = /** @type {PassiveSlot|null} */ (null);
+  let reading = false;
   let unknown = false,
     releasing = 0;
   function blocked() {
@@ -246,7 +257,7 @@ function createPassiveOwner() {
   /** @param {AbortController} controller */
   function reserve(controller) {
     if (blocked()) return null;
-    slot = { controller, invalidated: false, close: null, server: false };
+    slot = { controller, invalidated: false, close: null, server: null };
     return slot;
   }
   /** @param {PassiveSlot} token @param {()=>unknown} close */
@@ -259,10 +270,33 @@ function createPassiveOwner() {
           if (slot === token) slot = null;
         },
         () => {
-          unknown = true;
-          if (slot === token) slot = null;
+          if (slot !== token) return;
+          // Only a branded, exact-admission readback can resolve this slot.
+          if (token.server?.read) {
+            unconfirmed = token;
+          } else {
+            unknown = true;
+            slot = null;
+          }
         },
       );
+  }
+  async function reconcile() {
+    const token = unconfirmed;
+    const read = token?.server?.read;
+    if (!token || !read || reading || unknown) return false;
+    reading = true;
+    try {
+      await read();
+      if (slot !== token || unknown) return false;
+      unconfirmed = null;
+      slot = null;
+      return true;
+    } catch {
+      return false;
+    } finally {
+      reading = false;
+    }
   }
   /** @param {PassiveSlot} token */
   function release(token) {
@@ -305,8 +339,8 @@ function createPassiveOwner() {
   function acquired(token, handle) {
     const confirmed = takeServerClose(handle);
     if (confirmed) {
-      token.server = true;
-      token.close = confirmed;
+      token.server = confirmed;
+      token.close = confirmed.close;
       return true;
     }
     const close = handle?.close;
@@ -323,6 +357,7 @@ function createPassiveOwner() {
     release,
     fail,
     acquired,
+    reconcile,
     /** @param {PassiveSlot} token */
     owns: (token) => slot === token,
     cleanup: () =>
@@ -343,6 +378,7 @@ export function createProjectionFactory(options = {}) {
   return Object.freeze(
     Object.assign(() => createScopedProjection(options, views), {
       viewCleanup: views.cleanup,
+      reconcileViewCleanup: views.reconcile,
     }),
   );
 }
@@ -657,5 +693,6 @@ function createScopedProjection(
     refresh,
     view,
     dispose,
+    reconcileViewCleanup: views.reconcile,
   });
 }

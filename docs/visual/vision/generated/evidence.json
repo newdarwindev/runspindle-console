@@ -1,0 +1,949 @@
+{
+  "evidence_class": "local_static_document_and_reference_candidate",
+  "status": "captured_programmatic_checks_passed",
+  "reviewer_disposition": "pending_owner_baseline_approval",
+  "thresholds": {
+    "minimum_sample_text_contrast": 4.5,
+    "horizontal_overflow_pixels": 0
+  },
+  "pixel_diff": "pending_baseline_approval",
+  "actual_runtime_ui": "not_run",
+  "toolchain": {
+    "browser_version": "158.0.8127.36",
+    "browser_launcher_sha256": "ba610ca993caeb4327b2a397b8ddeeb781671744190332f3cc2e4b640db903a6",
+    "chrome_framework_sha256": "947b51bdb64056a2f38b301e88eb4654efe5a8196571c082407745be1e7906b2",
+    "node": "v26.13.0",
+    "node_sha256": "49635e701bc39f1e69b82a74346fbbbca1a4709a2680ade896ef6cf14f51f8e4",
+    "playwright": "1.58.2",
+    "playwright_sha256": "264c6404c848f6416ccecf63109ab272a749ac3a732e347efaa895095768e658",
+    "playwright_core_sha256": "283feae5c6087bdb4699e6e9c424f92db3c5365486c3134031ad125d984cd4ac",
+    "os": {
+      "platform": "darwin",
+      "build": "26B123",
+      "arch": "arm64"
+    },
+    "local_fonts": {
+      "SFNS.ttf": "44890958f3e0b997028121ed7c7a789f3f5cce227c7a93ce8f86ec0db26da571",
+      "SFNSItalic.ttf": "8f6a91c3340283d7653eda26bdc8ef9a3e7b31b5af20175348e9372d6836ffa0",
+      "Supplemental/Arial.ttf": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "Supplemental/Arial Bold.ttf": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "Supplemental/Georgia.ttf": "4f54eb299fccea7f103edeb0d92437359bfd4441811d53222b82b335369f6218"
+    },
+    "locale": "en-US",
+    "timezone": "UTC",
+    "color_scheme": "light"
+  },
+  "inputs": {
+    "docs/product/LICENSE-SRC-010.txt": "fcf64df3e04554728cc4f082f244fa3dc672c2c6368f22360e6491a113204895",
+    "docs/product/LICENSE-SRC-013.txt": "fcf64df3e04554728cc4f082f244fa3dc672c2c6368f22360e6491a113204895",
+    "docs/product/README.md": "c6d18b75211f8d73d87cb9fffbe094156bf17ee549dcd3a572913dc3bf63d02b",
+    "docs/product/SRC-010-lift.json": "80e4fbae10af2b29b9712cfc3c4754bda32266f5597940244ed9b998afa40e0d",
+    "docs/product/SRC-010-validation.md": "d551d121efb1525d8a73ef2f73099935ad9092c4f3ec38cb20a438debe20bb6b",
+    "docs/product/THIRD_PARTY_NOTICES.md": "2afe22dabdeffa7e19438910c1f5051d73d0466285a3eed6c5e7d3ef75ccd2a5",
+    "docs/product/artifacts.json": "52017a9039d1132994af29791c422d7a859dbe9b6f7d0ec46e22375ca1869c1f",
+    "docs/product/browser.html": "cfa1744917d2088f430e588c489590f1b3c3adf25bf15b277012345d6a2245c5",
+    "docs/product/index.html": "81a27aba679a08c0db9547adada4b925c5631991f3708801a5fb0e9a8d8ebed4",
+    "docs/product/vision.html": "39a546f71fce360129b06e4978c589769d79b19a05d14917066dadf0816d41e7",
+    "docs/visual/vision/capture-types.d.ts": "ffadcb67a67a91d7014926b25338f951f50b20c4253431304ea519cedd27bebe",
+    "docs/visual/vision/capture.cjs": "3dfdad867eace47799031cf486b4076dad0f6ffae864a8566b2d5724b546005e",
+    "docs/visual/vision/reference.html": "fdb597d37691ff63eee9ba57d04ce3cdb4fb6f947983f43670b704d3d4a96043",
+    "docs/visual/vision/scenarios.json": "31a2c60578638665f6380576efa741ca70f3c968333af5725a7a8817b5c1a580",
+    "tools/check_console_visuals.cjs": "dbf99f95c028d3b01e38832f176108f1bb4d6e2ece65998ef12b6438bcee2216",
+    "ui/package-lock.json": "f36b50ed68610fcf49f1363569acc468cd9d1f88d4d3c068dd6fdcc29914aa51"
+  },
+  "cases": [
+    {
+      "scenario": {
+        "id": "mobile-320",
+        "width": 320,
+        "height": 720,
+        "zoom": 100
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-mobile-320.png",
+          "geometry": {
+            "width": 320,
+            "height": 720,
+            "outer": 500,
+            "dpr": 1,
+            "scroll": 320,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            320,
+            5250
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": "long_heading_passed_missing_label_detected"
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-mobile-320.png",
+          "geometry": {
+            "width": 320,
+            "height": 720,
+            "outer": 500,
+            "dpr": 1,
+            "scroll": 320,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            320,
+            9979
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": "long_heading_passed_missing_label_detected"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "id": "mobile-390",
+        "width": 390,
+        "height": 844,
+        "zoom": 100
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-mobile-390.png",
+          "geometry": {
+            "width": 390,
+            "height": 844,
+            "outer": 500,
+            "dpr": 1,
+            "scroll": 390,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            390,
+            4592
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": null
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-mobile-390.png",
+          "geometry": {
+            "width": 390,
+            "height": 844,
+            "outer": 500,
+            "dpr": 1,
+            "scroll": 390,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            390,
+            8181
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": null
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 900,
+        "zoom": 100
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-tablet-768.png",
+          "geometry": {
+            "width": 768,
+            "height": 900,
+            "outer": 768,
+            "dpr": 1,
+            "scroll": 768,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            768,
+            3546
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": null
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-tablet-768.png",
+          "geometry": {
+            "width": 768,
+            "height": 900,
+            "outer": 768,
+            "dpr": 1,
+            "scroll": 768,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            768,
+            5129
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": null
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "zoom": 100
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-desktop-1440.png",
+          "geometry": {
+            "width": 1440,
+            "height": 900,
+            "outer": 1440,
+            "dpr": 1,
+            "scroll": 1440,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            1440,
+            3131
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "passed",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": null
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-desktop-1440.png",
+          "geometry": {
+            "width": 1440,
+            "height": 900,
+            "outer": 1440,
+            "dpr": 1,
+            "scroll": 1440,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 1,
+          "png_dimensions": [
+            1440,
+            4526
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "passed",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": null
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "id": "reflow-640",
+        "width": 640,
+        "height": 900,
+        "zoom": 200
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-reflow-640.png",
+          "geometry": {
+            "width": 320,
+            "height": 406,
+            "outer": 640,
+            "dpr": 2,
+            "scroll": 320,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 2,
+          "png_dimensions": [
+            640,
+            10502
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": null
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-reflow-640.png",
+          "geometry": {
+            "width": 320,
+            "height": 406,
+            "outer": 640,
+            "dpr": 2,
+            "scroll": 320,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 2,
+          "png_dimensions": [
+            640,
+            19962
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": null
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "id": "reflow-1440",
+        "width": 1440,
+        "height": 900,
+        "zoom": 200
+      },
+      "rows": [
+        {
+          "subject": "reference",
+          "filename": "reference-reflow-1440.png",
+          "geometry": {
+            "width": 720,
+            "height": 406,
+            "outer": 1440,
+            "dpr": 2,
+            "scroll": 720,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 2,
+          "png_dimensions": [
+            1440,
+            7125
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "../../product/index.html",
+            "../../product/browser.html",
+            "reference.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "../../product/index.html",
+            "../../product/SRC-010-lift.json",
+            "../../product/SRC-010-validation.md",
+            "../../product/THIRD_PARTY_NOTICES.md",
+            "../../product/LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 6.82,
+          "accessibility_sha256": "ea6cbbc401e7dc2e5b5b552653508a797531095333666b7fc64f7543bd793b36",
+          "mutation": null
+        },
+        {
+          "subject": "canonical",
+          "filename": "canonical-reflow-1440.png",
+          "geometry": {
+            "width": 720,
+            "height": 406,
+            "outer": 1440,
+            "dpr": 2,
+            "scroll": 720,
+            "scale": 1,
+            "css_zoom": "1",
+            "overflow": []
+          },
+          "browser_zoom": 2,
+          "png_dimensions": [
+            1440,
+            10777
+          ],
+          "keyboard": "tab_all_links_reverse_skip_focus",
+          "desktop_overview_activation": "not_run",
+          "headings": [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          "stage_ids": [
+            "select",
+            "review",
+            "gold",
+            "candidates",
+            "evaluate",
+            "approve",
+            "rollback"
+          ],
+          "navigation": [
+            "#main",
+            "index.html",
+            "browser.html",
+            "vision.html",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/STATUS.json",
+            "https://github.com/newdarwindev/runspindle-console/blob/main/docs/IMPLEMENTATION_EVIDENCE.md",
+            "SRC-010-lift.json",
+            "index.html",
+            "SRC-010-validation.md",
+            "THIRD_PARTY_NOTICES.md",
+            "LICENSE-SRC-010.txt"
+          ],
+          "minimum_sample_contrast": 7.22,
+          "accessibility_sha256": "c1449fff9e9535826e25ff952cf7c074c84355695aa4369eaa3dc23b7c4682e1",
+          "mutation": null
+        }
+      ]
+    }
+  ],
+  "output_sha256": {
+    "canonical-desktop-1440.png": "bfd93b309621a809de0a558554bd39183e243766b9d373b9d97aa6a2d1040108",
+    "canonical-focus.png": "297e16c2e76cffde8ef40c652308aa144027a4a6230204167fd707dae580e27f",
+    "canonical-hover.png": "ba2094f4ecc93d731bfa6709de5ae2b70e237615093c0be35c55f2a771df674e",
+    "canonical-long-heading.png": "58e1c275d70cc3c0f897d3f031b4825367dec07cd294d6d7f6aff9a243468d53",
+    "canonical-mobile-320.png": "2df90f8f0afee5c8435a49f59932c753f8569e0941ec71464b4d03a5e259287e",
+    "canonical-mobile-390.png": "0bd30b360eb9e496f2bda6479bd2204308c90aa84f794be544090985b3cf27e5",
+    "canonical-reflow-1440.png": "b56d480818790275e1c8a8c4e645a1f73a93f824193e6588448758026fd476d2",
+    "canonical-reflow-640.png": "d5f75b349626526a53e8d89e68ee3f579825cc327c8b549849021df32f36c061",
+    "canonical-tablet-768.png": "a4912e76e59c9b2aaf98460d43247a23795d667fc0092f679211fd0a2bf89ea2",
+    "canonical-workflow.png": "628c81414940a9988d7befcc8f8b341f152cd59c3335d16175c9bd867896795c",
+    "contact-sheet.png": "37c667637b5f3a9804d53b13436d01b7b7d6b4ad2ffda5d94003c7ef5162eb44",
+    "reference-desktop-1440.png": "9d0c5e71267a8aae4b13631cd1f31c86408dd69d39268bd6de524a960f9e53e7",
+    "reference-focus.png": "56ef3a741a51ccc7f2ad24a7524e172b97ab23146217d61fff27d3b4f3e7bd59",
+    "reference-hover.png": "71a9e9e4bf157236d35fd13086d73d72fd75173bd22d6b472d07e3d4ecafd4a5",
+    "reference-long-heading.png": "44c5fa277a57e2c7468fd3d6d6f769379b1f1a9ae471475c2c0c8e25b9d2d1df",
+    "reference-mobile-320.png": "a1411dfb060f0394e39179169d31c5897b1663b9c25e10cb9eba8167e3253dd9",
+    "reference-mobile-390.png": "a9d2597c9baa6f98f1f093edfdaafd63e9cb62f13527e2cbef4233cd003b55a9",
+    "reference-reflow-1440.png": "dfa356fd24c6c2c8f570c3ba2fa9027f1909b1fef89ec49cbb8bdf1d5d57ba1f",
+    "reference-reflow-640.png": "120392a1f0860a32419dcbf9daf764974ee00709c41b6888f1e2a918d64a7bbc",
+    "reference-tablet-768.png": "8b12a4a613dbaf22b540ddc4ac0d07f8950fb1cbd2c1a8f0ca25335164c9f451",
+    "reference-workflow.png": "726845ec8897209cf7bec722bf882a46fc8aa20f7b8d83e68dec0ccc385c7989"
+  }
+}

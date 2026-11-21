@@ -156,7 +156,10 @@ test("disconnect from an abort listener cancels the replacing connect", async ()
   const f = fixture();
   assert.equal(await f.stream.connect(identity), true);
   f.subscriptions[0].signal.addEventListener("abort", f.stream.disconnect);
-  assert.equal(await f.stream.connect({ ...identity, task: "cancelled" }), false);
+  assert.equal(
+    await f.stream.connect({ ...identity, task: "cancelled" }),
+    false,
+  );
   assert.equal(f.subscriptions.length, 1);
   assert.equal(f.closes(), 1);
   assert.equal(f.stream.state().status, "offline");

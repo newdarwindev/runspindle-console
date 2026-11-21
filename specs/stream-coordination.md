@@ -24,7 +24,11 @@ does not establish cleanup of an old one.
 
 Connect deduplicates overlapping calls for the same complete identity, including
 while acquisition is pending. Switching task/session or disconnecting closes the
-old projection and aborts its subscription signal. Abort is not proof that an
+old projection and aborts its subscription signal. If the clock selects a newer
+task while an older connect is preparing its selection, the older connect
+returns false without replacing the newer subscription, even if its clock read
+throws. Disconnect also cancels an unfinished selection, including when called
+from the abort callback during replacement. Abort is not proof that an
 unresolved subscribe call did not allocate. One acquisition slot remains occupied
 until that call yields a valid handle; a late handle must synchronously confirm
 unsubscribe before the slot can be reused. During this invalidated pending state,

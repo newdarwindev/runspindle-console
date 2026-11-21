@@ -40,6 +40,7 @@ export function createStreamProjection(
   let current = null;
   /** @type {Session | null} */
   let pendingAcquisition = null;
+  let selectionEpoch = 0;
   let disposed = false;
   let cleanupUnknown = false;
   let tearingDown = false;
@@ -202,6 +203,7 @@ export function createStreamProjection(
   function connect(identity) {
     if (disposed || cleanupUnknown || tearingDown)
       return Promise.resolve(false);
+    const selection = ++selectionEpoch;
     const projection = projectionFactory();
     projection.select(identity);
     let selected;
@@ -209,7 +211,13 @@ export function createStreamProjection(
       selected = projection.state().identity;
     } catch {
       projection.dispose();
-      if (current) stop(current, "unknown");
+      if (selection === selectionEpoch && current) stop(current, "unknown");
+      return Promise.resolve(false);
+    }
+    // Projection state reads the injected clock. A newer selection or a
+    // disconnect during that read owns the coordinator now.
+    if (selection !== selectionEpoch) {
+      projection.dispose();
       return Promise.resolve(false);
     }
     const key = JSON.stringify(
@@ -225,6 +233,7 @@ export function createStreamProjection(
     // Abort fences callbacks but cannot confirm that a pending acquisition did
     // not allocate. Keep its slot until a valid handle is owned or closed.
     if (
+      selection !== selectionEpoch ||
       disposed ||
       cleanupUnknown ||
       pendingAcquisition !== null ||
@@ -353,6 +362,7 @@ export function createStreamProjection(
     });
   }
   function disconnect() {
+    selectionEpoch++;
     if (current) stop(current, "offline");
   }
   function dispose() {

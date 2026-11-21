@@ -96,6 +96,73 @@ test("reconnect fences old stream and late snapshot across navigation", async ()
   assert.equal(f.closes(), 2);
 });
 
+test("a superseded connect cannot close the task selected by its clock", async () => {
+  const intermediate = { ...identity, task: "intermediate" };
+  const latest = { ...identity, task: "latest" };
+  for (const outcome of ["return", "throw"]) {
+    let armed = false;
+    /** @type {Promise<boolean> | undefined} */
+    let replacement;
+    const f = fixture({
+      clock() {
+        if (armed) {
+          armed = false;
+          replacement = f.stream.connect(latest);
+          if (outcome === "throw") throw new Error("superseded clock");
+        }
+        return 1000;
+      },
+      readSnapshot: async (target) => update(1, { identity: target }),
+    });
+    assert.equal(await f.stream.connect(identity), true);
+    armed = true;
+    assert.equal(await f.stream.connect(intermediate), false);
+    assert.equal(await replacement, true, outcome);
+    assert.deepEqual(
+      f.subscriptions.map((subscription) => subscription.target),
+      [identity, latest],
+    );
+    assert.equal(f.subscriptions[0].signal.aborted, true);
+    assert.equal(f.subscriptions[1].signal.aborted, false);
+    assert.equal(f.closes(), 1);
+    assert.deepEqual(f.stream.state().identity, latest);
+    assert.equal(f.stream.state().status, "ready");
+    f.stream.dispose();
+    assert.equal(f.closes(), 2);
+  }
+});
+
+test("disconnect during a connect clock read prevents subscription", async () => {
+  let armed = false;
+  const f = fixture({
+    clock() {
+      if (armed) {
+        armed = false;
+        f.stream.disconnect();
+      }
+      return 1000;
+    },
+  });
+  armed = true;
+  assert.equal(await f.stream.connect(identity), false);
+  assert.equal(f.subscriptions.length, 0);
+  assert.equal(f.closes(), 0);
+  assert.equal(await f.stream.connect(identity), true);
+  f.stream.dispose();
+  assert.equal(f.closes(), 1);
+});
+
+test("disconnect from an abort listener cancels the replacing connect", async () => {
+  const f = fixture();
+  assert.equal(await f.stream.connect(identity), true);
+  f.subscriptions[0].signal.addEventListener("abort", f.stream.disconnect);
+  assert.equal(await f.stream.connect({ ...identity, task: "cancelled" }), false);
+  assert.equal(f.subscriptions.length, 1);
+  assert.equal(f.closes(), 1);
+  assert.equal(f.stream.state().status, "offline");
+  f.stream.dispose();
+});
+
 test("disconnect during snapshot cannot restore readiness; reconnect gets a new snapshot", async () => {
   const pending = deferred();
   let reads = 0;

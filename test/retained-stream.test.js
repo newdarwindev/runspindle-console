@@ -216,11 +216,12 @@ test("v2 rejects malformed/cross-version frames; optimized exporter selects same
 
 test("revision rollback guard mutation is detected against independently read SQLite head", async (t) => {
   const f = setup(t);
+  const earlier = readFileSync(f.database);
   f.produce("edit");
   const original = createRetainedStream(f);
   t.after(() => original.dispose());
   await original.connect();
-  f.sql("UPDATE heads SET revision='1' WHERE task='task'");
+  writeFileSync(f.database, earlier);
   assert.equal(await original.poll(), false);
   assert.equal(await original.connect(), false);
   assert.equal(original.state().retained.reason, "unavailable");
@@ -239,11 +240,11 @@ test("revision rollback guard mutation is detected against independently read SQ
   const path = join(directory, "mutant.mjs");
   writeFileSync(path, mutant);
   const module = await import(pathToFileURL(path).href);
-  f.sql("UPDATE heads SET revision='2' WHERE task='task'");
+  f.produce("edit");
   const bad = module.createRetainedStream(f);
   t.after(() => bad.dispose());
   assert.equal(await bad.connect(), true);
-  f.sql("UPDATE heads SET revision='1' WHERE task='task'");
+  writeFileSync(f.database, earlier);
   assert.equal(await bad.poll(), true);
   assert.equal(
     Number(JSON.parse(f.sql("SELECT revision FROM heads"))[0][0]),
@@ -361,6 +362,7 @@ test("unprojected real head fails without repair; explicit reconnect accepts lat
 
 test("durable fence survives fresh consumers and rejects actual SQLite rollback", async (t) => {
   const f = setup(t);
+  const earlier = readFileSync(f.database);
   const highwater = f.database + ".highwater";
   python(["tools/retained_highwater.py", highwater, "--initialize"]);
   f.produce("edit");
@@ -372,7 +374,7 @@ test("durable fence survives fresh consumers and rejects actual SQLite rollback"
   assert.equal(first.state().retained.highwater, "local_durable");
   first.dispose();
   assert.equal(f.hash(), before);
-  f.sql("UPDATE heads SET revision='1' WHERE task='task'");
+  writeFileSync(f.database, earlier);
   const rolledBack = f.hash();
   const next = createRetainedStream({ ...f, highwater });
   t.after(() => next.dispose());

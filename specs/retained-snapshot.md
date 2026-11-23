@@ -21,6 +21,9 @@ The producer is an existing Admission version-1 database with application ID
 adopt legacy metadata, write schemas, ingest events, invoke provider callbacks,
 or run schema repairs. Read-only SQL validates a consistent transaction containing
 heads, revisions, source ownership, delivery digest and sanitized projection.
+Revision metadata must occupy every position from creation through the selected
+head in the same source scope. A head behind a later record, a missing or
+noncanonical revision, and any nonterminal deletion all reject before export.
 The schema helper is used only for inspection. Wrong/missing/partial schema and
 legacy unversioned stores reject. File and WAL size are capped at 16 MiB each;
 SQLite operation count, lock wait and the owning subprocess deadline are bounded.

@@ -2,7 +2,8 @@
 
 // Provisional, process-local console API. This is not a shared wire protocol.
 /** @typedef {Record<string, unknown>} ProjectionIdentity */
-/** @typedef {{revision:number, observedAt:number|null, connection:string, authority:string, evidenceClass:string, label:string, simulated:boolean, gap:boolean, viewUrl:string|null}} ProjectionRecord */
+/** @typedef {{artifactId?:string, artifactRevision?:number, artifactAcceptance?:string, artifactDelivery?:string, deliveryOperation?:string}} ArtifactObservation */
+/** @typedef {{revision:number, observedAt:number|null, connection:string, authority:string, evidenceClass:string, label:string, simulated:boolean, gap:boolean, viewUrl:string|null} & ArtifactObservation} ProjectionRecord */
 /** @typedef {{clock?:()=>number, readSnapshot?:(target:ProjectionIdentity, options:{signal:AbortSignal})=>any, openPassive?:(request:unknown, options:{signal:AbortSignal})=>any, allowedViewOrigins?:string[], maxAgeMs?:number}} ProjectionOptions */
 const ID_KEYS = [
   "task",
@@ -30,6 +31,59 @@ const EVIDENCE = new Set([
   "live_acceptance",
   "retained_local",
 ]);
+const ARTIFACT_ACCEPTANCE = new Set(["unknown", "accepted"]);
+const ARTIFACT_DELIVERY = new Set(["unknown", "reserved", "delivered"]);
+const ARTIFACT_TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+
+/** @param {any} update @param {ProjectionIdentity} target @returns {ArtifactObservation | null} */
+function artifactObservation(update, target) {
+  const {
+    artifactId,
+    artifactRevision,
+    artifactAcceptance,
+    artifactDelivery,
+    deliveryOperation,
+  } = update;
+  if (
+    [
+      artifactId,
+      artifactRevision,
+      artifactAcceptance,
+      artifactDelivery,
+      deliveryOperation,
+    ].every((value) => value === undefined)
+  )
+    return {};
+  const acceptance =
+    artifactAcceptance === undefined ? "unknown" : artifactAcceptance;
+  const delivery =
+    artifactDelivery === undefined ? "unknown" : artifactDelivery;
+  if (
+    !target.artifactDigest ||
+    typeof artifactId !== "string" ||
+    !ARTIFACT_TOKEN.test(artifactId) ||
+    !Number.isSafeInteger(artifactRevision) ||
+    artifactRevision < 1 ||
+    !ARTIFACT_ACCEPTANCE.has(acceptance) ||
+    !ARTIFACT_DELIVERY.has(delivery)
+  )
+    return null;
+  if (
+    deliveryOperation === undefined
+      ? delivery !== "unknown"
+      : acceptance !== "accepted" ||
+        typeof deliveryOperation !== "string" ||
+        !ARTIFACT_TOKEN.test(deliveryOperation)
+  )
+    return null;
+  return {
+    artifactId,
+    artifactRevision,
+    artifactAcceptance: acceptance,
+    artifactDelivery: delivery,
+    deliveryOperation,
+  };
+}
 
 /** @param {any} value @returns {Readonly<ProjectionIdentity>} */
 function identity(value) {
@@ -455,6 +509,8 @@ function createScopedProjection(
           update.observedAt < record.observedAt))
     )
       return false;
+    const artifact = artifactObservation(update, incoming);
+    if (artifact === null) return false;
     const gap =
       !snapshot &&
       !!record &&
@@ -470,6 +526,7 @@ function createScopedProjection(
       simulated: update.simulated,
       gap,
       viewUrl: safeViewUrl(update.viewUrl, allowedViewOrigins),
+      ...artifact,
     });
     phase = "ready";
     if (

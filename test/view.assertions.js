@@ -96,6 +96,51 @@ export async function assertProjectionDom(
       field("delivery").startsWith("Unknown"),
     "acceptance not confused with delivery",
   );
+  const artifactIdentity = {
+    ...scenarios.identity,
+    artifactDigest: "sha256:" + "a".repeat(64),
+  };
+  const acceptance = {
+    ...scenarios.observation,
+    identity: artifactIdentity,
+    artifactId: "fixture-artifact",
+    artifactRevision: 2,
+    artifactAcceptance: "accepted",
+  };
+  projection.select(artifactIdentity);
+  check(projection.merge(acceptance, { snapshot: true }), "acceptance merged");
+  current = projection.state();
+  view.update();
+  check(
+    field("artifactId") === "fixture-artifact" &&
+      field("artifactRevision") === "2" &&
+      field("artifactDigest") === artifactIdentity.artifactDigest &&
+      field("acceptance") === "Reported accepted" &&
+      field("delivery").startsWith("Unknown"),
+    "accepted artifact reference does not imply delivery",
+  );
+  for (const [index, [delivery, expected]] of [
+    ["reserved", "Reported reserved · fixture-delivery"],
+    ["unknown", "Unknown · fixture-delivery"],
+    ["delivered", "Reported delivered · fixture-delivery"],
+  ].entries()) {
+    check(
+      projection.merge({
+        ...acceptance,
+        revision: 2 + index,
+        artifactDelivery: delivery,
+        deliveryOperation: "fixture-delivery",
+      }),
+      "delivery observation merged",
+    );
+    current = projection.state();
+    view.update();
+    check(field("delivery") === expected, "exact delivery stage rendered");
+    check(
+      field("acceptance") === "Reported accepted",
+      "acceptance stays distinct",
+    );
+  }
   panel.focus();
   for (const status of scenarios.statuses) {
     current = { ...current, status };
@@ -116,6 +161,12 @@ export async function assertProjectionDom(
   check(
     field("task") === scenarios.longIdentity && field("label") === "Unknown",
     "navigation clears old task data",
+  );
+  check(
+    field("artifactId") === "Unknown" &&
+      field("acceptance").startsWith("Unknown") &&
+      field("delivery").startsWith("Unknown"),
+    "navigation clears old artifact evidence",
   );
   check(field("observedAt") === "Unknown", "missing timestamp unknown");
   // A throwing adapter/getter cannot partially mix identities or leak errors.

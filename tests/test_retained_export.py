@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,9 @@ class RetainedExportTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.db = self.root / "admission.sqlite"
+        self.produce()
+
+    def produce(self, *scenario: str) -> None:
         subprocess.run(
             [
                 sys.executable,
@@ -31,6 +35,7 @@ class RetainedExportTests(unittest.TestCase):
                 str(ROOT / "test_support/retained_producer.py"),
                 self.source,
                 str(self.db),
+                *scenario,
             ],
             check=True,
             capture_output=True,
@@ -38,7 +43,10 @@ class RetainedExportTests(unittest.TestCase):
         )
 
     def run_export(
-        self, source: str | None = None, optimized: bool = False
+        self,
+        source: str | None = None,
+        optimized: bool = False,
+        revision: int | None = 1,
     ) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
             [
@@ -53,8 +61,11 @@ class RetainedExportTests(unittest.TestCase):
                 str(self.db),
                 "--task",
                 "task",
-                "--revision",
-                "1",
+                *(
+                    ["--latest-head"]
+                    if revision is None
+                    else ["--revision", str(revision)]
+                ),
             ],
             capture_output=True,
             timeout=10,
@@ -68,6 +79,39 @@ class RetainedExportTests(unittest.TestCase):
         self.assertEqual(normal.stdout, optimized.stdout)
         self.assertEqual(before, self.db.read_bytes())
         self.assertNotIn(b"PRIVATE_CANARY", normal.stdout + normal.stderr)
+
+    def test_retained_head_rejects_a_missing_or_misbound_predecessor(self) -> None:
+        for index, corrupt in enumerate(
+            (
+                "DELETE FROM revisions WHERE revision='2'",
+                "UPDATE revisions SET scope='[]' WHERE revision='2'",
+                "UPDATE revisions SET kind='delete' WHERE revision='2'",
+                "UPDATE revisions SET revision='02' WHERE revision='2'",
+            )
+        ):
+            with self.subTest(corrupt=corrupt):
+                self.db = self.root / f"history-{index}.sqlite"
+                self.produce("edit-twice")
+                self.assertEqual(self.run_export(revision=None).returncode, 0)
+                with closing(sqlite3.connect(self.db)) as db, db:
+                    db.execute(corrupt)
+                before = self.db.read_bytes()
+                for revision in (3, None):
+                    result = self.run_export(optimized=True, revision=revision)
+                    self.assertEqual((result.returncode, result.stdout), (2, b""))
+                self.assertEqual(self.db.read_bytes(), before)
+
+    def test_retained_head_cannot_point_past_a_later_deletion(self) -> None:
+        self.db = self.root / "deleted.sqlite"
+        self.produce("delete")
+        self.assertEqual(self.run_export(revision=None).returncode, 0)
+        with closing(sqlite3.connect(self.db)) as db, db:
+            db.execute("UPDATE heads SET revision='1',deleted=0 WHERE task='task'")
+        before = self.db.read_bytes()
+        for revision in (1, None):
+            result = self.run_export(revision=revision)
+            self.assertEqual((result.returncode, result.stdout), (2, b""))
+        self.assertEqual(self.db.read_bytes(), before)
 
     def test_unknown_top_level_bytecode_rejected_before_execution(self) -> None:
         checkout = self.root / "source"

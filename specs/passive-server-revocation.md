@@ -48,3 +48,13 @@ See [local evidence](../docs/server-passive-revocation-evidence.json).
 This qualifies the component contract with an ephemeral synthetic server.
 KasmVNC-specific authentication and routing, live server revocation,
 interactive handoff, and end-to-end desktop acceptance remain open.
+
+## Passive admission deadline
+
+Passive admission has a five-second deadline by default. A trusted adapter can
+set `viewOpenTimeoutMs` from 1 to 30,000 milliseconds. On expiry Console aborts
+the open request and reports the view as unavailable. The shared owner keeps
+the slot reserved because abort does not establish that the server allocated
+nothing. A late handle is closed once. A server-backed handle clears the
+fence only after the same exact, verified revocation receipt used for other
+closures.

@@ -47,3 +47,44 @@ This evidence covers synthetic task navigation for Console issue #10 and its
 parent #3. Runtime stream integration, authenticated acceptance and delivery
 receipts, independent visual-baseline review, and live fleet acceptance remain
 open.
+
+## Task-bound observations
+
+The workspace extends the existing synthetic catalog with different host,
+workspace, native-session, browser, lease, trace, span and artifact identities
+for the two routes. A fixed clock shows task A as fresh at timestamp 2001 and
+task B as stale at timestamp 1000. An artifact digest identifies the output.
+Acceptance and delivery stay Unknown because the projection supplies neither
+receipt.
+
+The browser check independently verifies each field on selection and after
+Back and Forward. Restoring an invalid route clears the identities, digest,
+timestamp, revision and label. Tab and Shift+Tab verify visible, unclipped
+focus on both task buttons. The page keeps the long observation and hostile
+markup as literal text, exposes zero controls inside the projection, and
+makes zero attempted non-file page requests.
+
+Two clean runs of the command above produced identical results on macOS arm64
+with Chrome 158.0.8127.36, Playwright 1.58.2 and Node 26.13.0. The task checks
+passed at 320, 390, 768 and 1440 CSS pixels. At native 200% desktop zoom,
+the browser kept a 1440-pixel outer width, reported 720 CSS pixels, and doubled
+DPR. The check rejected two disposable builds, one with forced horizontal
+clipping and one that substituted task A's host into task B. Remove the
+temporary output directory after inspection.
+
+On base `dee7c7b8e69b889b21090ac5dc35a62568f80983`, all 170 Node tests
+passed across the component, shell and visual harness. Python discovery
+reported 121 passes and 6 skips, with SQLite resource warnings. Scaffold
+and pinned static quality passed with zero new diagnostics.
+
+| Current input | SHA-256 |
+| --- | --- |
+| Browser check | `679df0d23ac451994c4b5cddd4758e4eae21888bee2cd5ddf36b17497aa9bbbe` |
+| Workspace entrypoint | `c1708fc0eaad91097182869e508c5bd5f03278e10b2fb99874c069ef84fe70fe` |
+| Generated `tasks.js` | `3b66e601c8093fe9b52cd32947916afbea3b8b48359bf6422764f1425623454e` |
+| Generated `tasks.html` | `142af07384afe99de568f893c794fa78284944e2804a9f1c242e0fa8920957fb` |
+| Generated stylesheet | `7989a6321b71e47b99db6303a89d853f09f5b6365b43cd59825441b40df790c2` |
+
+These are local DOM and keyboard results against synthetic snapshots. Manual
+accessibility review, visual-baseline approval and the runtime gates above
+remain open.

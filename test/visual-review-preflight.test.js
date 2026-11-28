@@ -7,8 +7,10 @@ import test from "node:test";
 import { build } from "../visual/build.mjs";
 import { preflight } from "../test_support/visual-review-preflight.mjs";
 
+/** @returns {any} */
 function sample() {
   const manifest = build().manifest;
+  /** @type {any} */
   const receipt = {
     schema: "console.native-visual-reference.v1",
     status: "passed",
@@ -26,14 +28,24 @@ function sample() {
   for (const width of [320, 390, 768, 1440, 640, 780, 1536, 2880]) {
     for (const zoom of [100, 200]) {
       for (const repeat of [1, 2]) {
+        /** @type {Record<string, any>} */
         const captures = {};
         for (const { id } of manifest.scenarios) {
           const file = `${id}-window-${width}-zoom-${zoom}.png`;
           const png_sha256 = "b".repeat(64);
-          captures[id] = { file, png_sha256, pixels: { rgb_sha256: "c".repeat(64) } };
+          captures[id] = {
+            file,
+            png_sha256,
+            pixels: { rgb_sha256: "c".repeat(64) },
+          };
           receipt.sha256[file] = png_sha256;
         }
-        receipt.cases.push({ requested_window_width: width, zoom_percent: zoom, repeat, captures });
+        receipt.cases.push({
+          requested_window_width: width,
+          zoom_percent: zoom,
+          repeat,
+          captures,
+        });
       }
     }
   }
@@ -55,6 +67,7 @@ test("complete fabricated receipt is a deterministic candidate index, not verifi
 test("failed scope, stale source, missing evidence, and pixel drift cannot pass", () => {
   const receipt = sample();
   const firstSource = Object.keys(receipt.source_sha256)[0];
+  /** @type {Array<[(receipt: any) => void, RegExp]>} */
   const mutations = [
     [(r) => (r.baseline_approval = "approved"), /candidate_not_approved/],
     [(r) => (r.source_sha256[firstSource] = "d".repeat(64)), /source digest/],
@@ -62,8 +75,14 @@ test("failed scope, stale source, missing evidence, and pixel drift cannot pass"
     [(r) => r.cases.push(r.cases[0]), /duplicate capture case/],
     [(r) => (r.cases[0].repeat = "1"), /capture case values must be integers/],
     [(r) => delete r.cases[0].captures.unknown, /scenario inventory/],
-    [(r) => delete r.sha256[r.cases[0].captures.unknown.file], /artifact index/],
-    [(r) => (r.cases[1].captures.unknown.pixels.rgb_sha256 = "e".repeat(64)), /pixel drift/],
+    [
+      (r) => delete r.sha256[r.cases[0].captures.unknown.file],
+      /artifact index/,
+    ],
+    [
+      (r) => (r.cases[1].captures.unknown.pixels.rgb_sha256 = "e".repeat(64)),
+      /pixel drift/,
+    ],
     [(r) => (r.profiles_removed -= 1), /profile teardown/],
   ];
   for (const [mutate, expected] of mutations) {
@@ -74,13 +93,18 @@ test("failed scope, stale source, missing evidence, and pixel drift cannot pass"
 });
 
 test("offline CLI returns no success output when a receipt omits a case", () => {
-  const work = fs.mkdtempSync(path.join(os.tmpdir(), "console-review-preflight-"));
+  const work = fs.mkdtempSync(
+    path.join(os.tmpdir(), "console-review-preflight-"),
+  );
   try {
     const input = path.join(work, "capture-receipt.json");
     const receipt = sample();
-    const invoke = () => spawnSync(process.execPath, [
-      "test_support/visual-review-preflight.mjs", input,
-    ], { encoding: "utf8" });
+    const invoke = () =>
+      spawnSync(
+        process.execPath,
+        ["test_support/visual-review-preflight.mjs", input],
+        { encoding: "utf8" },
+      );
     fs.writeFileSync(input, JSON.stringify(receipt));
     const good = invoke();
     assert.equal(good.status, 0, good.stderr);

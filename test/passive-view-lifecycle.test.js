@@ -448,3 +448,41 @@ test("final readiness clock reentry cannot report stale passive admission as suc
     assert.equal(closes, action === "replace" ? 2 : 1);
   }
 });
+
+test("a stale clock sample cannot revoke a replacement admitted inside the callback", async () => {
+  let replace = false;
+  const closed = /** @type {number[]} */ ([]);
+  let opens = 0;
+  /** @type {Promise<boolean>|undefined} */ let replacement;
+  const p = make({
+    maxAgeMs: 100,
+    clock() {
+      if (!replace) return 1000;
+      replace = false;
+      select(p, "task-b");
+      replacement = p.view();
+      return 1101;
+    },
+    openPassive() {
+      const id = ++opens;
+      return {
+        close: () => {
+          closed.push(id);
+        },
+      };
+    },
+  });
+  try {
+    select(p, "task-a");
+    assert.equal(await p.view(), true);
+    replace = true;
+    p.state();
+    assert.equal(await replacement, true);
+    assert.equal(p.state().identity?.task, "task-b");
+    assert.equal(opens, 2);
+    assert.deepEqual(closed, [1]);
+  } finally {
+    p.dispose();
+  }
+  assert.deepEqual(closed, [1, 2]);
+});

@@ -459,7 +459,6 @@ test("wrong, unverified and expired readbacks cannot clear a revocation fence", 
   value.dispose();
 });
 
-
 test(
   "a hung receipt verifier disconnects at the revocation deadline",
   { timeout: 6000 },

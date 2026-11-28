@@ -169,7 +169,9 @@ may be skipped. The coordinator and adapter expose a gap when an observed
 revision jumps; adapter gap diagnostics survive explicit reconnect. Revision
 regressions and same-revision substitutions reject before publication. The
 comparison includes the wire deletion flag, so a blank edit and a deletion at
-the same revision conflict. The comparison covers decoded fields. The
+the same revision conflict. An accepted deletion also fences all higher
+revisions for the same task/host/workspace and configured source. The comparison
+covers decoded fields. The
 application can also configure a [local durable fence](../docs/RETAINED_HIGHWATER.md)
 for comparisons across consumer processes. Retained
 content remains `retained_local`, with null observation time and unknown authority,
